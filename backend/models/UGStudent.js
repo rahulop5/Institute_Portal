@@ -11,4 +11,4 @@ const stuschema=new mongoose.Schema({
     bin: {type: Number, required: false},
 });
 
-export default mongoose.model("UGStudent", stuschema)
+export default mongoose.model("UGStudent", stuschema);
