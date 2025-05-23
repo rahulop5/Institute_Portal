@@ -11,7 +11,7 @@ const userschema=new mongoose.Schema({
     referenceId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: role,
+        refPath: "role",
     },
     lastlogin: {type: Date, required: true},
 });
