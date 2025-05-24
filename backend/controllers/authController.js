@@ -1,7 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import UGStudent from "../models/UGStudent.js";
 
 export const authMiddleware=async (req, res, next)=>{
     const authHeader=req.headers.authorization;

@@ -9,6 +9,7 @@ const stuschema=new mongoose.Schema({
     ug: {type: String, required: true},
     section: {type: String, required: false},
     bin: {type: Number, required: false},
+    isBTP: {type: Boolean, required: false}
 });
 
 export default mongoose.model("UGStudent", stuschema);
