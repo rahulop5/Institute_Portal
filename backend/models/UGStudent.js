@@ -8,7 +8,7 @@ const stuschema=new mongoose.Schema({
     phone: {type: String, required: false},
     ug: {type: String, required: true},
     section: {type: String, required: false},
-    bin: {type: Number, required: false},
+    bin: {type: Number, required: false, default: 3},
     isBTP: {type: Boolean, required: false}
 });
 

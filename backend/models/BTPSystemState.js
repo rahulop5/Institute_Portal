@@ -1,19 +1,18 @@
 import mongoose from "mongoose";
 
 const btpsysschema=new mongoose.Schema({
-    academicYear: { type: String, required: true, unique: true }, // SYNTAX: "2024-2025"
-    semester: { type: String, enum: ["ODD", "EVEN"], required: true },
+    studentbatch: {type: String, required: true, unique: true}, //joining year
     currentPhase: {
       type: String,
       enum: [
         "NOT_STARTED",
-        "BIN_RELEASED",
         "TEAM_FORMATION",
         "FACULTY_ASSIGNMENT",
-+        "IN_PROGRESS",
+        "IN_PROGRESS",
         "COMPLETED"
       ],
-      default: "NOT_STARTED"
+      default: "NOT_STARTED",
+      required: true
     },
     updatedAt: { type: Date, default: Date.now },
 });

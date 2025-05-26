@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const btpschema=new mongoose.Schema({
     name: {type: String, required: true},
     about: {type: String, required: false},
+    studentbatch: {type: String, required: true},
     students: [
         {
             student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudent", required: true},
