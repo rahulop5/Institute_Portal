@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import BTPSystemState from "../models/BTPSystemState.js";
 import fs from "fs";
 import csvParser from "csv-parser";
-import { on } from "events";
+import UGStudent from "../models/UGStudent.js";
 
 export const authStaffMiddleware=async (req, res, next)=>{
     const authHeader=req.headers.authorization;
@@ -97,8 +97,24 @@ export const uploadCSVSheet=async (req, res)=>{
         const filePath="./uploads/bins.csv";
         fs.createReadStream(filePath)
             .pipe(csvParser())
-            .on("data", (row)=>{
+            .on("data", async (row)=>{
                 console.log(row);
+                const {email, bin}=row;
+                if(!email||!bin){
+                    return res.status(400).json({
+                        message: "No email or bin found"
+                    });
+                }
+                const result=await UGStudent.findOneAndUpdate(
+                    {email: email.trim()},
+                    {bin: Number(bin)},
+                    {new: true}
+                );
+                if(!result){
+                    return res.status(404).json({
+                        message: `Not able to update bin for ${email}`
+                    });
+                }
             })
             .on("end", ()=>{
                 console.log("ended");
