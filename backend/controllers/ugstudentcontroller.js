@@ -55,7 +55,7 @@ export const getBTPDashboard=async (req, res)=>{
         switch (currstate.currentPhase) {
             case "NOT_STARTED":
                 return res.status(200).json({
-                    message: "BTP Projects did not start yet"
+                    message: "BTP Projects did not start yet" 
                 });
 
             case "TEAM_FORMATION":
