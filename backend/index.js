@@ -1,4 +1,4 @@
-import express from "express";
+import express from "express"
 import connectDB from "./config/db.js";
 import env from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
