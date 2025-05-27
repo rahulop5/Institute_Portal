@@ -15,6 +15,7 @@ const btpeschema=new mongoose.Schema({
             student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudent", required: true},
             guidemarks: {type: Number, required: false},
             panelmarks: {type: Number, required: false},
+            //totalgrade is decided by dean
             totalgrade: {type: String,  required: false}
         }
     ]

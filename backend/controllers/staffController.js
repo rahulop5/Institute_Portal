@@ -86,7 +86,7 @@ export const uploadCSVSheet=async (req, res)=>{
     if(!currstate){
         return res.status(404).json({
             message: "No batch found"
-        })
+        });
     }
     if(currstate.currentPhase!=="NOT_STARTED"){
         return res.status(400).json({
@@ -98,7 +98,6 @@ export const uploadCSVSheet=async (req, res)=>{
         fs.createReadStream(filePath)
             .pipe(csvParser())
             .on("data", async (row)=>{
-                console.log(row);
                 const {email, bin}=row;
                 if(!email||!bin){
                     return res.status(400).json({
@@ -112,12 +111,17 @@ export const uploadCSVSheet=async (req, res)=>{
                 );
                 if(!result){
                     return res.status(404).json({
-                        message: `Not able to update bin for ${email}`
+                        message: `Not able to update bin for ${email}, Exiting...`
                     });
                 }
             })
-            .on("end", ()=>{
-                console.log("ended");
+            .on("end", async ()=>{
+                currstate.currentPhase="TEAM_FORMATION";
+                currstate.updatedAt=Date.now();
+                await currstate.save();
+                res.status(200).json({
+                    message: "Updated Bins successfully. Team Formation phase started"
+                });
             })
             .on("error", (err)=>{
                 console.log(err);
