@@ -3,6 +3,7 @@ import BTPSystemState from "../models/BTPSystemState.js";
 import fs from "fs";
 import csvParser from "csv-parser";
 import UGStudent from "../models/UGStudent.js";
+import BTPTeam from "../models/BTPTeam.js";
 
 export const authStaffMiddleware=async (req, res, next)=>{
     const authHeader=req.headers.authorization;
@@ -51,8 +52,46 @@ export const getStaffBTPDashboard=async (req, res)=>{
             });
 
         case "TEAM_FORMATION":
+            try {
+                const teams = await BTPTeam.find()
+                    .populate("bin1.student", "email bin")
+                    .populate("bin2.student", "email bin")
+                    .populate("bin3.student", "email bin");
+
+                const formedteams = teams.filter(team => team.isteamformed === true);
+                const partialteams = teams.filter(team => team.isteamformed === false);
+
+                const studentIdsInTeams = new Set();
+                teams.forEach(team => {
+                    if (team.bin1?.student) studentIdsInTeams.add(team.bin1.student._id.toString());
+                    if (team.bin2?.student) studentIdsInTeams.add(team.bin2.student._id.toString());
+                    if (team.bin3?.student) studentIdsInTeams.add(team.bin3.student._id.toString());
+                });
             
-            break;
+                const unteamedStudents = await UGStudent.find({
+                    _id: { $nin: Array.from(studentIdsInTeams) }
+                }).select("email bin");
+            
+                const formatTeam = (team) => {
+                    return {
+                        bin1: team.bin1?.student ? { email: team.bin1.student.email, bin: team.bin1.student.bin } : null,
+                        bin2: team.bin2?.student ? { email: team.bin2.student.email, bin: team.bin2.student.bin } : null,
+                        bin3: team.bin3?.student ? { email: team.bin3.student.email, bin: team.bin3.student.bin } : null,
+                    };
+                };
+                const response = {
+                    fullyFormedTeams: formedteams.map(formatTeam),
+                    partiallyFormedTeams: partialteams.map(formatTeam),
+                    unteamedStudents: unteamedStudents.map(student => ({
+                        email: student.email,
+                        bin: student.bin
+                    }))
+                };
+                return res.status(200).json(response);
+            } catch (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Error loading BTP teams" });
+            }
 
         case "FACULTY_ASSIGNMENT":
             
