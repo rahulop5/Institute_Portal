@@ -47,7 +47,6 @@ export const getBTPDashboard=async (req, res)=>{
         const currstate=await BTPSystemState.findOne({
             studentbatch: year,
         });
-        console.log(currstate);
         if(!currstate){
             return res.status(404).json({
                 message: `No batch found with the year ${year}`
@@ -60,7 +59,79 @@ export const getBTPDashboard=async (req, res)=>{
                 });
 
             case "TEAM_FORMATION":
+                switch (user.bin) {
+                    case 1:
+                        try{
+                            const teams=await BTPTeam.find({
+                                "bin1.student": user._id
+                            })
+                            .populate("bin1.student")
+                            .populate("bin2.student")
+                            .populate("bin3.student")
+                            
+                            if(!teams){
+                                return res.status(500).json({
+                                    message: "Error finding team"
+                                });
+                            }
+                            if(teams.length===0){
+                                return res.status(200).json({
+                                    message: "You are currently not in any full or partial team. Form a team"
+                                });
+                            }
+                            if(teams.length>1){
+                                return res.status(500).json({
+                                    message: "Bin 1 student cant participate in more than one full or partial team"
+                                }); 
+                            }
+                            const team=teams[0];
+                            const simplifiedTeam = {
+                                _id: team._id,
+                                bin1: {
+                                    email: team?.bin1.student.email,
+                                    name: team?.bin1.student.name,
+                                    approved: team?.bin1.approved
+                                },
+                                bin2: {
+                                    email: team?.bin2.student.email,
+                                    name: team?.bin2.student.name,
+                                    approved: team?.bin2.approved
+                                },
+                                bin3: {
+                                    email: team?.bin3.student.email,
+                                    name: team?.bin3.student.name,
+                                    approved: team?.bin3.approved
+                                }
+                            };
+                            //im gonna send team id and student email to frontend
+                            if(!team.bin2.approved||!team.bin3.approved){
+                                return res.status(200).json({
+                                    message: "Partial team",
+                                    team: simplifiedTeam
+                                });
+                            }
+                            return res.status(200).json({
+                                message: "Full team",
+                                team: simplifiedTeam
+                            });
+                        }
+                        catch(err){
+                            console.log(err);
+                            return res.status(500).json({
+                                message: "Error loading the details for bin1 student"
+                            });
+                        }
+                            
+                    case 2:
+                    case 3:
+                        
+                        break;
                 
+                    default:
+                        return res.status(500).json({
+                            message: "Invalid Bin"
+                        });
+                }
                 break;
                 
             case "FACULTY_ASSIGNMENT":
@@ -84,7 +155,7 @@ export const getBTPDashboard=async (req, res)=>{
     catch(err){
         console.log(err);
         return res.status(500).json({
-            message: "Error loading the dashboard"
+            message: "Error loading the BTP dashboard"
         });
     }
 }
