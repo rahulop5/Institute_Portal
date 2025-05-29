@@ -124,9 +124,92 @@ export const getBTPDashboard=async (req, res)=>{
                             
                     case 2:
                     case 3:
-                        
-                        break;
-                
+                        try{
+                            const querystring=`bin${user.bin}.student`;
+                            const teams=await BTPTeam.find({
+                                [querystring]: user._id
+                            })
+                            .populate("bin1.student")
+                            .populate("bin2.student")
+                            .populate("bin3.student")
+                            
+                            if(!teams){
+                                return res.status(500).json({
+                                    message: "Error finding team"
+                                });
+                            }
+                            if(teams.length===0){
+                                return res.status(200).json({
+                                    message: "You are currently not in any full or partial team. Form a team"
+                                });
+                            }
+                            const binkey=`bin${user.bin}`
+                            if(teams.length===1&&teams[0][binkey].approved){
+                                const team=teams[0];
+                                const simplifiedTeam = {
+                                    _id: team._id,
+                                    bin1: {
+                                        email: team?.bin1.student.email,
+                                        name: team?.bin1.student.name,
+                                        approved: team?.bin1.approved
+                                    },
+                                    bin2: {
+                                        email: team?.bin2.student.email,
+                                        name: team?.bin2.student.name,
+                                        approved: team?.bin2.approved
+                                    },
+                                    bin3: {
+                                        email: team?.bin3.student.email,
+                                        name: team?.bin3.student.name,
+                                        approved: team?.bin3.approved
+                                    }
+                                };
+                                if(team.isteamformed){
+                                    return res.status(200).json({
+                                        message: "Full team bin2",
+                                        team: simplifiedTeam
+                                    });
+                                }
+                                return res.status(200).json({
+                                    message: "Partial Team but self approved",
+                                    team: simplifiedTeam
+                                });
+                            }
+                            //handle the case where bin2 approved but length>1
+                            else{
+                                const newteams=teams.map((team)=>{
+                                    const simplifiedTeam = {
+                                        _id: team._id,
+                                        bin1: {
+                                            email: team?.bin1.student.email,
+                                            name: team?.bin1.student.name,
+                                            approved: team?.bin1.approved
+                                        },
+                                        bin2: {
+                                            email: team?.bin2.student.email,
+                                            name: team?.bin2.student.name,
+                                            approved: team?.bin2.approved
+                                        },
+                                        bin3: {
+                                            email: team?.bin3.student.email,
+                                            name: team?.bin3.student.name,
+                                            approved: team?.bin3.approved
+                                        }
+                                    };
+                                    return simplifiedTeam;
+                                });
+                                return res.status(200).json({
+                                    message: "Partial teams but not self approved",
+                                    teams: newteams
+                                });
+                            }
+                        }
+                        catch(err){
+                            return res.status(500).json({
+                                message: `Error loading the details for bin${user.bin} student`,
+                            });
+                        }
+                                            
                     default:
                         return res.status(500).json({
                             message: "Invalid Bin"
