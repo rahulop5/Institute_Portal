@@ -215,7 +215,6 @@ export const getBTPDashboard=async (req, res)=>{
                             message: "Invalid Bin"
                         });
                 }
-                break;
                 
             case "FACULTY_ASSIGNMENT":
                 
@@ -239,6 +238,117 @@ export const getBTPDashboard=async (req, res)=>{
         console.log(err);
         return res.status(500).json({
             message: "Error loading the BTP dashboard"
+        });
+    }
+}
+
+export const verifyBin=({bin})=>{
+    return async (req, res, next)=>{
+        try{
+            const user=await UGStudent.findOne({
+                email: req.user.email,
+            });
+            if(!bin.includes(user.bin)){
+                return res.status(403).json({
+                    message: "Only bin 1 student can access this page"
+                });
+            }
+            req.userid=user._id;
+            next();
+        }
+        catch(err){
+            return res.status(500).json({
+                message: "Error verifying the bin of student"
+            });
+        }
+    }
+}
+
+export const createTeam=async (req, res)=>{
+    try{
+        if(!req.userid){
+            return res.status(500).json({
+                message: "No user id found"
+            });
+        }
+        if(!req.body.bin2email||!req.body.bin3email){
+            return res.status(400).json({
+                message: "No bin2 or bin3 student selected"
+            });
+        }
+        const teams=await BTPTeam.find({
+            "bin1.student": req.userid
+        }); 
+        if(teams.length!==0){
+            return res.status(400).json({
+                message: "Cant create team when you are already in one"
+            });
+        }
+        const bin2stu=await UGStudent.findOne({
+            email: req.body.bin2email
+        });
+        const bin3stu=await UGStudent.findOne({
+            email: req.body.bin3email
+        });
+        //verify bin2 or 3 and see they didnt approve any other team
+        const checkbinandverify=async(stu, bin=-1)=>{
+            if(bin===-1){
+                return res.status(500).json({
+                    message: "Error: No bin provided",
+                });
+            }
+            if(!stu){
+                return res.status(400).json({
+                    message: `Invalid email for bin${bin}`
+                });
+            }
+            if(stu.bin!==bin){
+                return res.status(400).json({
+                    message: `Invalid bin for ${stu.email}`
+                });
+            }
+            const str=`bin${bin}.student`
+            const teamss=await BTPTeam.find({
+                [str]: stu._id,
+            });
+            teamss.forEach((team)=>{
+                if(team[`bin${bin}`].approved){
+                    throw {
+                        status: 400,
+                        message: `Can't create team because ${stu.email} is already in another approved team`
+                    };
+                }
+            });
+            return true;
+        }
+        const bin2Check=await checkbinandverify(bin2stu, 2);
+        const bin3Check=await checkbinandverify(bin3stu, 3);
+        if(bin2Check&&bin3Check){
+            const newteam= new BTPTeam({
+                bin1: {
+                    student: req.userid,
+                    approved: true,
+                },
+                bin2:{
+                    student: bin2stu._id,
+                    approved: false,
+                },
+                bin3:{
+                    student: bin3stu._id,
+                    approved: false
+                },
+                isteamformed: false
+            });
+            await newteam.save();
+            return res.status(201).json({
+                message: `Team formation request sent to ${bin2stu.email} and ${bin3stu.email} successfully`
+            });
+        }
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error creating team"
         });
     }
 }
