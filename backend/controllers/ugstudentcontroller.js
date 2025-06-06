@@ -398,11 +398,21 @@ export const approveTeamRequest = async (req, res)=>{
                     isteamformed: true
                 };
             }
-            const update=await BTPTeam.findByIdAndUpdate(currteam[0]._id, {
+            await BTPTeam.findByIdAndUpdate(currteam[0]._id, {
                 $set: setter
             }, {
                 new: true
             });
+            //delete other partial teams i forgot my bad 
+            const otherteams=teams.filter((team)=>{
+                return team._id.toString()!==req.body.teamid;
+            });
+            const deletee = await BTPTeam.deleteMany({
+              _id: { $ne: req.body.teamid },
+              [binstr]: { $eq: req.user._id }
+            });
+            console.log(deletee);
+            console.log(otherteams);
             return res.status(201).json({
                 message: "Approved team request successfully"
             });
