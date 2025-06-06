@@ -403,7 +403,6 @@ export const approveTeamRequest = async (req, res)=>{
             }, {
                 new: true
             });
-            //delete other partial teams i forgot my bad 
             const otherteams=teams.filter((team)=>{
                 return team._id.toString()!==req.body.teamid;
             });
@@ -411,8 +410,6 @@ export const approveTeamRequest = async (req, res)=>{
               _id: { $ne: req.body.teamid },
               [binstr]: { $eq: req.user._id }
             });
-            console.log(deletee);
-            console.log(otherteams);
             return res.status(201).json({
                 message: "Approved team request successfully"
             });
