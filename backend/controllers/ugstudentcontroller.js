@@ -250,10 +250,10 @@ export const verifyBin=({bin})=>{
             });
             if(!bin.includes(user.bin)){
                 return res.status(403).json({
-                    message: "Only bin 1 student can access this page"
+                    message: "A student in your bin cant access this page"
                 });
             }
-            req.userid=user._id;
+            req.user=user;
             next();
         }
         catch(err){
@@ -266,7 +266,7 @@ export const verifyBin=({bin})=>{
 
 export const createTeam=async (req, res)=>{
     try{
-        if(!req.userid){
+        if(!req.user){
             return res.status(500).json({
                 message: "No user id found"
             });
@@ -277,7 +277,7 @@ export const createTeam=async (req, res)=>{
             });
         }
         const teams=await BTPTeam.find({
-            "bin1.student": req.userid
+            "bin1.student": req.user._id
         }); 
         if(teams.length!==0){
             return res.status(400).json({
@@ -326,7 +326,7 @@ export const createTeam=async (req, res)=>{
         if(bin2Check&&bin3Check){
             const newteam= new BTPTeam({
                 bin1: {
-                    student: req.userid,
+                    student: req.user._id,
                     approved: true,
                 },
                 bin2:{
@@ -349,6 +349,76 @@ export const createTeam=async (req, res)=>{
         console.log(err);
         return res.status(err.status||500).json({
             message: err.message||"Error creating team"
+        });
+    }
+}
+
+export const approveTeamRequest = async (req, res)=>{
+    try{
+        if(!req.body.teamid){
+            return res.status(400).json({
+                message: "No team id found"
+            });
+        }
+        if(!req.user){
+            return res.status(500).json({
+                message: "No user found"
+            });
+        }
+        const binstr=`bin${req.user.bin}.student`
+        const teams=await BTPTeam.find({
+            [binstr]: req.user._id
+        });
+        const binstrshort=`bin${req.user.bin}`;
+        teams.forEach((team)=>{
+            if(team[binstrshort].approved){
+                throw{
+                    status: 400,
+                    message: "Cant be in more than one team",
+                }
+            }
+        });
+        const currteam=teams.filter((team)=>{
+            return team._id.toString()===req.body.teamid;
+        });
+        if(currteam.length===0){
+            return res.status(400).json({
+                message: "Cant approve a request u didnt get"
+            });
+        }
+        if(currteam.length===1){
+            const binstrapproved=`${binstrshort}.approved`;
+            let setter={
+                [binstrapproved]: true
+            }
+            const otherbin=req.user.bin===2?"bin3":"bin2";
+            if(currteam[0][otherbin].approved){
+                setter={
+                    ...setter,
+                    isteamformed: true
+                };
+            }
+            const update=await BTPTeam.findByIdAndUpdate(currteam[0]._id, {
+                $set: setter
+            }, {
+                new: true
+            });
+            return res.status(201).json({
+                message: "Approved team request successfully"
+            });
+        }
+        else{
+            //im throwing here instead of returning becoz i want it to get printed in the server logs see catch block
+            throw{
+                status: 500,
+                message: "More than one team found with the same team id"
+            }
+        }
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error approving the request"
         });
     }
 }
