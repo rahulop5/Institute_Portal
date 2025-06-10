@@ -217,7 +217,7 @@ export const getBTPDashboard=async (req, res)=>{
                 }
                 
             case "FACULTY_ASSIGNMENT":
-                
+                //show profs with their topics
                 break;
 
             case "IN_PROGRESS":
@@ -242,7 +242,7 @@ export const getBTPDashboard=async (req, res)=>{
     }
 }
 
-export const verifyBin=({bin})=>{
+export const verifyBinAndPhase=({bin, phase})=>{
     return async (req, res, next)=>{
         try{
             const user=await UGStudent.findOne({
@@ -251,6 +251,14 @@ export const verifyBin=({bin})=>{
             if(!bin.includes(user.bin)){
                 return res.status(403).json({
                     message: "A student in your bin cant access this page"
+                });
+            }
+            const currphase=await BTPSystemState.findOne({
+                studentbatch: user.batch
+            });
+            if(currphase.currentPhase!==phase){
+                return res.status(400).json({
+                    message: "Cant access this page now"
                 });
             }
             req.user=user;
@@ -290,6 +298,16 @@ export const createTeam=async (req, res)=>{
         const bin3stu=await UGStudent.findOne({
             email: req.body.bin3email
         });
+        if(!bin2stu||!bin3stu){
+            return res.status(400).json({
+                message: "Invalid email(s)"
+            });
+        }
+        if(req.user.batch!==bin2stu.batch||req.user.batch!==bin3stu.batch){
+            return res.status(400).json({
+                message: "Cant form a team with students of different batch"
+            });
+        }
         //verify bin2 or 3 and see they didnt approve any other team
         const checkbinandverify=async(stu, bin=-1)=>{
             if(bin===-1){
@@ -325,6 +343,7 @@ export const createTeam=async (req, res)=>{
         const bin3Check=await checkbinandverify(bin3stu, 3);
         if(bin2Check&&bin3Check){
             const newteam= new BTPTeam({
+                batch: req.user.batch,
                 bin1: {
                     student: req.user._id,
                     approved: true,
@@ -428,4 +447,8 @@ export const approveTeamRequest = async (req, res)=>{
             message: err.message||"Error approving the request"
         });
     }
+}
+
+export const facultyAssignmentRequest = async (req, res)=>{
+    
 }

@@ -6,6 +6,7 @@ const studentBinSchema = new mongoose.Schema({
 }, { _id: false }); 
 
 const teamSchema = new mongoose.Schema({
+  batch: {type: String, required: true},
   bin1: {
     type: studentBinSchema,
     required: true,

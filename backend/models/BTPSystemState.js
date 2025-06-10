@@ -15,6 +15,7 @@ const btpsysschema=new mongoose.Schema({
       required: true
     },
     updatedAt: { type: Date, default: Date.now },
+    stulimitperfaculty: {type: Number}
 });
 
 export default mongoose.model("BTPSystemState", btpsysschema); 
