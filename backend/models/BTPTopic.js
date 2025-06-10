@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const btptopicschema=new mongoose.Schema({
-    faculty: {type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true},
+    faculty: {type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true, unique: true},
     topics: [{type: String}],
     requests: [
         {

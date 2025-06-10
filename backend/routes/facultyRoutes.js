@@ -3,7 +3,7 @@ import {
     authFacultyMiddleware,
     getFacultyBTPDashboard,
     releaseTopics
-} from "../controllers/facultyController";
+} from "../controllers/facultyController.js";
 
 const router=express.Router();
 
