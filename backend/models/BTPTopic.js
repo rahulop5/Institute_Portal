@@ -2,7 +2,12 @@ import mongoose from "mongoose";
 
 const btptopicschema=new mongoose.Schema({
     faculty: {type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true, unique: true},
-    topics: [{type: String}],
+    topics: [
+        {
+            topic: {type: String, required: true},
+            dept: {type: String, required: true, enum: ["CSE", "ECE", "MDS"]}
+        }
+    ],
     requests: [
         {
             _id: false,

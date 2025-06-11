@@ -89,8 +89,7 @@ export const getFacultyBTPDashboard=async (req, res)=>{
     }
 }
 
-export const releaseTopics=async (req, res)=>{
-    //cant send arrays in url encoded ffs only in raw
+export const addTopic=async (req, res)=>{
     const user=await Faculty.findOne({
         email: req.user.email
     });
@@ -99,32 +98,36 @@ export const releaseTopics=async (req, res)=>{
             message: "Error finding the faculty"
         });
     }
-    const topicscheck=await BTPTopic.findOne({
-        faculty: user._id
-    });
-    if(topicscheck){
-        return res.status(200).json({
-            message: "Already uploaded your topics"
-        });
-    }
-    if(!req.body.topics){
+    if(!req.body.topic||!req.body.dept){
         return res.status(400).json({
-            message: "No topics found"
+            message: "No topic found"
         });
     }
-    const topics=req.body.topics;
-    try{
-        const strcheck=topics.every(item => typeof item === "string");
-        if(!strcheck){
-            return res.status(400).json({
-                message: "Topics can only be strings"
-            });
-        }
-        const newtopics=new BTPTopic({
-            faculty: user._id,
-            topics: topics
+    const {topic, dept}=req.body;
+    if(!["CSE", "ECE", "MDS"].includes(dept)){
+        return res.status(400).json({
+            message: "Invalid Department"
         });
-        await newtopics.save();
+    }
+    try{
+        const existing = await BTPTopic.findOne({ faculty: user._id });
+        if(existing){
+            existing.topics.push({
+                topic: topic,
+                dept: dept
+            });
+            await existing.save();
+        }
+        else{
+            const newtopic=new BTPTopic({
+                faculty: user._id,
+                topics: [{
+                    topic: topic,
+                    dept: dept
+                }]
+            });
+            await newtopic.save();
+        }
         return res.status(201).json({
             message: "Topics uploaded successfully"
         });
