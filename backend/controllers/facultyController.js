@@ -65,7 +65,7 @@ export const getFacultyBTPDashboard=async (req, res)=>{
                 }    
                 return res.status(200).json({
                     message: "You have uploaded the topics",
-                    topics: topics.topics
+                    topics: topics
                 });
             case "IN_PROGRESS": 
 
@@ -139,3 +139,37 @@ export const addTopic=async (req, res)=>{
         })
     }
 }
+
+export const deleteTopic=async(req, res)=>{
+    if(!req.body.topicid||!req.body.actualtid){
+        return res.status(400).json({
+            message: "Id not mentioned"
+        });
+    }
+    try{
+        const result=await BTPTopic.updateOne({
+            _id: req.body.actualtid
+        }, {
+            $pull: {
+                topics: {
+                    _id: req.body.topicid
+                }
+            }
+        });
+        if(result.matchedCount===0){
+            return res.status(200).json({
+                message: "No Topic found"
+            });
+        }
+        return res.status(200).json({
+            message: "Deleted successfully"
+        })
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error deleting the topic"
+        })
+    }
+}
+

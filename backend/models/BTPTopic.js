@@ -12,7 +12,8 @@ const btptopicschema=new mongoose.Schema({
         {
             _id: false,
             teamid: {type: mongoose.Schema.Types.ObjectId, required: true},
-            topic: {type: String, required: true}
+            topic: {type: String, required: true},
+            isapproved: {type: Boolean, required: true, default: false}
         }
     ]
 });
