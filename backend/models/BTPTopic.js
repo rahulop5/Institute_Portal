@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 
+//ik this schema is not preferred when u want to scale it but there will be limited no of topics
 const btptopicschema=new mongoose.Schema({
     faculty: {type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true, unique: true},
     topics: [
         {
+            _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
             topic: {type: String, required: true},
             dept: {type: String, required: true, enum: ["CSE", "ECE", "MDS"]}
         }
@@ -12,7 +14,7 @@ const btptopicschema=new mongoose.Schema({
         {
             _id: false,
             teamid: {type: mongoose.Schema.Types.ObjectId, required: true},
-            topic: {type: String, required: true},
+            topic: { type: mongoose.Schema.Types.ObjectId, required: true },
             isapproved: {type: Boolean, required: true, default: false}
         }
     ]

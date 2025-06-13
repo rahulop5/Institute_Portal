@@ -2,6 +2,7 @@ import UGStudent from "../models/UGStudent.js";
 import BTPSystemState from "../models/BTPSystemState.js";
 import BTPTeam from "../models/BTPTeam.js";
 import jwt from "jsonwebtoken";
+import BTPTopic from "../models/BTPTopic.js";
 
 export const authStudentMiddleware=async (req, res, next)=>{
     const authHeader=req.headers.authorization;
@@ -217,9 +218,57 @@ export const getBTPDashboard=async (req, res)=>{
                 }
                 
             case "FACULTY_ASSIGNMENT":
-                //show profs with their topics
-                break;
-
+                try{
+                    const querystring=`bin${user.bin}.student`;
+                    const teams=await BTPTeam.find({
+                        [querystring]: user._id
+                    })
+                    .populate("bin1.student")
+                    .populate("bin2.student")
+                    .populate("bin3.student")
+                    if(teams.length===0){
+                        return res.status(400).json({
+                            message: "Team not found"
+                        });
+                    }
+                    if(teams.length!==1){
+                        return res.status(400).json({
+                            message: "More than one team found"
+                        });
+                    }
+                    const team=teams[0];
+                    if(!team.isteamformed){
+                        return res.status(400).json({
+                            message: "Not all members have approved the request to join this team"
+                        });
+                    }
+                    const topics=await BTPTopic.find().populate("faculty");
+                    const cleanedTopics = topics.map(topic => {
+                        return {
+                            _id: topic._id,
+                            faculty: {
+                                name: topic?.faculty.name,
+                                email: topic?.faculty.email,
+                                dept: topic?.faculty.dept,
+                                role: topic?.faculty.role
+                            },
+                            topics: topic?.topics, // keep as is
+                            requests: topic?.requests // keep as is
+                        };
+                    });
+                    
+                    return res.status(200).json({
+                        message: "BTP Topics",
+                        topics: cleanedTopics
+                    });
+                }
+                catch(err){
+                    console.log(err);
+                    return res.status(500).json({
+                        message: "Error loading the dashboard in Faculty assignment phase"
+                    });
+                }
+                
             case "IN_PROGRESS":
                 
                 break;
@@ -450,5 +499,58 @@ export const approveTeamRequest = async (req, res)=>{
 }
 
 export const facultyAssignmentRequest = async (req, res)=>{
-    
+    if(!req.body.docId||!req.body.topicId||!req.body.teamId){
+        return res.status(400).json({
+            message: "Invalid details sent"
+        });
+    }
+    try{
+        const {docId, topicId, teamId}=req.body;
+        const facdoc=await BTPTopic.findOne({
+            _id: docId
+        });
+        if(!facdoc){
+            return res.status(400).json({
+                message: "No faculty with that topic found"
+            });
+        }
+        const topic=facdoc.topics.id(topicId);
+        if(!topic){
+            return res.status(400).json({
+                message: "No topic with that facutly found"
+            });
+        }
+        const team=await BTPTeam.findOne({
+            _id: teamId
+        });
+        if(!team){
+            return res.status(400).json({
+                message: "Invalid team"
+            });
+        }
+        const checkreq=facdoc.requests.filter((request)=>{
+            return request.teamid.toString()===teamId && request.topic.toString()===topicId
+        });
+        if(checkreq.length!==0){
+            return res.status(400).json({
+                message: "Request already sent"
+            });
+        }
+        const newrequest={
+            teamid: teamId,
+            topic: topicId,
+            isapproved: false
+        };
+        facdoc.requests.push(newrequest);
+        await facdoc.save();
+        return res.status(201).json({
+            message: "Request sent successfully"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error sending request"
+        });
+    }
 }
