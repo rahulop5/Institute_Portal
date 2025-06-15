@@ -3,7 +3,8 @@ import {
     authFacultyMiddleware,
     getFacultyBTPDashboard,
     addTopic,
-    deleteTopic
+    deleteTopic,
+    approveTopicRequest
 } from "../controllers/facultyController.js";
 
 const router=express.Router();
@@ -11,5 +12,6 @@ const router=express.Router();
 router.get("/btp", authFacultyMiddleware, getFacultyBTPDashboard);
 router.post("/btp/releasetopics", authFacultyMiddleware, addTopic);
 router.delete("/btp/deletetopic", authFacultyMiddleware, deleteTopic);
+router.post("/btp/approvetopicrequest", authFacultyMiddleware, approveTopicRequest)
 
 export default router;

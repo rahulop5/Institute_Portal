@@ -173,3 +173,59 @@ export const deleteTopic=async(req, res)=>{
     }
 }
 
+export const approveTopicRequest=async(req, res)=>{
+    if(!req.body.topicid||!req.body.teamid){
+        return res.status(400).json({
+            message: "Invalid request"
+        });
+    }
+    try{
+        const {topicid, teamid}=req.body;
+        const fac=await Faculty.findOne({
+            email: req.user.email
+        });
+        if(!fac){
+            return res.status(400).json({
+                message: "No faculty found"
+            });
+        }
+        const factopicdoc=await BTPTopic.findOne({
+            faculty: fac._id
+        });
+        if(!factopicdoc){
+            return res.status(400).json({
+                message: "No topics found under this faculty"
+            });
+        }
+        const topic=factopicdoc.topics.id(topicid);
+        if(!topic){
+            return res.status(400).json({
+                message: "No topic found with that topic id"
+            });
+        }
+        const request=factopicdoc.requests.find((request)=>{
+            return request.teamid.toString()===teamid && request.topic.toString()===topicid
+        });
+        if(!request){
+            return res.status(400).json({
+                message: "No request found with that team id"
+            });
+        }
+        if(request.isapproved){
+            return res.status(400).json({
+                message: "Already approved the request"
+            });
+        }
+        request.isapproved=false;
+        await factopicdoc.save();
+        return res.status(201).json({
+            message: "Successfully approved team request"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error approving the request"
+        });
+    }
+}

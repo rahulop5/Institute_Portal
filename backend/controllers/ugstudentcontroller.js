@@ -554,3 +554,4 @@ export const facultyAssignmentRequest = async (req, res)=>{
         });
     }
 }
+
