@@ -216,7 +216,7 @@ export const approveTopicRequest=async(req, res)=>{
                 message: "Already approved the request"
             });
         }
-        request.isapproved=false;
+        request.isapproved=true;
         await factopicdoc.save();
         return res.status(201).json({
             message: "Successfully approved team request"
