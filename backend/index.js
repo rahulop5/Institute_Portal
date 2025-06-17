@@ -2,9 +2,9 @@ import express from "express";
 import connectDB from "./config/db.js";
 import env from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
-import ugstudentRoutes from "./routes/ugstudentRoutes.js";
-import staffRoutes from "./routes/staffRoutes.js";
-import facultyRoutes from "./routes/facultyRoutes.js";
+import ugstudentbtpRoutes from "./routes/ugstudentbtpRoutes.js";
+import staffbtpRoutes from "./routes/staffbtpRoutes.js";
+import facultybtpRoutes from "./routes/facultybtpRoutes.js";
 
 const app=express();
 app.use(express.json());
@@ -13,8 +13,8 @@ env.config();
 connectDB();
 
 app.use("/auth", authRoutes);
-app.use("/student", ugstudentRoutes);
-app.use("/staff", staffRoutes);
-app.use("/faculty", facultyRoutes);
+app.use("/student/btp", ugstudentbtpRoutes);
+app.use("/staff/btp", staffbtpRoutes);
+app.use("/faculty/btp", facultybtpRoutes);
 
 app.listen(3000);
