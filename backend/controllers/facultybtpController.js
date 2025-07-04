@@ -1,6 +1,8 @@
 import Faculty from "../models/Faculty.js";
 import BTPSystemState from "../models/BTPSystemState.js";
 import BTPTopic from "../models/BTPTopic.js";
+import BTP from "../models/BTP.js";
+import BTPTeam from "../models/BTPTeam.js";
 
 export const getFacultyBTPDashboard=async (req, res)=>{
     const user=await Faculty.findOne({
@@ -147,6 +149,9 @@ export const deleteTopic=async(req, res)=>{
     }
 }
 
+
+//gotta add the feature to reject the request
+//also gotta set the limit on how many requests prof can accept
 export const approveTopicRequest=async(req, res)=>{
     if(!req.body.topicid||!req.body.teamid){
         return res.status(400).json({
@@ -190,8 +195,29 @@ export const approveTopicRequest=async(req, res)=>{
                 message: "Already approved the request"
             });
         }
-        request.isapproved=true;
+        request.isapproved=false;
         await factopicdoc.save();
+
+        //create an instance in the BTP projects to avoid massive computational tasks later
+        const team=await BTPTeam.findOne({
+            _id: teamid
+        });
+        const studentIds = [
+            team.bin1.student,
+            team.bin2.student,
+            team.bin3.student
+        ];
+        const formattedStudents = studentIds.map(id => ({ student: id }));
+        //add the other stuff later like give them option type shi after this phase
+        const newbtpproj=new BTP({
+            name: topic.topic,
+            studentbatch: team.batch,
+            students: formattedStudents,
+            guide: fac._id
+        });
+
+        await newbtpproj.save();
+
         return res.status(201).json({
             message: "Successfully approved team request"
         });

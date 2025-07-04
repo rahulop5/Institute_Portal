@@ -5,6 +5,7 @@ const btpeschema=new mongoose.Schema({
     evaluationno: {type: Number, required: true},
     time: {type: Date, required: true},
     canstudentsee: {type: Boolean, required: true},
+    remark: {type: String, required: false},
     resources: [
         {
             resourceURL: {type: String, required: true}
