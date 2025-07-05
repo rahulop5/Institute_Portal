@@ -192,6 +192,7 @@ export const getBTPDashboard=async (req, res)=>{
                 }
                 
             case "FACULTY_ASSIGNMENT":
+                //where tf is the case where the student sent the request
                 try{
                     const querystring=`bin${user.bin}.student`;
                     const teams=await BTPTeam.find({
