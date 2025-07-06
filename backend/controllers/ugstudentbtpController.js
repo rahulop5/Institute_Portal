@@ -52,8 +52,49 @@ export const getBTPDashboard=async (req, res)=>{
                                 });
                             }
                             if(teams.length===0){
+                                //sending the available bin2 and bin3 guys/gals
+                                const bin23total=await UGStudent.find({
+                                    batch: user.batch,
+                                    bin: {$ne: 1}
+                                });
+                                //removed the uk guys who already formed a team
+                                const bin2filter=await BTPTeam.find({
+                                    "bin2.approved": true
+                                }, "bin2.student");
+                                const formatbin2filter=bin2filter.map((stu)=>{
+                                    return stu.bin2.student.toString();
+                                });
+
+                                const bin3filter=await BTPTeam.find({
+                                    "bin3.approved": true
+                                }, "bin3.student");
+                                const formatbin3filter=bin3filter.map((stu)=>{
+                                    return stu.bin3.student.toString();
+                                });
+                                //here just formatting the DATA filtering aswell
+                                const availablebin2bin3=bin23total.filter((stu)=>{
+                                    return !(formatbin2filter.includes(stu._id.toString()) || formatbin3filter.includes(stu._id.toString()));
+                                });
+                                const availablebin2=availablebin2bin3.filter((stu)=>{
+                                    return stu.bin===2;
+                                }).map((stu)=>{
+                                    return {
+                                        name: stu.name,
+                                        email: stu.email,
+                                    }
+                                });
+                                const availablebin3=availablebin2bin3.filter((stu)=>{
+                                    return stu.bin===3;
+                                }).map((stu)=>{
+                                    return {
+                                        name: stu.name,
+                                        email: stu.email,
+                                    }
+                                });
                                 return res.status(200).json({
-                                    message: "You are currently not in any full or partial team. Form a team"
+                                    message: "You are currently not in any full or partial team. Form a team",
+                                    availablebin2: availablebin2,
+                                    availablebin3: availablebin3
                                 });
                             }
                             if(teams.length>1){
@@ -117,7 +158,7 @@ export const getBTPDashboard=async (req, res)=>{
                             }
                             if(teams.length===0){
                                 return res.status(200).json({
-                                    message: "You are currently not in any full or partial team. Form a team"
+                                    message: "You are currently not in any full or partial team. Form a team by finding a bin1 student"
                                 });
                             }
                             const binkey=`bin${user.bin}`
