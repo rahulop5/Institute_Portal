@@ -149,7 +149,6 @@ export const deleteTopic=async(req, res)=>{
     }
 }
 
-
 //gotta add the feature to reject the request
 //also gotta set the limit on how many requests prof can accept
 export const approveTopicRequest=async(req, res)=>{
@@ -228,4 +227,8 @@ export const approveTopicRequest=async(req, res)=>{
             message: err.message||"Error approving the request"
         });
     }
+}
+
+export const evaluateProjectGuide=async(req, res)=>{
+    
 }

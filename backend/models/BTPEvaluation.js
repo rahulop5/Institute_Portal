@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const btpeschema=new mongoose.Schema({
     projectRef: {type: mongoose.Schema.Types.ObjectId, ref: "BTP", required: true},
-    evaluationno: {type: Number, required: true},
     time: {type: Date, required: true},
     canstudentsee: {type: Boolean, required: true},
     remark: {type: String, required: false},
