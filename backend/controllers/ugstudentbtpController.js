@@ -2,6 +2,8 @@ import UGStudent from "../models/UGStudent.js";
 import BTPSystemState from "../models/BTPSystemState.js";
 import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
+import BTP from "../models/BTP.js";
+import BTPEvaluation from "../models/BTPEvaluation.js"
 
 export const getBTPDashboard=async (req, res)=>{
     const user=await UGStudent.findOne({
@@ -193,6 +195,8 @@ export const getBTPDashboard=async (req, res)=>{
                 
             case "FACULTY_ASSIGNMENT":
                 //where tf is the case where the student sent the request
+                //only limited no of requests can be sent by a team
+                //i should prolly redo this thing
                 try{
                     const querystring=`bin${user.bin}.student`;
                     const teams=await BTPTeam.find({
@@ -245,8 +249,30 @@ export const getBTPDashboard=async (req, res)=>{
                 }
                 
             case "IN_PROGRESS":
-                
+                //send bin of the user in the response so that the frontend guy can do conditional rendering of the add update 
+                try{
+                    const projectarr=await BTP.find({
+                        "students.student": user._id
+                    });
+                    if(projectarr.length!==1){
+                        return res.status(400).json({
+                            message: "Either no project found or too many projects found"
+                        });
+                    }
+                    const project=projectarr[0];
+                    const evaluations=await BTPEvaluation.find({
+                        projectRef: project._id
+                    });
+                    console.log(evaluations);
+                }
+                catch(err){
+                    console.log(err);
+                    return res.status(500).json({
+                        message: "Error loading the BTP dashboard in Progress phase"
+                    });
+                }
 
+                //remove this after completing the try block fkin ruining the aesthetics
                 break;
 
             case "COMPLETED":
