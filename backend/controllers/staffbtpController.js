@@ -187,6 +187,7 @@ export const uploadCSVSheet=async (req, res)=>{
 }
 
 //the studs who are in partial teams also come as unteamed 
+//handle the case where no bin1 or other bins are left like abnormal teams
 export const createTeambyStaff=async (req, res)=>{
     try{
         //handle batch of the students like make sure they are all from the intended batch
@@ -254,6 +255,34 @@ export const createTeambyStaff=async (req, res)=>{
         console.log(err);
         return res.status(500).json({
             message: "Error creating team"
+        });
+    }
+}
+
+export const deleteTeam=async(req, res)=>{
+    try{
+        if(!req.body.teamid){
+            return res.status(400).json({
+                message: "No Team selected"
+            });
+        }
+        const deletee=await BTPTeam.deleteOne({
+            _id: req.body.teamid,
+            batch: req.query.batch
+        });
+        if(deletee.deletedCount!==1){
+            return res.status(400).json({
+                message: "Team not found"
+            });
+        }
+        return res.status(201).json({
+            message: "Successfully deleted the team"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Error deleting team"
         });
     }
 }
