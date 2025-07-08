@@ -120,6 +120,7 @@ export const verifyPhase=({phase})=>{
     }
 }
 
+//basically this function ends the not_started phase
 export const uploadCSVSheet=async (req, res)=>{
     if(!req.query.year){
         return res.status(400).json({
@@ -255,4 +256,9 @@ export const createTeambyStaff=async (req, res)=>{
             message: "Error creating team"
         });
     }
+}
+
+//literally in the name of the function
+export const endTeamFormationPhase= async(req, res)=>{
+    //what to do
 }

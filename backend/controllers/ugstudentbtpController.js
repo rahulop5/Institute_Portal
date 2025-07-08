@@ -541,6 +541,65 @@ export const approveTeamRequest = async (req, res)=>{
     }
 }
 
+export const rejectTeamRequest=async(req, res)=>{
+    try{
+        if(!req.body.teamid){
+            return res.status(400).json({
+                message: "No team id found"
+            });
+        }
+        if(!req.user){
+            return res.status(500).json({
+                message: "No user found"
+            });
+        }
+        const binstr=`bin${req.user.bin}.student`
+        const teams=await BTPTeam.find({
+            [binstr]: req.user._id
+        });
+        const binstrshort=`bin${req.user.bin}`;
+        const currteam=teams.filter((team)=>{
+            return team._id.toString()===req.body.teamid;
+        });
+        if(currteam.length===0){
+            return res.status(400).json({
+                message: "Cant reject a request u didnt get"
+            });
+        }
+        if(currteam.length===1){
+            if(currteam[0][binstrshort].approved){
+                return res.status(400).json({
+                    message: "Cant reject once u approved"
+                });
+            }
+            const deletee=await BTPTeam.deleteOne({
+                _id: req.body.teamid
+            });
+            if(deletee.deletedCount!==1){
+                return res.status(500).json({
+                    message: "Unable to reject the request"
+                });
+            }
+            return res.status(201).json({
+                message: "Successfully rejected the request"
+            });
+        }
+        else{
+            //im throwing here instead of returning becoz i want it to get printed in the server logs see catch block
+            throw{
+                status: 500,
+                message: "More than one team found with the same team id"
+            }
+        }
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error approving the request"
+        });
+    }
+}
+
 export const facultyAssignmentRequest = async (req, res)=>{
     if(!req.body.docId||!req.body.topicId||!req.body.teamId){
         return res.status(400).json({
