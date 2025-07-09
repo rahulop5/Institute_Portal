@@ -5,21 +5,22 @@ import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js"
 
+//sending user details too in the response
 export const getBTPDashboard=async (req, res)=>{
-    const user=await UGStudent.findOne({
-        email: req.user.email
-    });
-    if(!user){
-        return res.status(404).json({
-            message: "Error finding the student"
-        });
-    }
-    if(!user.isBTP){
-        return res.status(403).json({
-            message: "You cant access this page"
-        });
-    }
     try{
+        const user=await UGStudent.findOne({
+            email: req.user.email
+        });
+        if(!user){
+            return res.status(404).json({
+                message: "Error finding the student"
+            });
+        }
+        if(!user.isBTP){
+            return res.status(403).json({
+                message: "You cant access this page"
+            });
+        }
         const year=user.batch;
         const currstate=await BTPSystemState.findOne({
             studentbatch: year,
@@ -32,7 +33,9 @@ export const getBTPDashboard=async (req, res)=>{
         switch (currstate.currentPhase) {
             case "NOT_STARTED":
                 return res.status(200).json({
-                    message: "BTP Projects did not start yet" 
+                    email: user.email,
+                    message: "BTP Projects did not start yet",
+                    phase: "NS" 
                 });
 
             case "TEAM_FORMATION":
@@ -48,6 +51,9 @@ export const getBTPDashboard=async (req, res)=>{
                             
                             if(!teams){
                                 return res.status(500).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Error finding team"
                                 });
                             }
@@ -92,6 +98,9 @@ export const getBTPDashboard=async (req, res)=>{
                                     }
                                 });
                                 return res.status(200).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "You are currently not in any full or partial team. Form a team",
                                     availablebin2: availablebin2,
                                     availablebin3: availablebin3
@@ -99,6 +108,9 @@ export const getBTPDashboard=async (req, res)=>{
                             }
                             if(teams.length>1){
                                 return res.status(500).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Bin 1 student cant participate in more than one full or partial team"
                                 }); 
                             }
@@ -124,11 +136,17 @@ export const getBTPDashboard=async (req, res)=>{
                             //im gonna send team id and student email to frontend
                             if(!team.bin2.approved||!team.bin3.approved){
                                 return res.status(200).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Partial team",
                                     team: simplifiedTeam
                                 });
                             }
                             return res.status(200).json({
+                                email: user.email,
+                                phase: "TF",
+                                bin: user.bin,
                                 message: "Full team",
                                 team: simplifiedTeam
                             });
@@ -136,6 +154,9 @@ export const getBTPDashboard=async (req, res)=>{
                         catch(err){
                             console.log(err);
                             return res.status(500).json({
+                                email: user.email,
+                                phase: "TF",
+                                bin: user.bin,
                                 message: "Error loading the details for bin1 student"
                             });
                         }
@@ -153,11 +174,17 @@ export const getBTPDashboard=async (req, res)=>{
                             
                             if(!teams){
                                 return res.status(500).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Error finding team"
                                 });
                             }
                             if(teams.length===0){
                                 return res.status(200).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "You are currently not in any full or partial team. Form a team by finding a bin1 student"
                                 });
                             }
@@ -184,11 +211,17 @@ export const getBTPDashboard=async (req, res)=>{
                                 };
                                 if(team.isteamformed){
                                     return res.status(200).json({
-                                        message: "Full team bin2",
+                                        email: user.email,
+                                        phase: "TF",
+                                        bin: user.bin,
+                                        message: "Full team",
                                         team: simplifiedTeam
                                     });
                                 }
                                 return res.status(200).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Partial Team but self approved",
                                     team: simplifiedTeam
                                 });
@@ -217,6 +250,9 @@ export const getBTPDashboard=async (req, res)=>{
                                     return simplifiedTeam;
                                 });
                                 return res.status(200).json({
+                                    email: user.email,
+                                    phase: "TF",
+                                    bin: user.bin,
                                     message: "Partial teams but not self approved",
                                     teams: newteams
                                 });
@@ -224,12 +260,16 @@ export const getBTPDashboard=async (req, res)=>{
                         }
                         catch(err){
                             return res.status(500).json({
+                                email: user.email,
+                                phase: "TF",
+                                bin: user.bin,
                                 message: `Error loading the details for bin${user.bin} student`,
                             });
                         }
                                             
                     default:
                         return res.status(500).json({
+                            phase: "TF",
                             message: "Invalid Bin"
                         });
                 }
