@@ -4,6 +4,8 @@ import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPTeam from "../models/BTPTeam.js";
 
+//have to send the additional details to frontend
+//remove err messages from catch blocks
 export const getFacultyBTPDashboard=async (req, res)=>{
     const user=await Faculty.findOne({
         email: req.user.email
@@ -149,8 +151,7 @@ export const deleteTopic=async(req, res)=>{
     }
 }
 
-//gotta add the feature to reject the request
-//also gotta set the limit on how many requests prof can accept
+// gotta set the limit on how many requests prof can accept
 export const approveTopicRequest=async(req, res)=>{
     if(!req.body.topicid||!req.body.teamid){
         return res.status(400).json({
@@ -225,6 +226,53 @@ export const approveTopicRequest=async(req, res)=>{
         console.log(err);
         return res.status(err.status||500).json({
             message: err.message||"Error approving the request"
+        });
+    }
+}
+
+//can there be multiple teams for a single topic??
+export const rejectTopicRequest=async(req, res)=>{
+    try{
+        if(!req.body.teamid||!req.body.topicid||!req.body.docid){
+            return res.status(400).json({
+                message: "Invalid Request"
+            });
+        }
+        const {teamid, topicid, docid}=req.body;
+        const topicdoc=await BTPTopic.findOne({
+            _id: docid
+        }).populate("faculty");
+        if(req.user.email!==topicdoc.faculty.email){
+            return res.status(403).json({
+                message: "Not allowed to do this"
+            });
+        }
+        //here i could just do topicdoc.save after filtering it there itself
+        //but that would compromise the security
+        const result = await BTPTopic.updateOne(
+            { _id: docid },
+            {
+                $pull: {
+                    requests: {
+                        teamid: teamid,
+                        topic: topicid
+                    }
+                }
+            }
+        );
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({
+                message: "Request not found or already rejected" 
+            });
+        }
+        return res.status(200).json({
+            message: "Request rejected successfully"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(err.status||500).json({
+            message: err.message||"Error rejecting the request"
         });
     }
 }

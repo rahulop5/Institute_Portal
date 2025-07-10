@@ -276,7 +276,7 @@ export const getBTPDashboard=async (req, res)=>{
                 
             case "FACULTY_ASSIGNMENT":
                 //where tf is the case where the student sent the request
-                //only limited no of requests can be sent by a team
+                //only limited no of requests can be sent by a team and currently im keeping that limit as 3
                 //i should prolly redo this thing
                 try{
                     const querystring=`bin${user.bin}.student`;
@@ -303,6 +303,7 @@ export const getBTPDashboard=async (req, res)=>{
                         });
                     }
                     const topics=await BTPTopic.find().populate("faculty");
+                    
                     const cleanedTopics = topics.map(topic => {
                         return {
                             _id: topic._id,
@@ -330,6 +331,7 @@ export const getBTPDashboard=async (req, res)=>{
                 }
                 
             case "IN_PROGRESS":
+                //redo this too
                 //send bin of the user in the response so that the frontend guy can do conditional rendering of the add update 
                 try{
                     const projectarr=await BTP.find({
@@ -404,6 +406,7 @@ export const verifyBinAndPhase=({bin, phase})=>{
     }
 }
 
+//prolly add a feature where the invite expires after smtime
 export const createTeam=async (req, res)=>{
     try{
         if(!req.user){
@@ -668,6 +671,11 @@ export const facultyAssignmentRequest = async (req, res)=>{
         if(!team){
             return res.status(400).json({
                 message: "Invalid team"
+            });
+        }
+        if(team.bin1.student.toString()!==req.user._id.toString()){
+            return res.status(400).json({
+                message: "Wrong Team Id"
             });
         }
         const checkreq=facdoc.requests.filter((request)=>{

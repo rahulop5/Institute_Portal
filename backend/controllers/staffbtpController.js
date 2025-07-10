@@ -4,6 +4,7 @@ import csvParser from "csv-parser";
 import UGStudent from "../models/UGStudent.js";
 import BTPTeam from "../models/BTPTeam.js";
 
+//have to send the additional details to frontend
 export const getStaffBTPDashboard=async (req, res)=>{
     try{
         if(!req.query.year){
@@ -197,6 +198,12 @@ export const createTeambyStaff=async (req, res)=>{
             });
         }
         const {bin1, bin2, bin3}=req.body;
+        if(bin1===bin2||bin2===bin3||bin1===bin3){
+            return res.status(400).json({
+                message: "Emails need to be different"
+            });
+        }
+        //im not verifying the bins of the students becoz uk obv reasons
         const verifyTeam=async (email)=>{
             const student=await UGStudent.findOne({
                 email: email
@@ -288,6 +295,31 @@ export const deleteTeam=async(req, res)=>{
 }
 
 //literally in the name of the function
+//currently considering the ideal case 
 export const endTeamFormationPhase= async(req, res)=>{
-    //what to do
+    try{
+        if(!req.query.batch){
+            return res.status(400).json({
+                message: "Incomplete request. No batch mentioned"
+            });
+        }
+        const currphase=await BTPSystemState.findOne({
+            studentbatch: req.query.batch
+        });
+        if(currphase.currentPhase!=="TEAM_FORMATION"){
+            return res.status(400).json({
+                message: "Cant access this page now"
+            });
+        }
+        currphase.currentPhase="FACULTY_ASSIGNMENT";
+        await currphase.save();
+        return res.status(201).json({
+            message: `Successfully moved batch ${req.query.batch} to Faculty Assignment phase` 
+        });
+    }
+    catch(err){
+        return res.status(500).json({
+            message: "Error verifying the phase"
+        });
+    }
 }

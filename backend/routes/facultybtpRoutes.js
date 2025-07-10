@@ -1,19 +1,22 @@
 import express from "express";
-import { authFacultyMiddleware } from "../controllers/authController.js";
+import { authFacultyMiddleware, authStaffMiddleware } from "../controllers/authController.js";
 import {
     getFacultyBTPDashboard,
     addTopic,
     deleteTopic,
     approveTopicRequest,
-    evaluateProjectGuide
+    evaluateProjectGuide,
+    rejectTopicRequest
 } from "../controllers/facultybtpController.js";
 
 const router=express.Router();
 
+//phase verification can be done outside
 router.get("/", authFacultyMiddleware, getFacultyBTPDashboard);
 router.post("/releasetopics", authFacultyMiddleware, addTopic);
 router.delete("/deletetopic", authFacultyMiddleware, deleteTopic);
-router.post("/approvetopicrequest", authFacultyMiddleware, approveTopicRequest)
+router.post("/approvetopicrequest", authFacultyMiddleware, approveTopicRequest);
+router.delete("/rejecttopicreq", authFacultyMiddleware, rejectTopicRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateProjectGuide);
 
 export default router;

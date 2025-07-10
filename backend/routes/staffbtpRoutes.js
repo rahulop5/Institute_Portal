@@ -13,9 +13,10 @@ import upload from "../config/multer.js";
 const router=express.Router();
 
 router.get("/", authStaffMiddleware, getStaffBTPDashboard);
-router.post("/binsrelease", authStaffMiddleware, verifyPhase({phase: "NOT_STARTED"}), upload.single("bins"), uploadCSVSheet);
+//for this phase verification is done inside the function
+router.post("/binsrelease", authStaffMiddleware, upload.single("bins"), uploadCSVSheet);
 router.post("/createteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), createTeambyStaff);
 router.delete("/deleteteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), deleteTeam);
-router.get("/endTFphase", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), endTeamFormationPhase);
+router.get("/endTFphase", authStaffMiddleware, endTeamFormationPhase);
 
 export default router;
