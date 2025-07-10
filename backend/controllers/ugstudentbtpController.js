@@ -273,7 +273,8 @@ export const getBTPDashboard=async (req, res)=>{
                             message: "Invalid Bin"
                         });
                 }
-                
+            //send addn details like phase etc
+            //write the case where the faculty accepted the request    
             case "FACULTY_ASSIGNMENT":
                 //where tf is the case where the student sent the request
                 //only limited no of requests can be sent by a team and currently im keeping that limit as 3
@@ -303,24 +304,53 @@ export const getBTPDashboard=async (req, res)=>{
                         });
                     }
                     const topics=await BTPTopic.find().populate("faculty");
+                    let approvedRequest = null;
+                    const outgoingRequests = [];
                     
-                    const cleanedTopics = topics.map(topic => {
-                        return {
-                            _id: topic._id,
-                            faculty: {
-                                name: topic?.faculty.name,
-                                email: topic?.faculty.email,
-                                dept: topic?.faculty.dept,
-                                role: topic?.faculty.role
-                            },
-                            topics: topic?.topics, // keep as is
-                            requests: topic?.requests // keep as is
-                        };
+                    //did this in 2 cases 
+                    // 1) any of the faculty accepts the request in which all the other outgoing requests will be deleted and only the approved req is shown
+                    // 2) if no request is approved we just show the status of outgoing requests
+
+                    topics.forEach(topic => {
+                        topic.requests.forEach(request => {
+                            if (request.teamid.toString() === team._id.toString()) {
+                                const matchedTopic = topic.topics.find(t => t._id.toString() === request.topic.toString());
+                            
+                                const requestData = {
+                                    topicDocId: topic._id,
+                                    faculty: {
+                                        name: topic.faculty.name,
+                                        email: topic.faculty.email,
+                                        dept: topic.faculty.dept
+                                    },
+                                    requestedTopic: matchedTopic,
+                                    isapproved: request.isapproved
+                                };
+                                //ideal case(not security wise integrity wise)
+                                //i.e what do u do if there are more than 1 approved req ik its not possible but what if smone hacks and does it
+                                if (request.isapproved) {
+                                    approvedRequest = requestData;
+                                } else {
+                                    outgoingRequests.push(requestData);
+                                }
+                            }
+                        });
                     });
-                    
+
                     return res.status(200).json({
                         message: "BTP Topics",
-                        topics: cleanedTopics
+                        topics: topics.map(topic => ({
+                            _id: topic._id,
+                            faculty: {
+                                name: topic.faculty.name,
+                                email: topic.faculty.email,
+                                dept: topic.faculty.dept,
+                                role: topic.faculty.role
+                            },
+                            topics: topic.topics,
+                            requests: topic.requests
+                        })),
+                        outgoingRequests: approvedRequest ? [approvedRequest] : outgoingRequests
                     });
                 }
                 catch(err){
@@ -643,6 +673,7 @@ export const rejectTeamRequest=async(req, res)=>{
     }
 }
 
+//here if any of the req is already approved then we shouldnt allow them to send the request
 export const facultyAssignmentRequest = async (req, res)=>{
     if(!req.body.docId||!req.body.topicId||!req.body.teamId){
         return res.status(400).json({
@@ -651,6 +682,17 @@ export const facultyAssignmentRequest = async (req, res)=>{
     }
     try{
         const {docId, topicId, teamId}=req.body;
+        //checking if these ppl are already in any team
+        const alreadyApproved = await BTPTopic.findOne({
+            "requests.teamid": teamId,
+            "requests.isapproved": true
+        });
+        if (alreadyApproved) {
+            return res.status(400).json({
+                message: "A faculty has already approved your request. You cannot send new ones."
+            });
+        }
+
         const facdoc=await BTPTopic.findOne({
             _id: docId
         });

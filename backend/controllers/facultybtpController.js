@@ -151,6 +151,7 @@ export const deleteTopic=async(req, res)=>{
     }
 }
 
+//delete other requests the team sent
 // gotta set the limit on how many requests prof can accept
 export const approveTopicRequest=async(req, res)=>{
     if(!req.body.topicid||!req.body.teamid){
@@ -195,8 +196,26 @@ export const approveTopicRequest=async(req, res)=>{
                 message: "Already approved the request"
             });
         }
-        request.isapproved=false;
+        request.isapproved=true;
         await factopicdoc.save();
+
+        //uk deleting other pending requests from that team to other faculties or other topics
+        const smth=await BTPTopic.updateMany(
+            {
+                $or: [
+                    { "requests.teamid": teamid, faculty: { $ne: fac._id } },
+                    { "requests.teamid": teamid, "requests.topic": { $ne: topicid } }
+                ]
+            },
+            {
+                $pull: {
+                    requests: {
+                        teamid: teamid,
+                        topic: { $ne: topicid } 
+                    }
+                }
+            }
+        );
 
         //create an instance in the BTP projects to avoid massive computational tasks later
         const team=await BTPTeam.findOne({
