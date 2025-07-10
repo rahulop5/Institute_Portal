@@ -25,6 +25,8 @@ app.get("/test", (req, res)=>{
     res.json({
         message: "Hello from venakamaala(backend)"
     });
-})
+});
+
+//add the page not found thing
 
 app.listen(3000);

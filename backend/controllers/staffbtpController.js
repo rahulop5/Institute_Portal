@@ -4,6 +4,7 @@ import csvParser from "csv-parser";
 import UGStudent from "../models/UGStudent.js";
 import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
+import BTP from "../models/BTP.js";
 
 //have to send the additional details to frontend
 export const getStaffBTPDashboard=async (req, res)=>{
@@ -370,13 +371,147 @@ export const endTeamFormationPhase= async(req, res)=>{
 }
 
 export const allocateFacultytoTeam=async(req, res)=>{
+    try{
+        if(!req.body.docid||!req.body.topicid||!req.body.teamid){
+            return res.status(400).json({
+                message: "Invalid details sent"
+            });
+        }
+        const {docid, topicid, teamid}=req.body;
+        const teamcheck=await BTPTopic.findOne({
+            "requests.teamid": teamid,
+            "requests.isapproved": true
+        });
+        if(teamcheck){
+            return res.status(400).json({
+                message: "This team is already assigned to a faculty"
+            })
+        }
+        const topicdoc = await BTPTopic.findById(docid);
+        if (!topicdoc) {
+            return res.status(404).json({ message: "Faculty topic document not found" });
+        }
+        const topic = topicdoc.topics.id(topicid);
+        if (!topic) {
+            return res.status(404).json({ message: "Topic not found under this faculty" });
+        }
+        topicdoc.requests.push({
+            teamid: teamid,
+            topic: topicid,
+            isapproved: true
+        });
+        await topicdoc.save();
+        //saving in actual BTP Project
+        const team = await BTPTeam.findById(teamid);
+        if (!team) {
+            return res.status(404).json({ message: "Team not found" });
+        }
+        const studentIds = [team.bin1?.student, team.bin2?.student, team.bin3?.student].filter(Boolean);
+        const formattedStudents = studentIds.map(id => ({ student: id }));
 
+        const newbtpproj = new BTP({
+            name: topic.topic,
+            studentbatch: team.batch,
+            students: formattedStudents,
+            guide: topicdoc.faculty
+        });
+
+        await newbtpproj.save();
+
+        return res.status(200).json({
+            message: "Faculty successfully allocated to team"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Error allocating faculty"
+        });
+    }
 }
 
-export const deallocateFacultytoTeam=async(req, res)=>{
+export const deallocateFacultyforTeam = async (req, res) => {
+    try {
+        const { teamid } = req.body;
+        if (!teamid) {
+            return res.status(400).json({
+                message: "Team ID is required"
+            });
+        }
+        const topicDoc = await BTPTopic.findOne({
+            "requests.teamid": teamid,
+            "requests.isapproved": true
+        });
+        if (!topicDoc) {
+            return res.status(404).json({
+                message: "This team is not assigned to any faculty"
+            });
+        }
+        const approvedRequest = topicDoc.requests.find(
+            req => req.teamid.toString() === teamid && req.isapproved
+        );
 
-}
+        if (!approvedRequest) {
+            return res.status(404).json({
+                message: "Approved request not found"
+            });
+        }
+        const approvedTopicId = approvedRequest.topic;
+        topicDoc.requests = topicDoc.requests.filter(
+            req => req.teamid.toString() !== teamid
+        );
+        await topicDoc.save();
 
-export const deleteFacultyTopic=async(req, res)=>{
-    
+        const team = await BTPTeam.findById(teamid);
+        if (!team) {
+            return res.status(404).json({ message: "Team not found" });
+        }
+        const studentIds = [team.bin1.student, team.bin2?.student, team.bin3?.student].filter(Boolean);
+
+        await BTP.deleteOne({
+            guide: topicDoc.faculty,
+            students: {
+                $all: studentIds.map(id => ({ student: id }))
+            }
+        });
+
+        return res.status(200).json({
+            message: "Successfully deallocated faculty from team"
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Error deallocating faculty from team"
+        });
+    }
+};
+
+export const endFacultyAssignmentPhase=async(req, res)=>{
+    try{
+        if(!req.query.batch){
+            return res.status(400).json({
+                message: "Incomplete request. No batch mentioned"
+            });
+        }
+        const currphase=await BTPSystemState.findOne({
+            studentbatch: req.query.batch
+        });
+        if(currphase.currentPhase!=="FACULTY_ASSIGNMENT"){
+            return res.status(400).json({
+                message: "Cant access this page now"
+            });
+        }
+        currphase.currentPhase="IN_PROGRESS";
+        await currphase.save();
+        return res.status(201).json({
+            message: `Successfully moved batch ${req.query.batch} to In Progress phase` 
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Error verifying the phase"
+        });
+    }
 }
