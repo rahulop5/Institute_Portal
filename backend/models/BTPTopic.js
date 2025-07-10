@@ -13,7 +13,7 @@ const btptopicschema=new mongoose.Schema({
     requests: [
         {
             _id: false,
-            teamid: {type: mongoose.Schema.Types.ObjectId, required: true},
+            teamid: {type: mongoose.Schema.Types.ObjectId, ref: "BTPTeam", required: true},
             topic: { type: mongoose.Schema.Types.ObjectId, required: true },
             isapproved: {type: Boolean, required: true, default: false}
         }

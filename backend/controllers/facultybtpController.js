@@ -38,10 +38,14 @@ export const getFacultyBTPDashboard=async (req, res)=>{
                 });
                 if(!topics){
                     return res.status(200).json({
+                        phase: currstate.currentPhase,
+                        email: user.email,
                         message: "Please upload your topics for BTP"
                     });
                 }    
                 return res.status(200).json({
+                    phase: currstate.currentPhase,
+                    email: user.email,
                     message: "You have uploaded the topics",
                     topics: topics
                 });

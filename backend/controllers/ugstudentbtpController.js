@@ -289,17 +289,23 @@ export const getBTPDashboard=async (req, res)=>{
                     .populate("bin3.student")
                     if(teams.length===0){
                         return res.status(400).json({
+                            phase: "FA",
+                            email: user.email,
                             message: "Team not found"
                         });
                     }
                     if(teams.length!==1){
                         return res.status(400).json({
+                            phase: "FA",
+                            email: user.email,
                             message: "More than one team found"
                         });
                     }
                     const team=teams[0];
                     if(!team.isteamformed){
                         return res.status(400).json({
+                            phase: "FA",
+                            email: user.email,
                             message: "Not all members have approved the request to join this team"
                         });
                     }
@@ -338,6 +344,8 @@ export const getBTPDashboard=async (req, res)=>{
                     });
 
                     return res.status(200).json({
+                        phase: "FA",
+                        email: user.email,
                         message: "BTP Topics",
                         topics: topics.map(topic => ({
                             _id: topic._id,

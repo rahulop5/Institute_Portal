@@ -3,18 +3,19 @@ import fs from "fs";
 import csvParser from "csv-parser";
 import UGStudent from "../models/UGStudent.js";
 import BTPTeam from "../models/BTPTeam.js";
+import BTPTopic from "../models/BTPTopic.js";
 
 //have to send the additional details to frontend
 export const getStaffBTPDashboard=async (req, res)=>{
     try{
-        if(!req.query.year){
+        if(!req.query.batch){
             return res.status(400).json({
-                message: "No year specified"
+                message: "No batch specified"
             });
         }
-        const year=req.query.year;
+        const batch=req.query.batch;
         const currstate=await BTPSystemState.findOne({
-            studentbatch: year
+            studentbatch: batch
         });
         if(!currstate){
             return res.status(404).json({
@@ -30,9 +31,9 @@ export const getStaffBTPDashboard=async (req, res)=>{
             case "TEAM_FORMATION":
                 try {
                     const teams = await BTPTeam.find()
-                        .populate("bin1.student", "email bin")
-                        .populate("bin2.student", "email bin")
-                        .populate("bin3.student", "email bin");
+                        .populate("bin1.student", "name email bin")
+                        .populate("bin2.student", "name email bin")
+                        .populate("bin3.student", "name email bin");
 
                     const formedteams = teams.filter(team => team.isteamformed === true);
                     const partialteams = teams.filter(team => team.isteamformed === false);
@@ -50,9 +51,9 @@ export const getStaffBTPDashboard=async (req, res)=>{
                 
                     const formatTeam = (team) => {
                         return {
-                            bin1: team.bin1?.student ? { email: team.bin1.student.email, bin: team.bin1.student.bin } : null,
-                            bin2: team.bin2?.student ? { email: team.bin2.student.email, bin: team.bin2.student.bin } : null,
-                            bin3: team.bin3?.student ? { email: team.bin3.student.email, bin: team.bin3.student.bin } : null,
+                            bin1: team.bin1?.student ? { email: team.bin1.student.email, bin: team.bin1.student.bin, name: team.bin1.student.name } : null,
+                            bin2: team.bin2?.student ? { email: team.bin2.student.email, bin: team.bin2.student.bin, name: team.bin2.student.name } : null,
+                            bin3: team.bin3?.student ? { email: team.bin3.student.email, bin: team.bin3.student.bin, name: team.bin3.student.name } : null,
                         };
                     };
                     const response = {
@@ -70,8 +71,52 @@ export const getStaffBTPDashboard=async (req, res)=>{
                 }
 
             case "FACULTY_ASSIGNMENT":
+                try{
+                    //can possibly uk attach the approved requests to topics but we can do it in frontend too
+                    const topics=await BTPTopic.find()
+                    .populate("faculty")
+                    .populate("requests.teamid")
 
-                break;
+                    const approvedTeamIds = [];
+                    
+                    //deleting teh pending requests and addin assgined teams
+                    topics.forEach((topic)=>{
+                        topic.requests=topic.requests.filter((request)=>{
+                            return request.isapproved;
+                        });
+                        topic.requests.forEach(request => {
+                            approvedTeamIds.push(request.teamid._id.toString());
+                        });
+                    });
+
+                    const teams = await BTPTeam.find()
+                        .populate("bin1.student", "name email bin")
+                        .populate("bin2.student", "name email bin")
+                        .populate("bin3.student", "name email bin");
+                    
+                    //separating the teams 
+                    const assignedTeams = [];
+                    const unassignedTeams = [];
+
+                    teams.forEach(team => {
+                        if (approvedTeamIds.includes(team._id.toString())) {
+                            assignedTeams.push(team);
+                        } else {
+                            unassignedTeams.push(team);
+                        }
+                    });                        
+                    
+                    return res.status(200).json({
+                        phase: "FA",
+                        topics: topics,
+                        assignedTeams: assignedTeams,
+                        unassignedTeams: unassignedTeams
+                    });
+                }
+                catch(err){
+                    console.error(err);
+                    return res.status(500).json({ message: "Error loading dashboard" });
+                }
 
             case "IN_PROGRESS":
 
@@ -123,14 +168,14 @@ export const verifyPhase=({phase})=>{
 
 //basically this function ends the not_started phase
 export const uploadCSVSheet=async (req, res)=>{
-    if(!req.query.year){
+    if(!req.query.batch){
         return res.status(400).json({
-            message: "No year specified"
+            message: "No batch specified"
         });
     }
-    const year=req.query.year;
+    const batch=req.query.batch;
     const currstate=await BTPSystemState.findOne({
-        studentbatch: year
+        studentbatch: batch
     });
     if(!currstate){
         return res.status(404).json({
@@ -322,4 +367,16 @@ export const endTeamFormationPhase= async(req, res)=>{
             message: "Error verifying the phase"
         });
     }
+}
+
+export const allocateFacultytoTeam=async(req, res)=>{
+
+}
+
+export const deallocateFacultytoTeam=async(req, res)=>{
+
+}
+
+export const deleteFacultyTopic=async(req, res)=>{
+    
 }
