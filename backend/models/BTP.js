@@ -18,9 +18,10 @@ const btpschema = new mongoose.Schema({
   updates: [
     {
       update: { type: String, required: true },
+      //guide gicves the remark
       remark: { type: String, required: false },
       time: { type: Date, required: true },
-      updatefor: { type: Number, required: true }    
+      //can remove this but let it be for now
     }
   ]
 });

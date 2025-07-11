@@ -1,6 +1,7 @@
 import express from "express";
 import { authStudentMiddleware } from "../controllers/authController.js";
 import {
+    addUpdatetoProject,
     approveTeamRequest,
     createTeam,
     facultyAssignmentRequest,
@@ -16,5 +17,6 @@ router.post("/createteam", authStudentMiddleware, verifyBinAndPhase({bin: [1], p
 router.post("/approverequest", authStudentMiddleware, verifyBinAndPhase({bin: [2, 3], phase: "TEAM_FORMATION"}), approveTeamRequest);
 router.delete("/rejectrequest", authStudentMiddleware, verifyBinAndPhase({bin: [2, 3], phase: "TEAM_FORMATION"}), rejectTeamRequest);
 router.post("/requestfaculty", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "FACULTY_ASSIGNMENT"}), facultyAssignmentRequest);
+router.post("/addupdate", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "IN_PROGRESS"}), addUpdatetoProject)
 
 export default router;

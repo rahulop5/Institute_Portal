@@ -13,7 +13,7 @@ const btpeschema=new mongoose.Schema({
     marksgiven: [
         {
             student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudent", required: true},
-            guidemarks: {type: Number, required: false},
+            guidemarks: {type: Number, required: true},
             panelmarks: {type: Number, required: false},
             //totalgrade is decided by dean
             totalgrade: {type: String,  required: false}

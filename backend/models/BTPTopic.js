@@ -7,6 +7,7 @@ const btptopicschema=new mongoose.Schema({
         {
             _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
             topic: {type: String, required: true},
+            about: {type: String, required: true},
             dept: {type: String, required: true, enum: ["CSE", "ECE", "MDS"]}
         }
     ],

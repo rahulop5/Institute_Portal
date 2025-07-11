@@ -411,6 +411,7 @@ export const allocateFacultytoTeam=async(req, res)=>{
 
         const newbtpproj = new BTP({
             name: topic.topic,
+            about: topic.about,
             studentbatch: team.batch,
             students: formattedStudents,
             guide: topicdoc.faculty

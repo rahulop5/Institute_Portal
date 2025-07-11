@@ -5,7 +5,7 @@ import {
     addTopic,
     deleteTopic,
     approveTopicRequest,
-    evaluateProjectGuide,
+    evaluateProjectasGuide,
     rejectTopicRequest
 } from "../controllers/facultybtpController.js";
 
@@ -17,6 +17,6 @@ router.post("/releasetopics", authFacultyMiddleware, addTopic);
 router.delete("/deletetopic", authFacultyMiddleware, deleteTopic);
 router.post("/approvetopicrequest", authFacultyMiddleware, approveTopicRequest);
 router.delete("/rejecttopicreq", authFacultyMiddleware, rejectTopicRequest);
-router.post("/evaluateguide", authFacultyMiddleware, evaluateProjectGuide);
+router.post("/evaluateguide", authFacultyMiddleware, evaluateProjectasGuide);
 
 export default router;

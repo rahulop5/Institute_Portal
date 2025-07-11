@@ -374,7 +374,9 @@ export const getBTPDashboard=async (req, res)=>{
                 try{
                     const projectarr=await BTP.find({
                         "students.student": user._id
-                    });
+                    })
+                    .populate("students.student")
+                    .populate("guide")
                     if(projectarr.length!==1){
                         return res.status(400).json({
                             message: "Either no project found or too many projects found"
@@ -383,8 +385,58 @@ export const getBTPDashboard=async (req, res)=>{
                     const project=projectarr[0];
                     const evaluations=await BTPEvaluation.find({
                         projectRef: project._id
+                    }).sort({time: 1});
+
+                    const updates = project.updates.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+                    const formattedEvaluations = [];
+                    let remainingUpdates = [...updates]; // mutable copy
+
+                    for (let i = 0; i < evaluations.length; i++) {
+                        const currEval = evaluations[i];
+                        const nextEvalTime = evaluations[i + 1]?.time || null;
+                        
+                        // Get updates before the *next* evaluation (or after current if last)
+                        const evalUpdates = remainingUpdates.filter(u => {
+                            return u.time < (nextEvalTime || new Date(8640000000000000)); // max date if last
+                        });
+
+                        // Remove matched updates from remainingUpdates
+                        remainingUpdates = remainingUpdates.filter(u => !evalUpdates.includes(u));
+
+                        formattedEvaluations.push({
+                            _id: currEval._id,
+                            time: currEval.time,
+                            remark: currEval.remark,
+                            resources: currEval.resources,
+                            updates: evalUpdates,
+                            canstudentsee: currEval.canstudentsee,
+                            marksgiven: currEval.canstudentsee
+                            ? currEval.marksgiven.filter(m => m.student.toString() === user._id.toString())
+                            : null
+                        });
+                    }
+                
+                    return res.status(200).json({
+                        message: "Student Progress Dashboard",
+                        project: {
+                            name: project.name,
+                            about: project.about,
+                            studentbatch: project.studentbatch,
+                            guide: {
+                                name: project.guide.name,
+                                email: project.guide.email
+                            },
+                            team: project.students.map(s => ({
+                                _id: s.student._id,
+                                name: s.student.name,
+                                email: s.student.email
+                            })),
+                            evaluations: formattedEvaluations,
+                            latestUpdates: remainingUpdates // updates after last evaluation
+                        }
                     });
-                    console.log(evaluations);
+                    
                 }
                 catch(err){
                     console.log(err);
@@ -392,9 +444,6 @@ export const getBTPDashboard=async (req, res)=>{
                         message: "Error loading the BTP dashboard in Progress phase"
                     });
                 }
-
-                //remove this after completing the try block fkin ruining the aesthetics
-                break;
 
             case "COMPLETED":
                 
@@ -755,3 +804,36 @@ export const facultyAssignmentRequest = async (req, res)=>{
     }
 }
 
+export const addUpdatetoProject=async(req, res)=>{
+    try{
+        if(!req.body.update){
+            return res.status(400).json({
+                message: "Incomplete Request"
+            });
+        }
+        const {update}=req.body;
+        const project=await BTP.findOne({
+            "students.student": req.user._id,
+        });
+        if (!project) {
+            return res.status(404).json({
+                message: "No project found for this student"
+            });
+        }
+        project.updates.push({
+            update,
+            time: new Date()
+        });
+        await project.save();
+
+        return res.status(200).json({
+            message: "Update added successfully"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Error adding update"
+        });
+    }
+}

@@ -3,6 +3,7 @@ import BTPSystemState from "../models/BTPSystemState.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPTeam from "../models/BTPTeam.js";
+import BTPEvaluation from "../models/BTPEvaluation.js";
 
 //have to send the additional details to frontend
 //remove err messages from catch blocks
@@ -50,6 +51,14 @@ export const getFacultyBTPDashboard=async (req, res)=>{
                     topics: topics
                 });
             case "IN_PROGRESS": 
+                //can do this later
+                const projects=await BTP.find({
+                    guide: user._id
+                })
+                .populate("students.student")
+                .populate("guide")
+
+                console.log(projects[0]);
 
                 break;
             
@@ -80,12 +89,12 @@ export const addTopic=async (req, res)=>{
             message: "Error finding the faculty"
         });
     }
-    if(!req.body.topic||!req.body.dept){
+    if(!req.body.topic||!req.body.dept||!req.body.about){
         return res.status(400).json({
             message: "No topic found"
         });
     }
-    const {topic, dept}=req.body;
+    const {topic, dept, about}=req.body;
     if(!["CSE", "ECE", "MDS"].includes(dept)){
         return res.status(400).json({
             message: "Invalid Department"
@@ -96,6 +105,7 @@ export const addTopic=async (req, res)=>{
         if(existing){
             existing.topics.push({
                 topic: topic,
+                about: about,
                 dept: dept
             });
             await existing.save();
@@ -105,6 +115,7 @@ export const addTopic=async (req, res)=>{
                 faculty: user._id,
                 topics: [{
                     topic: topic,
+                    about: about,
                     dept: dept
                 }]
             });
@@ -234,6 +245,7 @@ export const approveTopicRequest=async(req, res)=>{
         //add the other stuff later like give them option type shi after this phase
         const newbtpproj=new BTP({
             name: topic.topic,
+            about: topic.about,
             studentbatch: team.batch,
             students: formattedStudents,
             guide: fac._id
@@ -300,6 +312,81 @@ export const rejectTopicRequest=async(req, res)=>{
     }
 }
 
-export const evaluateProjectGuide=async(req, res)=>{
-    
+//IMP: for now we r letting the faculty do an evaluation whenever they now
+//itll be changed later...
+
+export const evaluateProjectasGuide=async(req, res)=>{
+    try{
+        if(!req.body.projid||!req.body.remark||!req.body.marks){
+            return res.status(400).json({
+                message: "Invalid Request"
+            });
+        }
+        const {projid, remark, marks}=req.body;
+        if (!Array.isArray(marks)) {
+            return res.status(400).json({
+                message: "Invalid request format"
+            });
+        }
+        const project=await BTP.findOne({
+            _id: projid
+        })
+        .populate("guide");
+        if(!project){
+            return res.status(404).json({
+                message: "No project found"
+            });
+        }
+        if(project.guide.email!==req.user.email){
+            return res.status(403).json({
+                message: "You dont have access to do this"
+            });
+        }
+
+        //checkin if student ids match
+        const expectedStudentIds = project.students.map(s => s.student.toString());
+        const sentStudentIds = marks.map(m => m.student.toString());
+
+        if (sentStudentIds.length !== expectedStudentIds.length) {
+            return res.status(400).json({
+                message: "Mismatch in number of students"
+            });
+        }
+
+        const uniqueSentIds = new Set(sentStudentIds);
+        if (uniqueSentIds.size !== expectedStudentIds.length) {
+            return res.status(400).json({
+                message: "Duplicate student entries in marks"
+            });
+        }
+
+        const missing = expectedStudentIds.filter(id => !uniqueSentIds.has(id));
+        if (missing.length > 0) {
+            return res.status(400).json({
+                message: "One or more student IDs do not match the project team"
+            });
+        }
+
+        //resources ignored for now ill do later
+        const newEval = new BTPEvaluation({
+            projectRef: projid,
+            time: new Date(),                  
+            canstudentsee: false,             
+            remark,
+            // this is the format: [{ student, guidemarks }]
+            marksgiven: marks                 
+        });
+
+        await newEval.save();
+
+        return res.status(201).json({
+            message: "Evaluation successfully submitted"
+        });
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Error evaluating the project"
+        });
+    }
 }
