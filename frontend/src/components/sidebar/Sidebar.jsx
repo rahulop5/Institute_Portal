@@ -1,5 +1,18 @@
 import { useState, useRef } from "react";
 
+// Image imports
+import peopleIcon from "../../assets/people.png";
+import settingsIcon from "../../assets/settings.svg";
+import studentIcon from "../../assets/student.svg";
+import staffIcon from "../../assets/staff.svg";
+import facultyIcon from "../../assets/facukty.svg";
+import honorsIcon from "../../assets/person-rays.svg";
+import btpIcon from "../../assets/BTP.svg";
+import feedbackIcon from "../../assets/feedback-cycle-loop 1.svg";
+import academicsIcon from "../../assets/book-open-cover 1.svg";
+import homeIcon from "../../assets/home 2.svg";
+import arrow from "../../assets/arrow.svg";
+
 export default function Sidebar() {
   const [isSidebarClosed, setIsSidebarClosed] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -12,12 +25,11 @@ export default function Sidebar() {
 
   const toggleSubMenu = (index) => {
     if (openDropdown === index) {
-      setOpenDropdown(null); // Toggle off if already open
+      setOpenDropdown(null);
     } else {
-      setOpenDropdown(index); // Open selected dropdown
+      setOpenDropdown(index);
     }
 
-    // If sidebar is closed, open it
     if (isSidebarClosed) {
       setIsSidebarClosed(false);
     }
@@ -43,90 +55,84 @@ export default function Sidebar() {
 
         <li className="active">
           <a href="index.html">
-            {/* Home Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="M240-200h120v-200q0-17 11.5-28.5T400-440h160q17 0 28.5 11.5T600-400v200h120v-360L480-740 240-560v360Z" />
-            </svg> */}
-            
+            <img src={homeIcon} alt="People Icon" height="24" width="24" />
             <span>Home</span>
           </a>
         </li>
 
-        <li>
-          <a href="dashboard.html">
-            {/* Dashboard Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="M520-640v-160q0-17 11.5-28.5T560-840h240q17 0 28.5 11.5T840-800v160q0 17-11.5 28.5T800-600H560q-17 0-28.5-11.5T520-640Z" />
-            </svg> */}
-            <span>Dashboard</span>
-          </a>
-        </li>
-
+        {/* Academics Menu */}
         <li>
           <button
             onClick={() => toggleSubMenu(0)}
             className={`dropdown-btn ${openDropdown === 0 ? "rotate" : ""}`}
-          >
-            {/* Create Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
-            <span>Create</span>
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
+          > 
+          <img src={academicsIcon} alt="People Icon" height="24" width="24" />
+            <span>Academics</span>
+             <img src={arrow} alt="Honors" height="20" width="20" />
+              
           </button>
           <ul className={`sub-menu ${openDropdown === 0 ? "show" : ""}`}>
             <div>
-              <li><a href="#">Folder</a></li>
-              <li><a href="#">Document</a></li>
-              <li><a href="#">Project</a></li>
+              <li>
+                <a href="#">
+                  <img src={honorsIcon} alt="Honors" height="20" width="20" />
+                  <span>Honors</span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <img src={btpIcon} alt="BTP" height="20" width="20" />
+                  <span>BTP</span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <img src={feedbackIcon} alt="Feedback Form" height="20" width="20" />
+                  <span>Feedback Form</span>
+                </a>
+              </li>
             </div>
           </ul>
         </li>
 
+        {/* People Menu */}
         <li>
           <button
             onClick={() => toggleSubMenu(1)}
             className={`dropdown-btn ${openDropdown === 1 ? "rotate" : ""}`}
           >
-            {/* Todo Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
-            <span>Todo-Lists</span>
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
+            <img src={peopleIcon} alt="People Icon" height="24" width="24" />
+            <span>People</span>
           </button>
           <ul className={`sub-menu ${openDropdown === 1 ? "show" : ""}`}>
             <div>
-              <li><a href="#">Work</a></li>
-              <li><a href="#">Private</a></li>
-              <li><a href="#">Coding</a></li>
-              <li><a href="#">Gardening</a></li>
-              <li><a href="#">School</a></li>
+              <li>
+                <a href="#">
+                  <img src={studentIcon} alt="Student" height="20" width="20" />
+                  <span>Student</span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <img src={staffIcon} alt="Staff" height="20" width="20" />
+                  <span>Staff</span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <img src={facultyIcon} alt="Faculty" height="20" width="20" />
+                  <span>Faculty</span>
+                </a>
+              </li>
             </div>
           </ul>
         </li>
 
-        <li>
-          <a href="calendar.html">
-            {/* Calendar Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
-            <span>Calendar</span>
-          </a>
-        </li>
-
+        {/* Settings */}
         <li>
           <a href="profile.html">
-            {/* Profile Icon */}
-            {/* <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-              <path d="..." />
-            </svg> */}
-            <span>Profile</span>
+            <img src={settingsIcon} alt="Settings Icon" height="24" width="24" />
+            <span>Settings</span>
           </a>
         </li>
       </ul>
