@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import Sidebar from "./components/sidebar/Sidebar"
 import Homepage from "./components/Homepage";
 import RootLayout from "./components/Root";
-import BTPTeamselection_bin1 from "./components/Academics/btp/Teamselection_bin1";
+import BTPTeamselection_bin1 from "./components/academics/btp/Teamselection_bin1";
 import Auth from "./components/AuthForm";
 import Authentication, { action as authAction } from "./pages/Authentication";
 import ErrorPage from "./pages/Error";
