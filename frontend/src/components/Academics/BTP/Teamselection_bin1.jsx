@@ -26,28 +26,44 @@ export default function BTPTeamselection_bin1(){
         <div className='student-list'>
             <div className="student-list-scroll">
         {[
-    { name: "Abhiram Reddi", roll: "S20230010203", section: "1" },
-    { name: "Sahal Ansar Theparambil", roll: "S20230010210", section: "3" },
-    { name: "Venkat Rahul Vempadapu", roll: "S20230010257", section: "2" },
-    { name: "Shrushant Reddy", roll: "S20230010208", section: "3" },
-    { name: "Pavan Karthik", roll: "S20230010188", section: "1" },
-    { name: "Balaji Sai Surya", roll: "S20230010209", section: "3" },
-    { name: "Abraham Scariya", roll: "S20230020230", section: "1" },
+    { name: "Abhiram Reddi", roll: "S20230010203", email: "abhiram.r23@iiits.in" },
+    { name: "Sahal Ansar Theparambil", roll: "S20230010210", email: "sahal.t23@iiits.in" },
+    { name: "Venkat Rahul Vempadapu", roll: "S20230010257", email: "rahul.v23@iiits.in" },
+    { name: "Shrushant Reddy", roll: "S20230010208", email: "srushanth.s23@iiits.in" },
+    { name: "Pavan Karthik", roll: "S20230010188", email: "karthik.d23@iiits.in" },
+    { name: "Balaji Sai Surya", roll: "S20230010209", email: "balajisai.s23@iiits.in" },
+    { name: "Abraham Scariya", roll: "S20230020230", email: "abraham.s23@iiits.in" },
     // Add more dummy data if you want to test scrolling
   ].map((student, index) => (
     <div className="student-row" key={index}>
       <div className="student-icon"><img src={studentIcon} alt="" /></div>
+        <div className="student-details">
       <div className="student-info">
         <div className="student-name">{student.name}</div>
         <div className="student-meta">
-          <span>{student.roll}</span> | <span>Section {student.section}</span>
+          <span>{student.email}</span>
         </div>
       </div>
+      <div>
+        <span className="student-roll">{student.roll}</span>
+      </div>
+
+        <div className="student-actions">
+        <button className="select-button">Select</button>
+    </div>
+    </div>
     </div>
   ))}
 </div>
         </div>
 
+
+
+        {/* //Starting with the button and next components */}
+
+        <div className='send-request '>
+            <button className="send-request-button active">Send Request</button>
+        </div>
         </div>
         </>
     )

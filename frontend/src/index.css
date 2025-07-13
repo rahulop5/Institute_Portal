@@ -456,7 +456,7 @@ team-selection-buttons {
 }
 
 .student-list-scroll {
-  max-height: 250px; /* Controls the scroll area height */
+  max-height: 300px; /* Controls the scroll area height */
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -479,6 +479,32 @@ team-selection-buttons {
   border-bottom: 1px solid #eee;
 }
 
+.student-roll {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.student-actions {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+.select-button {
+  padding: 6px 12px;
+  background-color: #F8F6FF;
+  color: rgb(0, 0, 0);
+  border: rgb(211, 211, 205) 1px solid;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.select-button:hover {
+  background-color: #e0dff2; /* Slightly darker on hover */
+  transition: background-color 0.3s ease;
+}
 .student-row:last-child {
   border-bottom: none;
 }
@@ -496,10 +522,12 @@ team-selection-buttons {
 }
 
 .student-info {
+  flex: 2;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  min-width: 0; /* allow text to truncate instead of overflow */
 }
-
 .student-name {
   font-weight: bold;
   font-size: 1rem;
@@ -509,3 +537,62 @@ team-selection-buttons {
   font-size: 0.85rem;
   color: #555;
 }
+
+.student-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;  /* Distribute space evenly */
+  width: 100%;
+  padding-left: 12px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.send-request {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end; /* Aligns it to the right */
+}
+
+
+.send-request-button {
+  background-color: #ffffff; /* light purple background */
+  color: #9a9a9a;            /* dark purple text */
+  padding: 10px 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 999px;       /* pill shape */
+  box-shadow: 0 0 10px rgba(214, 180, 252, 0.6); /* glowing effect */
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.send-request-button.active {
+  background-color: #d6b4fc; /* light purple background */
+  color: #3c1c3c;            /* dark purple text */
+  padding: 10px 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 999px;       /* pill shape */
+  box-shadow: 0 0 10px rgba(214, 180, 252, 0.6); /* glowing effect */
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.send-request-button.active:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(214, 180, 252, 0.9);
+}
+
