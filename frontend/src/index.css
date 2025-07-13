@@ -13,7 +13,6 @@
 }
 html{
   font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.5rem;
 }
 body{
   min-height: 100vh;
@@ -43,7 +42,7 @@ body{
   width: 250px;
   padding: 5px 1em;
   background-color: #FFFFFF;
-  margin-top: 10vh;
+  margin-top: 82px;
 
   position: sticky;
   top: 0;
@@ -274,7 +273,6 @@ main p{
   padding: 0.5em 1em;
   width: 450px;
   height: 40px;
-  box-shadow: #1a1a1a 0px 1px 1px -1px, #1a1a1a 0px 1px 1px 0px, #1a1a1a 0px 1px 1px 0px;
 }
 
 .search-input {
@@ -282,7 +280,7 @@ main p{
   border: none;
   background: transparent;
   outline: none;
-  font-size: 14px;
+  font-size: 18px;
   color: #333;
 }
 
