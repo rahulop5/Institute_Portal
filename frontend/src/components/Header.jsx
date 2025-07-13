@@ -1,22 +1,27 @@
+import CollegeIcon from "./../assets/college_logo.svg";
+import SearchIcon from "./../assets/search.svg";
+import notificationIcon from "./../assets/notification.png";
+import profileIcon from "./../assets/profile.svg";
+
 export default function Header(){
   return(
     <>
     <div className="header">
       <div className="logo">
-      <img src="/icons/college_logo.svg" alt="College logo"/>
+      <img src={CollegeIcon} alt="College logo"/>
     <div>
       <h3>Indian Institute of Information <br/>Technology, Sri City <br />भारतीय सूचना प्रौद्योगिकी संस्थान श्री सिटी</h3>
     </div>
       </div> 
        <div className="search-container">
       <input type="text" placeholder="Search" className="search-input" />
-       <img src="/icons/search.svg" alt="Search" className="search-icon" />
+       <img src={SearchIcon} alt="Search" className="search-icon" />
         </div>
 
 
      <div className="header-right">
   <button className="icon-button">
-    <img src="icons/notification.png" alt="notifications" />
+    <img src={notificationIcon} alt="notifications" />
   </button>
 
   <div className="greeting">
@@ -24,7 +29,7 @@ export default function Header(){
   </div>
 
   <button className="icon-button profile-button">
-    <img src="icons/profile.svg" alt="Profile" />
+    <img src={profileIcon} alt="Profile" />
   </button>
 </div>
 

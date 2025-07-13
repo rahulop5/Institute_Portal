@@ -24,7 +24,7 @@ body{
 
 .layout-grid {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 300px 1fr;
   grid-template-rows: auto 1fr;
   min-height: 100vh;
 }
@@ -39,7 +39,7 @@ body{
 #sidebar{
   box-sizing: border-box;
   height: 100vh;
-  width: 250px;
+  width: 300px;
   padding: 5px 1em;
   background-color: #FFFFFF;
   margin-top: 82px;
@@ -241,14 +241,14 @@ main p{
   position: fixed;           /* Add this line */
   top: 0;                    /* Already there */
   left: 0;                   /* Add this to fully anchor to top left */
-  width: 100%;               /* Use 100% instead of 100vw for safer layout */
+  width: 100%;
+  height: 60px;               /* Use 100% instead of 100vw for safer layout */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1em;
   background-color: #FFFFFF;
-  color: rgb(0, 0, 0);
-  height: 50px;              /* Use fixed height in px instead of 5vh */
+  color: rgb(0, 0, 0);          /* Use fixed height in px instead of 5vh */
   z-index: 1000;             /* Ensure it stays above */
   border-radius: 0;          /* Optional: you had 10px top border-radius */
 }
@@ -273,8 +273,14 @@ main p{
   padding: 0.5em 1em;
   width: 450px;
   height: 40px;
+
+
 }
 
+.search-container:hover {
+   box-shadow: 2px 2px 2px 2px #ededed;
+  transition: box-shadow 0.2s ease-in-out;
+}
 .search-input {
   flex: 1;
   border: none;
@@ -349,4 +355,157 @@ main p{
   border-radius: 50%;
   object-fit: cover;
   margin-right: 50px;
+}
+
+
+
+
+
+
+
+
+
+
+.team-selection {
+  /* margin-left: 200px;   Match sidebar width */
+  margin-top: 30px;     /*Match header height */
+  /* padding-left: 3rem; */
+  padding-top: 1rem;
+  min-height: calc(100vh - 70px);
+  background-color: #f5f5ff; /* Optional: slight background */
+  color: #000
+}
+
+
+.team-selection-content{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-top: 2rem;
+
+}
+
+.team-selection-buttons{
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+  
+}
+
+.team-selection-button-group {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  height: 3vh;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+team-selection-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.team-selection-buttons h2 {
+  font-size: 30px;
+  font-weight: 400;
+  /* margin-top: 0.5rem; */
+}
+
+.team-selection-button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.team-selection-button-group button {
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 9999px;
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-selection-button-group button:hover {
+  background-color: #f1f1f1;
+}
+
+.team-selection-button-group button.active {
+  background-color: #e6e6e6;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#Teamselectionsearchbar{
+  background-color: white;
+}
+
+.student-list {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.student-list-scroll {
+  max-height: 250px; /* Controls the scroll area height */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Optional scrollbar styling */
+.student-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.student-list-scroll::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* Each student row */
+.student-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.student-row:last-child {
+  border-bottom: none;
+}
+
+/* Icon and info styling */
+.student-icon {
+  font-size: 24px;
+}
+
+.student-icon img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.student-meta {
+  font-size: 0.85rem;
+  color: #555;
 }
