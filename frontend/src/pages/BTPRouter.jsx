@@ -1,9 +1,8 @@
 import { useLoaderData } from "react-router";
 import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
-import TFBin1 from "../components/academics/btp/TFBin1";
-import TFBin23 from "../components/academics/btp/TFBin23";
 import BTPTeamselection_bin1 from "../components/academics/btp/Teamselection_bin1";
+import BTPTeamselection_bin23 from "../components/academics/btp/Teamselection_bin23";
 
 export default function BTPRouter(){
     const data=useLoaderData();
@@ -18,7 +17,7 @@ export default function BTPRouter(){
                     return <BTPTeamselection_bin1 data={data} />
                 case 2:
                 case 3: 
-                    return <TFBin23 data={data} />
+                    return <BTPTeamselection_bin23 data={data} />
                 default:
                     return <ErrorPage />
             }

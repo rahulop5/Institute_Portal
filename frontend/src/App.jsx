@@ -3,7 +3,7 @@ import Homepage from "./pages/Homepage";
 import RootLayout from "./pages/Root";
 import Authentication, { action as authAction } from "./pages/Authentication";
 import ErrorPage from "./pages/Error";
-import BTPTeamselection_bin23 from "./components/Academics/BTP/Teamselection_bin23";
+import BTPTeamselection_bin23, { action as acceptTRAction } from "./components/academics/BTP/Teamselection_bin23";
 import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
@@ -28,7 +28,8 @@ const router=createBrowserRouter([
             path: "btp", element: <BTPRouter />,
             loader: btpLoader,
             children: [
-              {path: "sendteamrequest", action: sendTRAction, element: <></>}
+              {path: "sendteamrequest", action: sendTRAction, element: <></>},
+              {path: "acceptteamrequest", action: acceptTRAction, element: <></>}
             ]
           }
         ]

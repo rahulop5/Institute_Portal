@@ -7,33 +7,6 @@ import TFBin1TeamSelection from './TFBin1TeamSelection';
 import TFTeamthereBin1 from './TFTeamthereBin1';
 // import classes from "../../styles/TeamSelectionbin1.module.css"
 
-const temp2={
-    "name": "Vihaan Isha",
-    "email": "vihaan.isha1@example.com",
-    "phase": "TF",
-    "inteam": 1,
-    "bin": 1,
-    "message": "Full team",
-    "team": {
-        "_id": "686ea21605c14e3f3d14957d",
-        "bin1": {
-            "email": "vihaan.isha1@example.com",
-            "name": "Vihaan Isha",
-            "approved": true
-        },
-        "bin2": {
-            "email": "vivaan.sneha21@example.com",
-            "name": "Vivaan Sneha",
-            "approved": true
-        },
-        "bin3": {
-            "email": "diya.sai38@example.com",
-            "name": "Diya Sai",
-            "approved": true
-        }
-    }
-}
-
 export default function BTPTeamselection_bin1({data}) {
   const [selectedBin, setSelectedBin] = useState(2); 
   const [selectedStudents, setSelectedStudents] = useState({});
@@ -125,7 +98,6 @@ export async function action({request}){
   }
 
   const result = await response.json();
-  console.log(result);
 
   return redirect("/academics/btp");
 }

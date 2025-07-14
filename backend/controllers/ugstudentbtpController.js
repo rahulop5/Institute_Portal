@@ -186,6 +186,7 @@ export const getBTPDashboard=async (req, res)=>{
                             if(teams.length===0){
                                 return res.status(200).json({
                                     email: user.email,
+                                    inteam: 0,
                                     phase: "TF",
                                     bin: user.bin,
                                     message: "You are currently not in any full or partial team. Form a team by finding a bin1 student"
@@ -215,6 +216,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 if(team.isteamformed){
                                     return res.status(200).json({
                                         email: user.email,
+                                        inteam: 1,
                                         phase: "TF",
                                         bin: user.bin,
                                         message: "Full team",
@@ -224,6 +226,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 return res.status(200).json({
                                     email: user.email,
                                     phase: "TF",
+                                    inteam: 1,
                                     bin: user.bin,
                                     message: "Partial Team but self approved",
                                     team: simplifiedTeam
@@ -254,6 +257,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 });
                                 return res.status(200).json({
                                     email: user.email,
+                                    inteam: 0,
                                     phase: "TF",
                                     bin: user.bin,
                                     message: "Partial teams but not self approved",
