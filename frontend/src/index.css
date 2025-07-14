@@ -53,6 +53,10 @@ body{
   text-wrap: nowrap;
 }
 
+#sidebar>ul>li:last-child{
+  margin-top: auto;
+}
+
 #sidebar.close {
   padding: 5px;
   width: 60px;
@@ -121,8 +125,13 @@ body{
   flex-grow: 1;
 }
 
+#sidebar form:hover{
+  background-color: rgb(255, 239, 239);
+  color: red;
+}
+
 /* Hover Effects */
-#sidebar a:hover, #sidebar form:hover,
+#sidebar a:hover,
 #sidebar .dropdown-btn:hover {
   background-color: var(--hover-clr);
 }
@@ -640,6 +649,8 @@ team-selection-buttons {
   transform: scale(1.03);
   box-shadow: 0 0 12px rgba(214, 180, 252, 0.9);
 }
+
+
 
 
 .added-students {

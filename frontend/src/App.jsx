@@ -7,6 +7,7 @@ import BTPTeamselection_bin23 from "./components/Academics/BTP/Teamselection_bin
 import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
+import BTPTeamselection_bin1 from "./components/academics/btp/Teamselection_bin1";
 
 const router=createBrowserRouter([
   {
@@ -35,7 +36,9 @@ const router=createBrowserRouter([
         element: <Authentication />,
         action: authAction
       },
-      { path: "/logout", action: logoutAction }
+      { path: "/logout", action: logoutAction },
+      { path: "/temp", loader: checkAuthLoader, element: <BTPTeamselection_bin23 /> },
+      { path: "/temp2", loader: checkAuthLoader, element: <BTPTeamselection_bin1 /> }
     ]
   },
 ]);
