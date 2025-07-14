@@ -1,36 +1,46 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
-import Sidebar from "./components/sidebar/Sidebar"
-import Homepage from "./components/Homepage";
-import RootLayout from "./components/Root";
-import BTPTeamselection_bin1 from "./components/academics/btp/Teamselection_bin1";
-import Auth from "./components/AuthForm";
+import Homepage from "./pages/Homepage";
+import RootLayout from "./pages/Root";
 import Authentication, { action as authAction } from "./pages/Authentication";
 import ErrorPage from "./pages/Error";
 import BTPTeamselection_bin23 from "./components/Academics/BTP/Teamselection_bin23";
+import { checkAuthLoader, tokenLoader } from "./util/auth";
+import Temp from "./pages/Lemp";
+import { action as logoutAction } from "./pages/Logout";
 
 const router=createBrowserRouter([
   {
     path: "/",
     errorElement: <ErrorPage />,
     element: <RootLayout />,
+    id: "root",
+    loader: tokenLoader,
     children: [
-      { index: true, element: <Homepage /> },
-      //remove or edit this and put it in pages
-      { path: "temp", element: <BTPTeamselection_bin1 /> }
+      { index: true, element: <Homepage />, loader: checkAuthLoader },
+      { path: "academics",
+        loader: checkAuthLoader,
+        children: [
+          {path: ":smth", element: <Temp />}
+        ]
+      },
+      { path: "people",
+        loader: checkAuthLoader,
+        children: [
+          {path: ":smth", element: <Temp />}
+        ]
+      },
+      { path: "settings", element: <Temp />, loader: checkAuthLoader },
+      {
+        path: "/auth",
+        element: <Authentication />,
+        action: authAction
+      },
+      { path: "/logout", action: logoutAction }
     ]
   },
-  //will have to deal with this based on the login page design
-  {
-    path: "/auth",
-    errorElement: <ErrorPage />,
-    element: <Authentication />,
-    action: authAction
-  }
 ]);
 
 function App() {
-
-  
   return (
     <RouterProvider router={router} />
   )

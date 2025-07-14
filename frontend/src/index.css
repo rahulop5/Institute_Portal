@@ -11,6 +11,7 @@
   margin: 0;
   padding: 0;
 }
+
 html{
   font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -36,14 +37,14 @@ body{
   flex-direction: column;
 }
 
-#sidebar{
+/* Sidebar Container */
+#sidebar {
   box-sizing: border-box;
   height: 100vh;
   width: 300px;
-  padding: 5px 1em;
-  background-color: #FFFFFF;
-  margin-top: 82px;
-
+  padding: 15px 1em;
+  background-color: #ffffff;
+  margin-top: 92px;
   position: sticky;
   top: 0;
   align-self: start;
@@ -51,95 +52,129 @@ body{
   overflow: hidden;
   text-wrap: nowrap;
 }
-#sidebar.close{
+
+#sidebar.close {
   padding: 5px;
   width: 60px;
 }
-#sidebar ul{
+
+/* Sidebar List */
+#sidebar ul {
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
-#sidebar > ul > li:first-child{
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
-  .logo{
-    font-weight: 600;
-  }
+
+#sidebar > ul > li {
+  margin-bottom: 10px;
 }
-#sidebar ul li.active a{
+
+.logoutbutton {
+  all: unset;
+  cursor: pointer; 
+}
+
+/* Active NavLink Styling */
+#sidebar a.active {
   color: var(--accent-clr);
   font-weight: bold;
   background-color: var(--hover-clr);
-
-  svg{
-    fill: var(--accent-clr);
-  }
 }
 
-#sidebar a, #sidebar .dropdown-btn, #sidebar .logo{
-  border-radius: .5em;
-  padding: .85em;
+#sidebar a.active svg {
+  fill: var(--accent-clr);
+}
+
+/* Common styles for both links and buttons */
+#sidebar a, #sidebar form,
+#sidebar .dropdown-btn,
+#sidebar .logo {
+  border-radius: 0.5em;
+  padding: 0.85em;
   text-decoration: none;
   color: var(--text-clr);
   display: flex;
   align-items: center;
   gap: 1em;
 }
-.dropdown-btn{
+
+/* Button Reset */
+.dropdown-btn {
   width: 100%;
   text-align: left;
   background: none;
-  border:  none;
+  border: none;
   font: inherit;
   cursor: pointer;
-  color: #000000;
+  color: var(--text-clr);
 }
-#sidebar svg{
+
+/* SVG Icon Styling */
+#sidebar svg {
   flex-shrink: 0;
   fill: var(--text-clr);
 }
-#sidebar a span, #sidebar .dropdown-btn span{
+
+/* Text span flex to grow */
+#sidebar a span, #sidebar form p,
+#sidebar .dropdown-btn span {
   flex-grow: 1;
 }
-#sidebar a:hover, #sidebar .dropdown-btn:hover{
+
+/* Hover Effects */
+#sidebar a:hover, #sidebar form:hover,
+#sidebar .dropdown-btn:hover {
   background-color: var(--hover-clr);
 }
-#sidebar .sub-menu{
+
+/* Submenu Animation */
+#sidebar .sub-menu {
   display: grid;
   grid-template-rows: 0fr;
   transition: 300ms ease-in-out;
-
-  > div{
-    overflow: hidden;
-  }
 }
-#sidebar .sub-menu.show{
+
+#sidebar .sub-menu > div {
+  overflow: hidden;
+}
+
+/* Show Submenu */
+#sidebar .sub-menu.show {
   grid-template-rows: 1fr;
 }
-.dropdown-btn svg{
-  transition: 200ms ease;
-}
-.rotate svg:last-child{
-  rotate: 180deg;
-}
-#sidebar .sub-menu a{
+
+/* Submenu link indentation */
+#sidebar .sub-menu a {
   padding-left: 2em;
 }
-#toggle-btn{
+
+/* Dropdown arrow rotate */
+.dropdown-btn img:last-child {
+  transition: 200ms ease;
+}
+
+.rotate img:last-child {
+  rotate: 180deg;
+}
+
+/* Toggle Sidebar Button */
+#toggle-btn {
   margin-left: auto;
   padding: 1em;
   border: none;
-  border-radius: .5em;
+  border-radius: 0.5em;
   background: none;
   cursor: pointer;
-
-  svg{
-    transition: rotate 150ms ease;
-  }
 }
-#toggle-btn:hover{
+
+#toggle-btn:hover {
   background-color: var(--hover-clr);
 }
+
+#toggle-btn svg {
+  transition: rotate 150ms ease;
+}
+
 
 main {
   padding: min(30px, 7%);
@@ -236,7 +271,6 @@ main p{
   }
 }
 
-
 .header {
   position: fixed;           /* Add this line */
   top: 0;                    /* Already there */
@@ -259,7 +293,7 @@ main p{
 }
 .header h3{
   margin: 0;
-  font-size: 0.7em;
+  font-size: 0.75em;
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 }

@@ -12,7 +12,7 @@ const btpeschema=new mongoose.Schema({
     ],
     marksgiven: [
         {
-            student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudent", required: true},
+            student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudentBTP", required: true},
             guidemarks: {type: Number, required: true},
             panelmarks: {type: Number, required: false},
             //totalgrade is decided by dean

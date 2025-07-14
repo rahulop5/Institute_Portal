@@ -1,4 +1,4 @@
-import UGStudent from "../models/UGStudent.js";
+import UGStudentBTP from "../models/UGStudentBTP.js";
 import BTPSystemState from "../models/BTPSystemState.js";
 import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
@@ -8,17 +8,12 @@ import BTPEvaluation from "../models/BTPEvaluation.js"
 //sending user details too in the response
 export const getBTPDashboard=async (req, res)=>{
     try{
-        const user=await UGStudent.findOne({
+        const user=await UGStudentBTP.findOne({
             email: req.user.email
         });
         if(!user){
             return res.status(404).json({
                 message: "Error finding the student"
-            });
-        }
-        if(!user.isBTP){
-            return res.status(403).json({
-                message: "You cant access this page"
             });
         }
         const year=user.batch;
@@ -59,7 +54,7 @@ export const getBTPDashboard=async (req, res)=>{
                             }
                             if(teams.length===0){
                                 //sending the available bin2 and bin3 guys/gals
-                                const bin23total=await UGStudent.find({
+                                const bin23total=await UGStudentBTP.find({
                                     batch: user.batch,
                                     bin: {$ne: 1}
                                 });
@@ -466,7 +461,7 @@ export const getBTPDashboard=async (req, res)=>{
 export const verifyBinAndPhase=({bin, phase})=>{
     return async (req, res, next)=>{
         try{
-            const user=await UGStudent.findOne({
+            const user=await UGStudentBTP.findOne({
                 email: req.user.email,
             });
             if(!bin.includes(user.bin)){
@@ -514,10 +509,10 @@ export const createTeam=async (req, res)=>{
                 message: "Cant create team when you are already in one"
             });
         }
-        const bin2stu=await UGStudent.findOne({
+        const bin2stu=await UGStudentBTP.findOne({
             email: req.body.bin2email
         });
-        const bin3stu=await UGStudent.findOne({
+        const bin3stu=await UGStudentBTP.findOne({
             email: req.body.bin3email
         });
         if(!bin2stu||!bin3stu){

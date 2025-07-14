@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import ugstudentbtpRoutes from "./routes/ugstudentbtpRoutes.js";
 import staffbtpRoutes from "./routes/staffbtpRoutes.js";
 import facultybtpRoutes from "./routes/facultybtpRoutes.js";
+import ugstudenthonorsroutes from "./routes/ugstudenthonorsRoutes.js"
 
 const app=express();
 app.use(cors({
@@ -20,6 +21,7 @@ app.use("/auth", authRoutes);
 app.use("/student/btp", ugstudentbtpRoutes);
 app.use("/staff/btp", staffbtpRoutes);
 app.use("/faculty/btp", facultybtpRoutes);
+app.use("/student/honors", ugstudenthonorsroutes);
 
 app.get("/test", (req, res)=>{
     res.json({

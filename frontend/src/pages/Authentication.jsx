@@ -27,9 +27,15 @@ export async function action({request}){
     }
 
     const resData=await response.json();
-    const token=resData.token;
+    const { token, name }=resData;
     //didnt handle expiration will do that later
     localStorage.setItem("token", token);
+    localStorage.setItem("name", name);
+
+    const expiration=new Date();
+    expiration.setHours(expiration.getHours()+1);
+    localStorage.setItem("expiration", expiration.toISOString());
+
     return redirect("/");
 
 }

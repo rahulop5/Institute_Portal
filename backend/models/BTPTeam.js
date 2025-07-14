@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const studentBinSchema = new mongoose.Schema({
-  student: { type: mongoose.Schema.Types.ObjectId, ref: "UGStudent", required: true },
+  student: { type: mongoose.Schema.Types.ObjectId, ref: "UGStudentBTP", required: true },
   approved: { type: Boolean, required: true },
 }, { _id: false }); 
 

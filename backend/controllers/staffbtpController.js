@@ -1,7 +1,7 @@
 import BTPSystemState from "../models/BTPSystemState.js";
 import fs from "fs";
 import csvParser from "csv-parser";
-import UGStudent from "../models/UGStudent.js";
+import UGStudentBTP from "../models/UGStudentBTP.js";
 import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
@@ -46,7 +46,7 @@ export const getStaffBTPDashboard=async (req, res)=>{
                         if (team.bin3?.student) studentIdsInTeams.add(team.bin3.student._id.toString());
                     });
                 
-                    const unteamedStudents = await UGStudent.find({
+                    const unteamedStudents = await UGStudentBTP.find({
                         _id: { $nin: Array.from(studentIdsInTeams) }
                     }).select("email bin");
                 
@@ -199,7 +199,7 @@ export const uploadCSVSheet=async (req, res)=>{
                         message: "No email or bin found"
                     });
                 }
-                const result=await UGStudent.findOneAndUpdate(
+                const result=await UGStudentBTP.findOneAndUpdate(
                     {email: email.trim()},
                     {bin: Number(bin)},
                     {new: true}
@@ -251,7 +251,7 @@ export const createTeambyStaff=async (req, res)=>{
         }
         //im not verifying the bins of the students becoz uk obv reasons
         const verifyTeam=async (email)=>{
-            const student=await UGStudent.findOne({
+            const student=await UGStudentBTP.findOne({
                 email: email
             });
             if(!student){
