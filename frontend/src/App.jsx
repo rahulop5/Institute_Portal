@@ -8,6 +8,8 @@ import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
 import BTPTeamselection_bin1 from "./components/academics/btp/Teamselection_bin1";
+import BTPStudent from "./pages/BTPStudent";
+import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
 
 const router=createBrowserRouter([
   {
@@ -21,7 +23,8 @@ const router=createBrowserRouter([
       { path: "academics",
         loader: checkAuthLoader,
         children: [
-          {path: ":smth", element: <Temp />}
+          {path: ":smth", element: <Temp />},
+          { path: "btp", element: <BTPRouter />, loader: btpLoader }
         ]
       },
       { path: "people",

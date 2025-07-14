@@ -81,6 +81,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 }).map((stu)=>{
                                     return {
                                         name: stu.name,
+                                        rollno: stu.rollno,
                                         email: stu.email,
                                     }
                                 });
@@ -89,12 +90,14 @@ export const getBTPDashboard=async (req, res)=>{
                                 }).map((stu)=>{
                                     return {
                                         name: stu.name,
+                                        rollno: stu.rollno,
                                         email: stu.email,
                                     }
                                 });
                                 return res.status(200).json({
                                     email: user.email,
                                     phase: "TF",
+                                    inteam: 0,
                                     bin: user.bin,
                                     message: "You are currently not in any full or partial team. Form a team",
                                     availablebin2: availablebin2,
@@ -133,6 +136,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 return res.status(200).json({
                                     email: user.email,
                                     phase: "TF",
+                                    inteam: 1,
                                     bin: user.bin,
                                     message: "Partial team",
                                     team: simplifiedTeam
@@ -141,6 +145,7 @@ export const getBTPDashboard=async (req, res)=>{
                             return res.status(200).json({
                                 email: user.email,
                                 phase: "TF",
+                                inteam: 1,
                                 bin: user.bin,
                                 message: "Full team",
                                 team: simplifiedTeam

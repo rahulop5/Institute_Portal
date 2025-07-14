@@ -162,6 +162,7 @@ export const handleLogin = async (req, res)=>{
     });
     return res.json({
         name: "User",
+        role: user.role,
         token: jwt_token,
     });
 }

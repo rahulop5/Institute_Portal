@@ -2,10 +2,58 @@ import { useState } from 'react';
 import SearchIcon from '../../../assets/search.svg';
 import studentIcon from '../../../assets/studenticon.svg';
 import BTPStudentList from './Studentlist';
+import TFBin1TeamSelection from './TFBin1TeamSelection';
+import TFTeamthereBin1 from './TFTeamthereBin1';
 // import classes from "../../styles/TeamSelectionbin1.module.css"
 
+const temp2={
+    "email": "neha.saanvi9@example.com",
+    "phase": "TF",
+    "inteam": 0,
+    "bin": 1,
+    "message": "You are currently not in any full or partial team. Form a team",
+    "availablebin2": [
+        {
+            "name": "Kabir Neha",
+            "rollno": "S20211028",
+            "email": "kabir.neha28@example.com"
+        },
+        {
+            "name": "Dev Yash",
+            "rollno": "S20211036",
+            "email": "dev.yash36@example.com"
+        },
+        {
+            "name": "Saanvi Anaya",
+            "rollno": "S20211037",
+            "email": "saanvi.anaya37@example.com"
+        }
+    ],
+    "availablebin3": [
+        {
+            "name": "Meera Ira",
+            "rollno": "S20211043",
+            "email": "meera.ira43@example.com"
+        },
+        {
+            "name": "Divya Anika",
+            "rollno": "S20211045",
+            "email": "divya.anika45@example.com"
+        },
+        {
+            "name": "Neha Dev",
+            "rollno": "S20211046",
+            "email": "neha.dev46@example.com"
+        },
+        {
+            "name": "Anika Ira",
+            "rollno": "S20211049",
+            "email": "anika.ira49@example.com"
+        }
+    ]
+}
 
-export default function BTPTeamselection_bin1() {
+export default function BTPTeamselection_bin1({data}) {
   const [selectedBin, setSelectedBin] = useState(2); 
   const [selectedStudents, setSelectedStudents] = useState({});
   const [teamData, setTeamData] = useState(null);
@@ -25,56 +73,16 @@ export default function BTPTeamselection_bin1() {
   }
 
   // 🧠 Function passed to child component
-  function handleStudentSelect(student) {
+  function handleStudentSelect(student, bin) {
     // Enforce only one student per bin
     setSelectedStudents(prev => ({
       ...prev,
-      [student.bin]: student
+      [bin]: student
     }));
+    console.log(selectedStudents)
   }
 
-  return (
-    <>
-      <div className="team-selection">
-        <h1>Team Formation</h1>
-
-        <div className="team-selection-content">
-          <div className="team-selection-buttons">
-            <h2>Selection</h2>
-            <div className="team-selection-button-group">
-              <button
-                className={selectedBin === 2 ? 'active' : ''}
-                onClick={handlebinchange}
-              >
-                Bin 2
-              </button>
-              <button
-                className={selectedBin === 3 ? 'active' : ''}
-                onClick={handlebinchange}
-              >
-                Bin 3
-              </button>
-            </div>
-          </div>
-
-          <div className="search-container" id="Teamselectionsearchbar">
-            <input type="text" placeholder="Search" className="search-input" />
-            <img src={SearchIcon} alt="Search" className="search-icon" />
-          </div>
-        </div>
-
-
-       {!teamData && (
-  <BTPStudentList
-    bin={selectedBin}
-    onSelectStudent={handleStudentSelect}
-    selectedStudents={selectedStudents}
-  />
-)}
-
-<button
-  className={`send-request-button ${selectedStudents[2] && selectedStudents[3] ? 'active' : ''}`}
-  onClick={() => {
+  function handleSendRequest(){
     if (selectedStudents[2] && selectedStudents[3]) {
       // Simulated backend team response
       const dummyTeam = {
@@ -101,58 +109,32 @@ export default function BTPTeamselection_bin1() {
           }
         }
       };
-
+    
       setTeamData(dummyTeam); // Save team to state
     } else {
       alert('One student from each bin must be selected.');
     }
-  }}
->
-  Send Request
-</button>
+  }
 
-
-{teamData ? (
-  <div className="added-students">
-    <h1>Your Team</h1>
-    <div className="team-table">
-      {["bin1", "bin2", "bin3"].map(binKey => {
-        const member = teamData.team[binKey];
-        return (
-          <div className="team-row" key={member.email}>
-            <div className="student-name-icon">
-              <img src={studentIcon} alt="avatar" className="avatar-icon" />
-              <span>{member.name}</span>
-            </div>
-            <span>{member.email}</span>
-            <span className={`approval-status ${member.approved ? 'approved' : 'pending'}`}>
-              {member.approved ? '✅ Approved' : '❌ Not Approved'}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-) : (
-  <div className="added-students">
-    <h1>Team</h1>
-    <div className="team-table">
-      {Object.entries(selectedStudents).map(([bin, student]) => (
-        <div key={student.rollno} className="team-row">
-          <div className="student-name-icon">
-            <img src={studentIcon} alt="avatar" className="avatar-icon" />
-            <span>{student.name}</span>
-          </div>
-          <span>{student.rollno}</span>
-          <span>{student.bin}</span>
-        </div>
-      ))}
-      {Object.keys(selectedStudents).length === 0 && (
-        <div className="team-empty">No students selected.</div>
-      )}
-    </div>
-  </div>
-)}
+  return (
+    <>
+      <div className="team-selection">
+        {data.inteam===0?
+          <TFBin1TeamSelection 
+            selectedBin={selectedBin}
+            handlebinchange={handlebinchange}
+            SearchIcon={SearchIcon}
+            handleStudentSelect={handleStudentSelect}
+            selectedStudents={selectedStudents}
+            handleSendRequest={handleSendRequest}
+            studentIcon={studentIcon}
+            data={data}
+          /> : 
+          <TFTeamthereBin1 
+            teamData= {teamData}
+            studentIcon={studentIcon}
+          />
+        }
 
 
       </div>
