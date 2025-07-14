@@ -95,6 +95,7 @@ export const getBTPDashboard=async (req, res)=>{
                                     }
                                 });
                                 return res.status(200).json({
+                                    name: user.name,
                                     email: user.email,
                                     phase: "TF",
                                     inteam: 0,
@@ -134,6 +135,7 @@ export const getBTPDashboard=async (req, res)=>{
                             //im gonna send team id and student email to frontend
                             if(!team.bin2.approved||!team.bin3.approved){
                                 return res.status(200).json({
+                                    name: user.name,
                                     email: user.email,
                                     phase: "TF",
                                     inteam: 1,
@@ -143,6 +145,7 @@ export const getBTPDashboard=async (req, res)=>{
                                 });
                             }
                             return res.status(200).json({
+                                name: user.name,
                                 email: user.email,
                                 phase: "TF",
                                 inteam: 1,
