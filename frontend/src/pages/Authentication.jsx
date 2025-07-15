@@ -21,6 +21,8 @@ export async function action({request}){
 
     //could add custom shit
     if(!response.ok){
+        const temp=await response.json();
+        console.log(temp);
         throw new Response(JSON.stringify({ message: "Error Logging in" }), {
             status: 500
         });

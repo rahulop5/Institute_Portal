@@ -8,8 +8,8 @@ import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
 import BTPTeamselection_bin1, { action as sendTRAction } from "./components/academics/btp/Teamselection_bin1";
-import BTPStudent from "./pages/BTPStudent";
 import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
+import FacultySelection, { action as applytotopicAction } from "./components/academics/btp/Facultyselection";
 
 const router=createBrowserRouter([
   {
@@ -29,7 +29,8 @@ const router=createBrowserRouter([
             loader: btpLoader,
             children: [
               {path: "sendteamrequest", action: sendTRAction, element: <></>},
-              {path: "acceptteamrequest", action: acceptTRAction, element: <></>}
+              {path: "acceptteamrequest", action: acceptTRAction, element: <></>},
+              {path: "applytotopic", action: applytotopicAction, element: <></>}
             ]
           }
         ]
@@ -42,13 +43,13 @@ const router=createBrowserRouter([
       },
       { path: "settings", element: <Temp />, loader: checkAuthLoader },
       {
-        path: "/auth",
+        path: "auth",
         element: <Authentication />,
         action: authAction
       },
-      { path: "/logout", action: logoutAction },
-      { path: "/temp", loader: checkAuthLoader, element: <BTPTeamselection_bin23 /> },
-      { path: "/temp2", loader: checkAuthLoader, element: <BTPTeamselection_bin1 /> }
+      { path: "logout", action: logoutAction },
+      { path: "temp", loader: checkAuthLoader, element: <BTPTeamselection_bin23 /> },
+      { path: "temp2", loader: checkAuthLoader, element: <BTPTeamselection_bin1 /> },
     ]
   },
 ]);

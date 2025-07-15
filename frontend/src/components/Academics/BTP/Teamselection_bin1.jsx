@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { redirect, useSubmit } from 'react-router';
 import SearchIcon from '../../../assets/search.svg';
 import studentIcon from '../../../assets/studenticon.svg';
-import BTPStudentList from './Studentlist';
 import TFBin1TeamSelection from './TFBin1TeamSelection';
 import TFTeamthereBin1 from './TFTeamthereBin1';
 // import classes from "../../styles/TeamSelectionbin1.module.css"

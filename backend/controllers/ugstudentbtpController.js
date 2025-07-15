@@ -118,16 +118,19 @@ export const getBTPDashboard=async (req, res)=>{
                                 _id: team._id,
                                 bin1: {
                                     email: team?.bin1.student.email,
+                                    rollno: team.bin1.student.rollno,
                                     name: team?.bin1.student.name,
                                     approved: team?.bin1.approved
                                 },
                                 bin2: {
                                     email: team?.bin2.student.email,
+                                    rollno: team.bin2.student.rollno,
                                     name: team?.bin2.student.name,
                                     approved: team?.bin2.approved
                                 },
                                 bin3: {
                                     email: team?.bin3.student.email,
+                                    rollno: team.bin3.student.rollno,
                                     name: team?.bin3.student.name,
                                     approved: team?.bin3.approved
                                 }
@@ -199,16 +202,19 @@ export const getBTPDashboard=async (req, res)=>{
                                     _id: team._id,
                                     bin1: {
                                         email: team?.bin1.student.email,
+                                        rollno: team.bin1.student.rollno,
                                         name: team?.bin1.student.name,
                                         approved: team?.bin1.approved
                                     },
                                     bin2: {
                                         email: team?.bin2.student.email,
+                                        rollno: team.bin2.student.rollno,
                                         name: team?.bin2.student.name,
                                         approved: team?.bin2.approved
                                     },
                                     bin3: {
                                         email: team?.bin3.student.email,
+                                        rollno: team.bin3.student.rollno,
                                         name: team?.bin3.student.name,
                                         approved: team?.bin3.approved
                                     }
@@ -239,16 +245,19 @@ export const getBTPDashboard=async (req, res)=>{
                                         _id: team._id,
                                         bin1: {
                                             email: team?.bin1.student.email,
+                                            rollno: team.bin1.student.rollno,
                                             name: team?.bin1.student.name,
                                             approved: team?.bin1.approved
                                         },
                                         bin2: {
                                             email: team?.bin2.student.email,
+                                            rollno: team.bin2.student.rollno,
                                             name: team?.bin2.student.name,
                                             approved: team?.bin2.approved
                                         },
                                         bin3: {
                                             email: team?.bin3.student.email,
+                                            rollno: team.bin3.student.rollno,
                                             name: team?.bin3.student.name,
                                             approved: team?.bin3.approved
                                         }
@@ -316,6 +325,27 @@ export const getBTPDashboard=async (req, res)=>{
                             message: "Not all members have approved the request to join this team"
                         });
                     }
+                    const filteredteam={
+                        _id: team._id,
+                        bin1: {
+                            name: team.bin1.student.name,
+                            email: team.bin1.student.email,
+                            approved: team?.bin1.approved,
+                            rollno: team.bin1.student.rollno,
+                        },
+                        bin2: {
+                            name: team.bin2.student.name,
+                            email: team.bin2.student.email,
+                            approved: team?.bin2.approved,
+                            rollno: team.bin2.student.rollno,
+                        },
+                        bin3: {
+                            name: team.bin3.student.name,
+                            email: team.bin3.student.email,
+                            approved: team?.bin3.approved,
+                            rollno: team.bin3.student.rollno,
+                        }
+                    }
                     const topics=await BTPTopic.find().populate("faculty");
                     let approvedRequest = null;
                     const outgoingRequests = [];
@@ -353,6 +383,9 @@ export const getBTPDashboard=async (req, res)=>{
                     return res.status(200).json({
                         phase: "FA",
                         email: user.email,
+                        facultyassigned: approvedRequest?true:false,
+                        bin: user.bin,
+                        team: filteredteam,
                         message: "BTP Topics",
                         topics: topics.map(topic => ({
                             _id: topic._id,
@@ -746,6 +779,7 @@ export const facultyAssignmentRequest = async (req, res)=>{
     }
     try{
         const {docId, topicId, teamId}=req.body;
+        console.log(req.body);
         //checking if these ppl are already in any team
         const alreadyApproved = await BTPTopic.findOne({
             "requests.teamid": teamId,

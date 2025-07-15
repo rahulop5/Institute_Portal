@@ -3,6 +3,8 @@ import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
 import BTPTeamselection_bin1 from "../components/academics/btp/Teamselection_bin1";
 import BTPTeamselection_bin23 from "../components/academics/btp/Teamselection_bin23";
+import FacultySelection from "../components/academics/btp/Facultyselection";
+import FSBin23 from "../components/academics/btp/FSBin23";
 
 export default function BTPRouter(){
     const data=useLoaderData();
@@ -21,6 +23,18 @@ export default function BTPRouter(){
                 default:
                     return <ErrorPage />
             }
+
+        case "FA": 
+            switch (data.bin) {
+                case 1:
+                    return <FacultySelection data={data} />
+            
+                case 2:
+                case 3: 
+                    return <FSBin23 data={data}/>
+                default:
+                    return <ErrorPage />
+            } 
 
         default:
             return <ErrorPage />

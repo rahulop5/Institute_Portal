@@ -1,10 +1,10 @@
-export default function TFTeamthereBin1({teamData, studentIcon}){
+export default function FSTeamthere({teamData, studentIcon}){
     return <>
         <div className="added-students">
           <h1>Your Team</h1>
           <div className="team-table">
             {["bin1", "bin2", "bin3"].map((binKey) => {
-              const member = teamData.team[binKey];
+              const member = teamData[binKey];
               return (
                 <div className="team-row" key={member.email}>
                   <div className="student-name-icon">
