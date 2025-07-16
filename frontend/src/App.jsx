@@ -10,6 +10,7 @@ import { action as logoutAction } from "./pages/Logout";
 import BTPTeamselection_bin1, { action as sendTRAction } from "./components/academics/btp/Teamselection_bin1";
 import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
 import FacultySelection, { action as applytotopicAction } from "./components/academics/btp/Facultyselection";
+import Inprogress from "./components/Academics/BTP/Inprogress";
 
 const router=createBrowserRouter([
   {
@@ -47,9 +48,10 @@ const router=createBrowserRouter([
         element: <Authentication />,
         action: authAction
       },
+      
       { path: "logout", action: logoutAction },
-      { path: "temp", loader: checkAuthLoader, element: <BTPTeamselection_bin23 /> },
-      { path: "temp2", loader: checkAuthLoader, element: <BTPTeamselection_bin1 /> },
+      { path: "temp", element: <BTPTeamselection_bin23 /> },
+      { path: "temp2", loader: checkAuthLoader, element: <Inprogress /> },
     ]
   },
 ]);
