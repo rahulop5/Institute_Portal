@@ -448,7 +448,7 @@ main p{
   color: white;
 }
 
- 
+
 
 
 
@@ -945,6 +945,12 @@ h1 {
   
 }
 
+
+.parentdivshowupdates{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
 
 
 .eval-timestamp {

@@ -30,7 +30,8 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
         <h2>Project Updates</h2>
       </div>
 
-      <div className="evaluation-table">
+      <div className="parentdivshowupdates">
+        <div className="evaluation-table">
         <div className="eval-table-header">
           <span>Time</span>
           <span>Update</span>
@@ -63,6 +64,7 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }
