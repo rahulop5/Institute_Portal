@@ -7,6 +7,7 @@ import TeamCard from "./TeamCard";
 import RemarksCard from "./RemarksCard";
 import ScoreCard from "./ScoreCard";
 import EvaluationDetails from "./Evaluations";
+import AddUpdateCard from "./UpdateCard";
 
 
 
@@ -130,6 +131,8 @@ const data = {
         evaluations={data.project.evaluations}
         latestUpdates={data.project.latestUpdates}
       />
+
+      <AddUpdateCard/>
     </div>
   );
 }
