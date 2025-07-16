@@ -677,6 +677,9 @@ h1 {
   gap: 20px;
 }
 
+/* here 1 */
+
+
 .guide-card,
 .progress-card {
   background: white;
@@ -689,6 +692,11 @@ h1 {
   box-shadow: 0 1px 5px rgba(0,0,0,0.05);
 }
 
+.guide-card h2{
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
 
 .progress-card h2 {
   font-size: 14px;
@@ -696,15 +704,11 @@ h1 {
   text-align: center;
 }
 
-.guide-card h2{
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
 .guide-card p {
   font-size: 16px;
   font-weight: 500;
 }
+
 
 .progress-bar-container {
   position: relative;
@@ -729,6 +733,10 @@ h1 {
   background: black;
   transform: translateX(-50%);
 }
+
+
+
+/* here */
 
 
 .next-eval-card,.score-card {

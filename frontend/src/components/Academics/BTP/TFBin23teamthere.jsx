@@ -23,23 +23,26 @@ const temp2={
         }
     }
 }
+import classes from "../../styles/TeamSelectionbin1.module.css";
 
-export default function TFBin23teamthere({approvedTeam, studentIcon}) {
+export default function TFBin23teamthere({ approvedTeam, studentIcon }) {
   return (
-    <div className="added-students">
+    <div className={classes["added-students"]}>
       <h2>Your Team</h2>
-      <div className="team-table">
+      <div className={classes["team-table"]}>
         {[approvedTeam.bin1, approvedTeam.bin2, approvedTeam.bin3].map(
           (member, idx) => (
-            <div key={idx} className="team-row">
-              <div className="student-name-icon">
-                <img src={studentIcon} alt="avatar" className="avatar-icon" />
+            <div key={idx} className={classes["team-row"]}>
+              <div className={classes["student-name-icon"]}>
+                <img src={studentIcon} alt="avatar" className={classes["avatar-icon"]} />
                 <span>{member.name}</span>
               </div>
               <span>{member.email}</span>
-              <span>{idx+1}</span>
+              <span>{idx + 1}</span>
               <span
-                className={`status ${member.approved ? "approved" : "pending"}`}
+                className={`${classes["status"]} ${
+                  member.approved ? classes["approved"] : classes["pending"]
+                }`}
               >
                 {member.approved ? "✔ Confirmed" : "⌛ Pending..."}
               </span>

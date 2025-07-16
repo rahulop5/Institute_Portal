@@ -52,7 +52,6 @@ const router=createBrowserRouter([
       
       { path: "logout", action: logoutAction },
       { path: "temp", element: <BTPTeamselection_bin23 /> },
-      { path: "temp2", loader: checkAuthLoader, element: <Inprogress /> },
     ]
   },
 ]);

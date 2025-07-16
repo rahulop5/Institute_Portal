@@ -458,6 +458,7 @@ export const getBTPDashboard=async (req, res)=>{
                     }
                 
                     return res.status(200).json({
+                        phase: "IP",
                         message: "Student Progress Dashboard",
                         project: {
                             name: project.name,

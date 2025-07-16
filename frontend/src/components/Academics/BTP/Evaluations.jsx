@@ -1,56 +1,45 @@
 import { useState } from "react";
 
 export default function EvaluationDetails({ evaluations, latestUpdates }) {
-  const [currentEvalIndex, setCurrentEvalIndex] = useState(0);
-  const currentEval = evaluations[currentEvalIndex];
+  const [showAll, setShowAll] = useState(false);
+
+  // Combine all updates from all evaluations + latest ones
+  const allUpdates = [
+    ...(latestUpdates || []),
+    ...evaluations.flatMap((evalObj) => evalObj.updates || [])
+  ];
+
+  // Sort updates descending by time (newest first)
+  const sortedUpdates = allUpdates.sort(
+    (a, b) => new Date(b.time) - new Date(a.time)
+  );
+
+  // Slice updates based on toggle
+  const visibleUpdates = showAll ? sortedUpdates : sortedUpdates.slice(0, 4);
 
   function formatDateTime(isoString) {
     const date = new Date(isoString);
-    const dateStr = date.toLocaleDateString("en-GB"); // DD-MM-YYYY
+    const dateStr = date.toLocaleDateString("en-GB");
     const timeStr = date.toLocaleTimeString("en-GB", { hour12: false });
     return { dateStr, timeStr };
   }
 
-  
-  const combinedUpdates =
-    currentEvalIndex === 0
-      ? [...(currentEval?.updates || []), ...(latestUpdates || [])]
-      : currentEval?.updates || [];
-
   return (
     <div className="evaluation-details-container">
       <div className="evaluation-header">
-        <h2>Evaluation</h2>
-        <div className="eval-index-nav">
-          <button
-            onClick={() => setCurrentEvalIndex(i => Math.max(0, i - 1))}
-            disabled={currentEvalIndex === 0}
-          >
-            &#60;
-          </button>
-          <span>{currentEvalIndex + 1}.0</span>
-          <button
-            onClick={() =>
-              setCurrentEvalIndex(i =>
-                Math.min(evaluations.length - 1, i + 1)
-              )
-            }
-            disabled={currentEvalIndex === evaluations.length - 1}
-          >
-            &#62;
-          </button>
-        </div>
+        <h2>Project Updates</h2>
       </div>
 
       <div className="evaluation-table">
         <div className="eval-table-header">
-          <span>Timestamp</span>
+          <span>Time</span>
           <span>Update</span>
           <span>Remarks</span>
         </div>
 
-        {combinedUpdates.map((update, idx) => {
+        {visibleUpdates.map((update, idx) => {
           const { dateStr, timeStr } = formatDateTime(update.time);
+          const remark = update?.remark || <i>No Remarks are given yet.</i>;
           return (
             <div key={update._id || idx} className="eval-table-row">
               <div className="eval-timestamp">
@@ -58,16 +47,28 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
                 <div>{timeStr}</div>
               </div>
               <div>{update.update}</div>
-              <div>
-                {currentEval?.remark
-                  ? currentEval.remark
-                  : <i>No Remarks are given yet.</i>}
-              </div>
+              <div>{remark}</div>
             </div>
           );
         })}
       </div>
+
+      {sortedUpdates.length > 4 && (
+        <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <button
+            style={{
+              padding: "0.5rem 1rem",
+              border: "none",
+              borderRadius: "6px",
+              backgroundColor: "#e0e0e0",
+              cursor: "pointer"
+            }}
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? "Show Less" : "Show All"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
- 

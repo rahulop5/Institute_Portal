@@ -5,6 +5,7 @@ import BTPTeamselection_bin1 from "../components/academics/btp/Teamselection_bin
 import BTPTeamselection_bin23 from "../components/academics/btp/Teamselection_bin23";
 import FacultySelection from "../components/academics/btp/Facultyselection";
 import FSBin23 from "../components/academics/btp/FSBin23";
+import Inprogress from "../components/Academics/BTP/Inprogress";
 
 export default function BTPRouter(){
     const data=useLoaderData();
@@ -31,10 +32,14 @@ export default function BTPRouter(){
             
                 case 2:
                 case 3: 
-                    return <FSBin23 data={data}/>
+                    return <FSBin23 data={data} />
                 default:
                     return <ErrorPage />
-            } 
+            }
+            
+        case "IP":
+            console.log(data);
+            return <Inprogress data={data} />
 
         default:
             return <ErrorPage />
@@ -61,6 +66,7 @@ export async function loader(){
                 });
             }
             const resData=await response.json();
+            console.log(resData)
             return resData;
     
         //handle other users later
