@@ -56,13 +56,7 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
       {sortedUpdates.length > 4 && (
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
           <button
-            style={{
-              padding: "0.5rem 1rem",
-              border: "none",
-              borderRadius: "6px",
-              backgroundColor: "#e0e0e0",
-              cursor: "pointer"
-            }}
+            className="toggle-project-updates-btn"
             onClick={() => setShowAll(!showAll)}
           >
             {showAll ? "Show Less" : "Show All"}
