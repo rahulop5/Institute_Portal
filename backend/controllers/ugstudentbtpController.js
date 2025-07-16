@@ -783,9 +783,15 @@ export const facultyAssignmentRequest = async (req, res)=>{
         console.log(req.body);
         //checking if these ppl are already in any team
         const alreadyApproved = await BTPTopic.findOne({
-            "requests.teamid": teamId,
-            "requests.isapproved": true
+          requests: {
+            $elemMatch: {
+              teamid: teamId,
+              isapproved: true
+            }
+          }
         });
+
+        console.log(alreadyApproved)
         if (alreadyApproved) {
             return res.status(400).json({
                 message: "A faculty has already approved your request. You cannot send new ones."

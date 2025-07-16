@@ -124,6 +124,8 @@ export async function action({ request }) {
   );
 
   if (!response.ok) {
+  const result = await response.json();
+  console.log(result)
     throw new Response(
       JSON.stringify({
         message: "Error sending team request",
