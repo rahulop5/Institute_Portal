@@ -1,4 +1,4 @@
-export default function TFBin23Requests({incomingRequests, studentIcon, handleAccept}) {
+export default function TFBin23Requests({incomingRequests, studentIcon, handleAccept, handleReject}) {
   return (
     <div className="incoming-requests">
       {incomingRequests.map((request, index) => (
@@ -11,7 +11,9 @@ export default function TFBin23Requests({incomingRequests, studentIcon, handleAc
             </div>
           </div>
           <div className="action-buttons">
-            <button className="reject-button">Reject</button>
+            <button className="reject-button" onClick={()=>handleReject(request)} >
+              Reject
+            </button>
             <button
               className="accept-button"
               onClick={() => handleAccept(request)}

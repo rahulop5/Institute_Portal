@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import SimpleNavItem from "./SimpleNavItem";
 import DropdownNavItem from "./DropdownNavItem";
 import { SubMenuItem } from "./SubmenuItem";
-
+import "../styles/Sidebar.css"
 // Image imports
 import peopleIcon from "../../assets/people.png";
 import settingsIcon from "../../assets/settings.svg";

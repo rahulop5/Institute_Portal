@@ -140,18 +140,29 @@ export default function BTPTeamselection_bin23({data}) {
     });
   };
 
+  const handleReject=(team)=>{
+    const formData = new FormData();
+    formData.append("teamData", JSON.stringify(team))  
+    submit(formData, {
+      method: "post",
+      action: "acceptteamrequest", 
+      encType: "application/x-www-form-urlencoded",
+    });
+  }
+
   return (
     <div className="team-selection">
       <h1>Team Formation</h1>
       <div className="team-selection-content">
         <div className="team-selection-header">
-          <h2>Incoming Requests</h2>
+          {!data.inteam&&<><h2>Incoming Requests</h2>
           <div className="warning-message">
             <p>
               Only <strong>ONE</strong> team leader can be accepted and it is
               final.
             </p>
-          </div>
+          </div></>
+          }
         </div>
 
         {data.inteam===0 ? (
@@ -159,6 +170,7 @@ export default function BTPTeamselection_bin23({data}) {
             incomingRequests= {data?.teams}
             studentIcon= {studentIcon}
             handleAccept={handleAccept}
+            handleReject={handleReject}
           />
         ) : (
           <TFBin23teamthere 
@@ -192,6 +204,39 @@ export async function action({request}){
   if (!response.ok) {
     throw new Response(JSON.stringify({
       message: "Error approving team request"
+    }), {
+      status: 500
+    });
+  }
+
+  const result = await response.json();
+  console.log(result);
+
+  return redirect("/academics/btp");
+}
+
+
+export async function action2({request}){
+  const formData = await request.formData();
+  const teamDataJSON = formData.get("teamData");
+  const teamData = JSON.parse(teamDataJSON);
+  const token=localStorage.getItem("token");
+  const reqdata={
+    teamid: teamData._id
+  }
+
+  const response=await fetch("http://localhost:3000/student/btp/rejectrequest", {
+    method: "DELETE",
+    headers: {
+      "Authorization": "Bearer "+token,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(reqdata)
+  });
+
+  if (!response.ok) {
+    throw new Response(JSON.stringify({
+      message: "Error rejecting team request"
     }), {
       status: 500
     });

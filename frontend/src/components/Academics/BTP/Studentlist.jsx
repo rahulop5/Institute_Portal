@@ -1,28 +1,29 @@
 import studentIcon from '../../../assets/studenticon.svg';
+import classes from "../../styles/TeamSelectionbin1.module.css";
 
 export default function BTPStudentList({ bin, onSelectStudent, selectedStudents, available }) {
 
- const parsedBin = Number(bin); // convert if needed
+  const parsedBin = Number(bin);
 
- return (
-    <div className="student-list">
-      <div className="student-list-scroll">
+  return (
+    <div className={classes["student-list"]}>
+      <div className={classes["student-list-scroll"]}>
         {available.map((student, index) => (
-          <div className="student-row" key={index}>
-            <div className="student-icon">
+          <div className={classes["student-row"]} key={index}>
+            <div className={classes["student-icon"]}>
               <img src={studentIcon} alt="" />
             </div>
-            <div className="student-details">
-              <div className="student-info">
-                <div className="student-name">{student.name}</div>
-                <div className="student-meta">{student.email}</div>
+            <div className={classes["student-details"]}>
+              <div className={classes["student-info"]}>
+                <div className={classes["student-name"]}>{student.name}</div>
+                <div className={classes["student-meta"]}>{student.email}</div>
               </div>
               <div>
-                <span className="student-roll">{student.rollno}</span>
+                <span className={classes["student-roll"]}>{student.rollno}</span>
               </div>
-              <div className="student-actions">
+              <div className={classes["student-actions"]}>
                 <button
-                  className="select-button"
+                  className={classes["select-button"]}
                   onClick={() => onSelectStudent(student, parsedBin)}
                   disabled={selectedStudents[bin]?.email === student.email}
                 >
