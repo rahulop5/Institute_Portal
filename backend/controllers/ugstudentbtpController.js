@@ -874,9 +874,11 @@ export const addUpdatetoProject=async(req, res)=>{
         });
         await project.save();
 
-        return res.status(200).json({
-            message: "Update added successfully"
-        });
+        setTimeout(()=>{
+            return res.status(200).json({
+                message: "Update added successfully"
+            });
+        }, 2000);
     }
     catch(err){
         console.log(err);
