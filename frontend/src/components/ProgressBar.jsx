@@ -1,9 +1,12 @@
 import { useEffect } from "react";
 import { useNavigation } from "react-router";
 import NProgress from "nprogress";
-// import "nprogress/nprogress.css";
 
-NProgress.configure({ showSpinner: false });
+NProgress.configure({
+  showSpinner: false,
+  trickleSpeed: 200,
+  minimum: 0.1,
+});
 
 export default function ProgressBar() {
   const navigation = useNavigation();
