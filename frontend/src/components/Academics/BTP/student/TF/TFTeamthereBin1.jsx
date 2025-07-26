@@ -1,6 +1,6 @@
-import tick from "../../../assets/confirmedtick.png";
-import pending from "../../../assets/pendingclock.png";
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import tick from "../../../../../assets/confirmedtick.png";
+import pending from "../../../../../assets/pendingclock.png";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 export default function TFTeamthereBin1({ teamData, studentIcon }) {
   return (

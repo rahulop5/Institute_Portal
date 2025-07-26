@@ -23,7 +23,7 @@ const temp2={
         }
     }
 }
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 export default function TFBin23teamthere({ approvedTeam, studentIcon }) {
   return (

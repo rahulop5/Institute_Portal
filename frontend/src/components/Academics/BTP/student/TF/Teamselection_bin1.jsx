@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { redirect, useSubmit } from "react-router";
-import SearchIcon from "../../../assets/search.svg";
-import studentIcon from "../../../assets/studenticon.svg";
+import SearchIcon from "../../../../../assets/search.svg";
+import studentIcon from "../../../../../assets/studenticon.svg";
 import TFBin1TeamSelection from "./TFBin1TeamSelection";
 import TFTeamthereBin1 from "./TFTeamthereBin1";
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 export default function BTPTeamselection_bin1({ data }) {
   const [selectedBin, setSelectedBin] = useState(2);

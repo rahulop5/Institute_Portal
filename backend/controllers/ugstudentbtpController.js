@@ -206,6 +206,7 @@ export const getBTPDashboard = async (req, res) => {
                   inteam: 0,
                   phase: "TF",
                   bin: user.bin,
+                  teams:[],
                   message:
                     "You are currently not in any full or partial team. Form a team by finding a bin1 student",
                 });

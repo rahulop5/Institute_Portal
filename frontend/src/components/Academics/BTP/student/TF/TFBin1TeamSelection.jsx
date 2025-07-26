@@ -1,5 +1,5 @@
 import BTPStudentList from "./Studentlist";
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 import { useState, useEffect } from "react";
 
 export default function TFBin1TeamSelection({

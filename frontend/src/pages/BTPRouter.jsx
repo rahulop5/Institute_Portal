@@ -1,10 +1,9 @@
 import { useLoaderData } from "react-router";
 import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
-import BTPTeamselection_bin1 from "../components/academics/btp/Teamselection_bin1";
-import BTPTeamselection_bin23 from "../components/academics/btp/Teamselection_bin23";
+import BTPTeamselection_bin1 from "../components/academics/btp/student/TF/Teamselection_bin1";
+import BTPTeamselection_bin23 from "../components/academics/btp/student/TF/Teamselection_bin23";
 import FacultySelection from "../components/academics/btp/Facultyselection";
-import FSBin23 from "../components/academics/btp/FSBin23";
 import Inprogress from "../components/Academics/BTP/Inprogress";
 
 export default function BTPRouter(){

@@ -1,5 +1,5 @@
-import studentIcon from '../../../assets/studenticon.svg';
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import studentIcon from '../../../../../assets/studenticon.svg';
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 import { useMemo } from 'react';
 
 export default function BTPStudentList({ bin, onSelectStudent, selectedStudents, available, search }) {

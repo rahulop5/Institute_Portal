@@ -3,13 +3,13 @@ import Homepage from "./pages/Homepage";
 import RootLayout from "./pages/Root";
 import Authentication, { action as authAction } from "./pages/Authentication";
 import ErrorPage from "./pages/Error";
-import BTPTeamselection_bin23, { action as acceptTRAction, action2 as rejectTRAction } from "./components/academics/BTP/Teamselection_bin23";
+import { action as acceptTRAction, action2 as rejectTRAction } from "./components/academics/btp/student/TF/Teamselection_bin23";
 import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
-import BTPTeamselection_bin1, { action as sendTRAction } from "./components/academics/btp/Teamselection_bin1";
+import { action as sendTRAction } from "./components/academics/btp/student/TF/Teamselection_bin1";
 import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
-import FacultySelection, { action as applytotopicAction } from "./components/academics/btp/Facultyselection";
+import { action as applytotopicAction } from "./components/academics/btp/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/Academics/BTP/Inprogress";
 
 const router=createBrowserRouter([
