@@ -9,7 +9,7 @@ import FSTeamthere from "./FSTeamshow";
 
 export default function FacultySelection({ data }) {
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
-  const [showRequests, setShowRequests] = useState(true);
+  const [showRequests, setShowRequests] = useState(false);
   const submit = useSubmit();
 
   const handleShowTopics = (facultyObj) => {
@@ -75,6 +75,7 @@ export default function FacultySelection({ data }) {
             <TopicCards
               topics={selectedFacultyTopics}
               handleApply={handleApply}
+              bin={data.bin}
             />
           )}
 

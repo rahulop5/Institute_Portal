@@ -4,7 +4,7 @@ export default function FSTeamthere({ teamData, studentIcon }) {
   return (
     <>
       <div className={classes["added-students"]}>
-        <h1>Your Team</h1>
+        <h2>Your Team</h2>
         <div className={classes["team-table"]}>
           {["bin1", "bin2", "bin3"].map((binKey) => {
             const member = teamData[binKey];

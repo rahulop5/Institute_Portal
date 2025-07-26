@@ -26,16 +26,7 @@ export default function BTPRouter(){
             }
 
         case "FA": 
-            switch (data.bin) {
-                case 1:
-                    return <FacultySelection data={data} />
-            
-                case 2:
-                case 3: 
-                    return <FSBin23 data={data} />
-                default:
-                    return <ErrorPage />
-            }
+            return <FacultySelection data={data} />
             
         case "IP":
             return <Inprogress data={data} />

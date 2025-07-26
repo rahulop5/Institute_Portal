@@ -37,7 +37,6 @@
 
 .team-selection {
   /* margin-left: 200px;   Match sidebar width */
-  margin-top: 30px;     /*Match header height */
   /* padding-left: 3rem; */
   padding-top: 1rem;
   min-height: calc(100vh - 70px);
@@ -266,8 +265,10 @@
 }
 
 .added-students>h2{
-  margin-bottom: 20px;
+  font-size: 30px;
   font-weight: 400;
+  margin-top: 0.5rem;
+  margin-bottom: 20px;
 }
 
 .team-table {
@@ -371,4 +372,24 @@
 .statusintf>img{
   margin-right: 10px;
   height: 25px;
+}
+
+.reject-button {
+  padding: 5px 15px;
+  border: 1.5px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  background-color: white;
+  transition: 0.2s ease;
+}
+
+.reject-button {
+  border-color: red;
+  color: red;
+}
+
+.reject-button:hover {
+  background-color: rgb(255, 239, 239);
 }
