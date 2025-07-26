@@ -9,8 +9,8 @@ import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
 import { action as sendTRAction } from "./components/academics/btp/student/TF/Teamselection_bin1";
 import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
-import { action as applytotopicAction } from "./components/academics/btp/Facultyselection";
-import Inprogress, { action as addUpdateAction } from "./components/Academics/BTP/Inprogress";
+import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
+import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
 
 const router=createBrowserRouter([
   {

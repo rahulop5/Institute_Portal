@@ -1,4 +1,4 @@
-import classes from "../../styles/TeamSelectionbin1.module.css";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 export default function FSTeamthere({ teamData, studentIcon }) {
   return (

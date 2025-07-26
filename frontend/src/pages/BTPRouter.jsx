@@ -3,8 +3,8 @@ import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
 import BTPTeamselection_bin1 from "../components/academics/btp/student/TF/Teamselection_bin1";
 import BTPTeamselection_bin23 from "../components/academics/btp/student/TF/Teamselection_bin23";
-import FacultySelection from "../components/academics/btp/Facultyselection";
-import Inprogress from "../components/Academics/BTP/Inprogress";
+import FacultySelection from "../components/academics/btp/student/FA/Facultyselection";
+import Inprogress from "../components/academics/btp/student/IP/Inprogress";
 
 export default function BTPRouter(){
     const data=useLoaderData();

@@ -56,7 +56,7 @@ export default function Inprogress({data}) {
         latestUpdates={data.project.latestUpdates}
       />
       {/* to make sure it clears the state */}
-      <AddUpdateCard key={Date.now()} />
+      {data.bin===1?<AddUpdateCard key={Date.now()} />:<></>}
     </div>
   );
 }

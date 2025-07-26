@@ -1,5 +1,5 @@
 import { Form } from "react-router";
-import hand from "../../../assets/update.svg";
+import hand from "../../../../../assets/update.svg";
 
 export default function AddUpdateCard() {
   return (

@@ -4,7 +4,7 @@ import FacultyList from "./FSlist";
 import TopicCards from "./FStopiclist";
 import RequestList from "./Requestlist";
 import ApprovedCard from "./ApprovedCard";
-import studentIcon from '../../../assets/studenticon.svg';
+import studentIcon from '../../../../../assets/studenticon.svg';
 import FSTeamthere from "./FSTeamshow";
 
 export default function FacultySelection({ data }) {

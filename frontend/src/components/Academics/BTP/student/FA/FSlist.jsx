@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import downarrow from "../../../assets/right 1.svg";
-import profile from "../../../assets/studenticon.svg";
-import SearchIcon from "../../../assets/search.svg";
+import downarrow from "../../../../../assets/right 1.svg";
+import profile from "../../../../../assets/studenticon.svg";
+import SearchIcon from "../../../../../assets/search.svg";
 
 export default function FacultyList({ topics, onShowTopics }) {
   const [search, setSearch]=useState("");
