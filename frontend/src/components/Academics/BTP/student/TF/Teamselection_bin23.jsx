@@ -2,6 +2,7 @@ import { redirect, useSubmit } from "react-router";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import TFBin23Requests from "./TFBin23Requests";
 import TFBin23teamthere from "./TFBin23teamthere";
+import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 // Dummy incoming request data (replace with actual backend data later)
 const incomingRequests = [
@@ -151,16 +152,16 @@ export default function BTPTeamselection_bin23({ data }) {
   };
 
   return (
-    <div className="team-selection">
-      <div className="team-selection-content">
+    <div className={classes["team-selection"]}>
+      <div className={classes["team-selection-content"]}>
         {data.inteam === 0 ? (
           <>
             {data.teams.length > 0 ? (
-              <div className="team-selection-header">
+              <div className={classes["team-selection-header"]}>
                 {!data.inteam && (
                   <>
                     <h2>Incoming Requests</h2>
-                    <div className="warning-message">
+                    <div className={classes["warning-message"]}>
                       <p>
                         Only <strong>ONE</strong> team leader can be accepted
                         and it is final.
@@ -171,7 +172,7 @@ export default function BTPTeamselection_bin23({ data }) {
               </div>
             ) : (
               <>
-                <div className="warning-message">
+                <div className={classes["warning-message"]}>
                   <p>No Incoming Requests</p>
                 </div>
               </>

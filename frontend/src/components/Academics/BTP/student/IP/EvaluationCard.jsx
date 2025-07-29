@@ -1,3 +1,5 @@
+import classes from "../../../../styles/Inprogress.module.css";
+
 export default function EvaluationCard({ evaluations }) {
   function formatDate(isoString) {
     if (!isoString) return "Not Occurred";
@@ -6,10 +8,10 @@ export default function EvaluationCard({ evaluations }) {
   }
 
   return (
-    <div className="evaluation-card">
+    <div className={classes["evaluation-card"]}>
       <h2>Evaluation</h2>
       {evaluations.map((evalItem, index) => (
-        <div key={index} className="evaluation-row">
+        <div key={index} className={classes["evaluation-row"]}>
           <span>Evaluation {index + 1}</span>
           <span>{formatDate(evalItem.time)}</span>
         </div>

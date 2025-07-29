@@ -1,10 +1,12 @@
+import classes from "../../../../styles/Inprogress.module.css";
+
 export default function ScoreCard({ currentScore }) {
   return (
-    <div className="score-card">
+    <div className={classes["score-card"]}>
       <h2>Current Score</h2>
-      <div className="score-value">
-        <div className="score-main">{currentScore}</div>
-        <div className="score-outof">/ 50</div>
+      <div className={classes["score-value"]}>
+        <div className={classes["score-main"]}>{currentScore}</div>
+        <div className={classes["score-outof"]}>/ 50</div>
       </div>
     </div>
   );

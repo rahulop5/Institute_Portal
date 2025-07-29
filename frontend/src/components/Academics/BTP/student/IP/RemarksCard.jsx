@@ -1,8 +1,10 @@
+import classes from "../../../../styles/Inprogress.module.css";
+
 export default function RemarksCard({ latestRemark }) {
   return (
-    <div className="remarks-card">
+    <div className={classes["remarks-card"]}>
       <h2>Evaluation Remarks</h2>
-      <div className="remark-content">
+      <div className={classes["remark-content"]}>
         <span>{latestRemark}</span>
       </div>
     </div>

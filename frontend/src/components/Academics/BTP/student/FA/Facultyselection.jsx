@@ -4,8 +4,9 @@ import FacultyList from "./FSlist";
 import TopicCards from "./FStopiclist";
 import RequestList from "./Requestlist";
 import ApprovedCard from "./ApprovedCard";
-import studentIcon from '../../../../../assets/studenticon.svg';
+import studentIcon from "../../../../../assets/studenticon.svg";
 import FSTeamthere from "./FSTeamshow";
+import classes from "../../../../styles/FacultySelection.module.css";
 
 export default function FacultySelection({ data }) {
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
@@ -80,10 +81,10 @@ export default function FacultySelection({ data }) {
           )}
 
           {data.outgoingRequests.length > 0 && (
-            <div className="request-toggle-wrapper">
+            <div className={classes["request-toggle-wrapper"]}>
               <button
                 onClick={handleToggleRequests}
-                className="request-toggle-btn"
+                className={classes["request-toggle-btn"]}
               >
                 {showRequests
                   ? "Hide Outgoing Requests"
@@ -125,8 +126,8 @@ export async function action({ request }) {
   );
 
   if (!response.ok) {
-  const result = await response.json();
-  console.log(result)
+    const result = await response.json();
+    console.log(result);
     throw new Response(
       JSON.stringify({
         message: "Error sending team request",

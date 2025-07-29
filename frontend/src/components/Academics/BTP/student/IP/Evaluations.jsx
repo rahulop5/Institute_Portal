@@ -1,4 +1,5 @@
 import { useState } from "react";
+import classes from "../../../../styles/Inprogress.module.css";
 
 export default function EvaluationDetails({ evaluations, latestUpdates }) {
   const [showAll, setShowAll] = useState(false);
@@ -6,7 +7,7 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
   // Combine all updates from all evaluations + latest ones
   const allUpdates = [
     ...(latestUpdates || []),
-    ...evaluations.flatMap((evalObj) => evalObj.updates || [])
+    ...evaluations.flatMap((evalObj) => evalObj.updates || []),
   ];
 
   // Sort updates descending by time (newest first)
@@ -25,45 +26,48 @@ export default function EvaluationDetails({ evaluations, latestUpdates }) {
   }
 
   return (
-    <div className="evaluation-details-container">
-      <div className="evaluation-header">
+    <div className={classes["evaluation-details-container"]}>
+      <div className={classes["evaluation-header"]}>
         <h2>Project Updates</h2>
       </div>
 
-      <div className="parentdivshowupdates">
-        <div className="evaluation-table">
-        <div className="eval-table-header">
-          <span>Time</span>
-          <span>Update</span>
-          <span>Remarks</span>
-        </div>
+      <div className={classes["parentdivshowupdates"]}>
+        <div className={classes["evaluation-table"]}>
+          <div className={classes["eval-table-header"]}>
+            <span>Time</span>
+            <span>Update</span>
+            <span>Remarks</span>
+          </div>
 
-        {visibleUpdates.map((update, idx) => {
-          const { dateStr, timeStr } = formatDateTime(update.time);
-          const remark = update?.remark || <i>No Remarks are given yet.</i>;
-          return (
-            <div key={update._id || idx} className="eval-table-row">
-              <div className="eval-timestamp">
-                <strong>{dateStr}</strong>
-                <div>{timeStr}</div>
+          {visibleUpdates.map((update, idx) => {
+            const { dateStr, timeStr } = formatDateTime(update.time);
+            const remark = update?.remark || <i>No Remarks are given yet.</i>;
+            return (
+              <div
+                key={update._id || idx}
+                className={classes["eval-table-row"]}
+              >
+                <div className={classes["eval-timestamp"]}>
+                  <strong>{dateStr}</strong>
+                  <div>{timeStr}</div>
+                </div>
+                <div>{update.update}</div>
+                <div>{remark}</div>
               </div>
-              <div>{update.update}</div>
-              <div>{remark}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {sortedUpdates.length > 4 && (
-        <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <button
-            className="toggle-project-updates-btn"
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? "Show Less" : "Show All"}
-          </button>
+            );
+          })}
         </div>
-      )}
+
+        {sortedUpdates.length > 4 && (
+          <div style={{ textAlign: "center", marginTop: "1rem" }}>
+            <button
+              className={classes["toggle-project-updates-btn"]}
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? "Show Less" : "Show All"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
