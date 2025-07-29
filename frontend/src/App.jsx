@@ -11,6 +11,7 @@ import { action as sendTRAction } from "./components/academics/btp/student/TF/Te
 import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
 import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
+import TopicAddtion from "./components/academics/btp/student/FA/TopicAddtion";
 
 const router=createBrowserRouter([
   {
