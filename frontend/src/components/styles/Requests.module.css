@@ -1,0 +1,139 @@
+.container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 1rem;
+  padding-left: 0.5rem;
+  margin-top: 2vh;
+  background-color: #fdfdfd;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  /* box-shadow: 0 1px 4px rgba(0,0,0,0.1); */
+  transition: all 0.3s ease;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1.9fr 2.6fr 0.5fr; /* Adjust ratios as needed */
+  align-items: center;
+  font-size: 1rem;
+  gap: 1rem;
+}
+
+
+.bin1name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.name {
+  font-weight: 500;
+  word-break: break-word;
+}
+.topic {
+  color: #555;
+  word-break: break-word;
+}
+
+.bin1name img {
+  width: 3rem;
+  height: 3rem;
+  /* border-radius: 50%; */
+  margin-right: 0.5rem;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.name {
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.moreInfo {
+  background: none;
+  border: none;
+  color: #3c82f6;
+  cursor: pointer;
+  white-space: nowrap; 
+}
+
+.expanded {
+
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2fr 2.5fr 0.5fr; 
+  align-items: center;
+  padding-top: 1rem;
+
+}
+
+.icons {
+  display: flex;
+  margin: 0.5rem 0;
+}
+
+.icon {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  position: relative;
+  margin-left: -0.6rem; /* overlap */
+  z-index: 1;
+}
+
+.icon:second-child {
+  margin-left: 0;
+  z-index: 2;
+}
+
+.icon img {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+}
+
+.actions {
+  margin-top: 4vh;
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 4vh;
+}
+
+.reject {
+  height: 4vh;
+  background: transparent;
+  border: 2px solid #6F6F6F;
+  border-radius: 1rem;
+  padding: 0.25rem 1rem;
+  cursor: pointer;
+}
+
+.accept {
+  height: 4vh;
+  background: white;
+  width: 7rem;
+  border: 2px solid #1bbb55;
+  color: #1bbb55;
+  border-radius: 1rem;
+  padding: 0.25rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
