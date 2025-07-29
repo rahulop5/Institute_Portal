@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import styles from '../../../styles/TabsHeader.module.css';
-import SearchContainer from '../SearchContainer';
+import SearchIcon from '../../../../assets/search.svg';
+
 
 export default function TabsHeader({ activeTab, setActiveTab }) {
+
+  const [search, setSearch] = useState("");
+
   return (
     <div className={styles.headerWrapper}>
       <h2 className={styles.heading}>Team Management</h2>
@@ -24,7 +28,21 @@ export default function TabsHeader({ activeTab, setActiveTab }) {
         </div>
 
         <div className={styles.searchWrapper}>
-          <SearchContainer />
+           <div className={styles.searchcontainer} id="Teamselectionsearchbar">
+                    <input
+                      type="text"
+                      placeholder="Search by name, email, or roll number"
+                      onChange={(e)=>{setSearch(e.target.value)}}
+                      value={search}
+                      className={styles.searchinput}
+                      aria-label="Search students"
+                    />
+                    <img
+                      src={SearchIcon}
+                      alt="Search"
+                      className={styles.searchicon}
+                    />
+                  </div>
         </div>
       </div>
     </div>

@@ -77,12 +77,13 @@ const data = {
 
 
   return (
-    <div>
-      <TabsHeader activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="faculty-page">
-      {/* <TopicList topics={facultyData.topics} /> */}
-      <Requests data={data} />
+  <div>
+    <TabsHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="faculty-page">
+      {activeTab === 'topics' && <TopicList topics={facultyData.topics} />}
+      {activeTab === 'requests' && <Requests data={data} />}
     </div>
-    </div>
-  );
+  </div>
+);
+
 }

@@ -71,11 +71,12 @@
 
 .expanded {
 
-  width: 100%;
+
   display: grid;
-  grid-template-columns: 2fr 2.5fr 0.5fr; 
+  grid-template-columns: 1.3fr 1.7fr 0.5fr; 
   align-items: center;
   padding-top: 1rem;
+  margin-left: 3.8vw;
 
 }
 
