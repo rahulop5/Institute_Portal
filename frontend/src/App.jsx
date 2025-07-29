@@ -52,7 +52,7 @@ const router=createBrowserRouter([
       },
       
       { path: "logout", action: logoutAction },
-      { path: "temp", element: <Inprogress /> },
+      { path: "temp", element: <TopicAddtion/> },
     ]
   },
 ]);
