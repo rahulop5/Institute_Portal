@@ -108,5 +108,5 @@ export async function action({ request }) {
 
   const result = await response.json();
 
-  return redirect("/academics/btp");
+  return redirect("/academics/btp/student");
 }

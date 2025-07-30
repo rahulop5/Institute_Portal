@@ -230,7 +230,7 @@ export async function action({ request }) {
   const result = await response.json();
   console.log(result);
 
-  return redirect("/academics/btp");
+  return redirect("/academics/btp/student");
 }
 
 export async function action2({ request }) {
@@ -268,5 +268,5 @@ export async function action2({ request }) {
   const result = await response.json();
   console.log(result);
 
-  return redirect("/academics/btp");
+  return redirect("/academics/btp/student");
 }

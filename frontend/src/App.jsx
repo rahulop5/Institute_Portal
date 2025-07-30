@@ -8,10 +8,12 @@ import { checkAuthLoader, tokenLoader } from "./util/auth";
 import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
 import { action as sendTRAction } from "./components/academics/btp/student/TF/Teamselection_bin1";
-import BTPRouter, { loader as btpLoader} from "./pages/BTPRouter";
+import BTPStudentRouter, { loader as btpLoader} from "./pages/BTPStudentRouter.jsx";
 import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
 import TopicAddtion from "./components/Academics/BTP/faculty/TopicAddition.jsx";
+import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFacultyRouter.jsx";
+import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -28,14 +30,28 @@ const router=createBrowserRouter([
         children: [
           {path: ":smth", element: <Temp />},
           { 
-            path: "btp", element: <BTPRouter />,
-            loader: btpLoader,
+            path: "btp",
             children: [
-              {path: "sendteamrequest", action: sendTRAction, element: <></>},
-              {path: "acceptteamrequest", action: acceptTRAction, element: <></>},
-              {path: "rejectteamrequest", action: rejectTRAction, element: <></>},
-              {path: "applytotopic", action: applytotopicAction, element: <></>},
-              {path: "addupdate", action: addUpdateAction, element: <></>}
+              {
+                index: true,
+                loader: btpRouterLoader,
+                element: <></>
+              },
+              {path: "student", element: <BTPStudentRouter />,
+                loader: btpLoader,
+                children: [
+                  {path: "sendteamrequest", action: sendTRAction, element: <></>},
+                  {path: "acceptteamrequest", action: acceptTRAction, element: <></>},
+                  {path: "rejectteamrequest", action: rejectTRAction, element: <></>},
+                  {path: "applytotopic", action: applytotopicAction, element: <></>},
+                  {path: "addupdate", action: addUpdateAction, element: <></>}
+                ]
+              },
+              {
+                path: "faculty", element: <BTPFacultyRouter />,
+                loader: btpFacultyRouter,
+                
+              }
             ]
           }
         ]
