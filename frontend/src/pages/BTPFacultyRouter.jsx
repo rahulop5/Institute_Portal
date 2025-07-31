@@ -10,7 +10,7 @@ export default function BTPFacultyRouter(){
         case "NOT_STARTED":
         case "TEAM_FORMATION":
         case "FACULTY_ASSIGNMENT":
-            return <TopicAddtion data={data}/>
+            return <TopicAddtion data={data} />
     
         default:
             return <ErrorPage />

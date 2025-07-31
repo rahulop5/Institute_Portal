@@ -167,12 +167,13 @@ export const addTopic = async (req, res) => {
       message: "Error finding the faculty",
     });
   }
-  if (!req.body.topic || !req.body.dept || !req.body.about) {
+  if (!req.body.topic || !req.body.about) {
     return res.status(400).json({
       message: "No topic found",
     });
   }
-  const { topic, dept, about } = req.body;
+  const { topic, about } = req.body;
+  const dept = user.dept;
   if (!["CSE", "ECE", "MDS"].includes(dept)) {
     return res.status(400).json({
       message: "Invalid Department",
@@ -212,21 +213,19 @@ export const addTopic = async (req, res) => {
 };
 
 export const deleteTopic = async (req, res) => {
-  if (!req.body.topicid || !req.body.actualtid) {
-    return res.status(400).json({
-      message: "Id not mentioned",
-    });
-  }
   try {
+    const { topicid, actualtid } = req.body;
+    if (!topicid || !actualtid) {
+      return res.status(400).json({
+        message: "Id not mentioned",
+      });
+    }
     const result = await BTPTopic.updateOne(
-      {
-        _id: req.body.actualtid,
-      },
+      { _id: actualtid },
       {
         $pull: {
-          topics: {
-            _id: req.body.topicid,
-          },
+          topics: { _id: topicid },
+          requests: { topic: topicid },
         },
       }
     );
@@ -236,7 +235,7 @@ export const deleteTopic = async (req, res) => {
       });
     }
     return res.status(200).json({
-      message: "Deleted successfully",
+      message: "Deleted topic and related requests successfully",
     });
   } catch (err) {
     console.log(err);

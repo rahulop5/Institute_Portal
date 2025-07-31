@@ -11,9 +11,11 @@ import { action as sendTRAction } from "./components/academics/btp/student/TF/Te
 import BTPStudentRouter, { loader as btpLoader} from "./pages/BTPStudentRouter.jsx";
 import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
-import TopicAddtion from "./components/Academics/BTP/faculty/TopicAddition.jsx";
+import TopicAddtion from "./components/academics/btp/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFacultyRouter.jsx";
 import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
+import { action2 as deleteTopicAction, action as addTopicAction } from "./components/academics/btp/faculty/Topicslist.jsx";
+import { action as acceptReqAction, action2 as rejectReqAction } from "./components/academics/btp/faculty/Requests.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -50,7 +52,12 @@ const router=createBrowserRouter([
               {
                 path: "faculty", element: <BTPFacultyRouter />,
                 loader: btpFacultyRouter,
-                
+                children: [
+                  {path: "addtopic", action: addTopicAction, element: <></>},
+                  {path: "deletetopic", action: deleteTopicAction, element: <></>},
+                  {path: "accepttopicrequest", action: acceptReqAction, element: <></>},
+                  {path: "rejecttopicrequest", action: rejectReqAction, element: <></>}
+                ]
               }
             ]
           }
