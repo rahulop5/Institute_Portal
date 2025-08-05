@@ -1,0 +1,236 @@
+/* Overall layout container */
+.container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top container with topic and evaluations */
+.topContainer {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Topic Card Styles */
+.topicCard {
+  background-color: #f9f9ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.topicTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.topicDescription {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Evaluation Card Styles */
+.evaluationCard {
+  background-color: #f9f9ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.evaluationRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+/* Evaluation status badges */
+.status {
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.completed {
+  color: #2e7d32;
+  background-color: #e6f4ea;
+}
+
+.pending {
+  color: #ed6c02;
+  background-color: #fff3e0;
+}
+
+.unavailable {
+  color: #777;
+  background-color: #f0f0f0;
+}
+
+
+
+
+/* Bottom container grid */
+.bottomContainer {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  gap: 1.5rem;
+}
+
+/* Members Card */
+.membersCard {
+  background-color: #f9f9ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.cardHeading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.memberList {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.icon {
+  margin-right: 0.5rem;
+}
+
+/* Guide + Evaluators Grid */
+.guideEvalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Guide and Evaluator Cards */
+.guideCard,
+.evaluatorCard {
+  background-color: #f9f9ff;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-size: 0.95rem;
+}
+
+
+/* Right side container */
+.rightContainer {
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Progress Card */
+.progressCard {
+  background-color: #f9f9ff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.progressBar {
+  margin-top: 1rem;
+  position: relative;
+  height: 10px;
+  background-color: #ddd;
+  border-radius: 5px;
+}
+
+.progressFill {
+  position: absolute;
+  height: 10px;
+  width: 35%; /* change this based on progress */
+  background-color: #007bff;
+  border-radius: 5px 0 0 5px;
+}
+
+.checkpoint {
+  position: absolute;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  border: 2px solid #000;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+/* Grid for date and score */
+.evalScoreGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.dateCard,
+.scoreCard {
+  background-color: #f9f9ff;
+  padding: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.smallLabel {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 0.3rem;
+}
+
+.largeNumber {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.scoreValue {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.outOf {
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Phase Card */
+.phaseCard {
+  background-color: #f9f9ff;
+  padding: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 65% 35%;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.leftWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}

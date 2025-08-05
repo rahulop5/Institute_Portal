@@ -1,0 +1,61 @@
+.overviewContainer {
+  background-color: #ffffff;
+  width: 95px;
+  padding: 15px 0;
+  border-radius: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  margin-top: 10vh;
+}
+
+
+.item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-weight: bold;
+  font-size: 25px;
+  color: #000;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  margin-right: -5px;
+}
+
+.number {
+  font-weight: 500;
+  font-size: 35px;
+  margin-top: 15px;
+}
+
+.guiding {
+  color: #2563eb;  /* blue */
+}
+
+.evaluating {
+  color: #f59e0b;  /* orange */
+}
+
+.requests {
+  color: #ef4444; /* red */
+}
+
+.lastItem {
+  margin-top: auto;
+  background: #fff;
+  width: 80px;
+  height: 80px;
+  border-radius: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  font-size: 30px;
+  font-weight: 500;
+}

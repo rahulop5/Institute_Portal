@@ -16,6 +16,8 @@ import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFaculty
 import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import { action2 as deleteTopicAction, action as addTopicAction } from "./components/academics/btp/faculty/Topicslist.jsx";
 import { action as acceptReqAction, action2 as rejectReqAction } from "./components/academics/btp/faculty/Requests.jsx";
+import EvaluationPage from "./components/Academics/BTP/faculty/Evaluationpage.jsx";
+import StudentInProgress from "./components/Academics/BTP/faculty/StudentInProgress.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -77,7 +79,7 @@ const router=createBrowserRouter([
       },
       
       { path: "logout", action: logoutAction },
-      { path: "temp", element: <TopicAddtion/> },
+      { path: "temp", element: <StudentInProgress /> },
     ]
   },
 ]);

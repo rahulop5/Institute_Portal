@@ -1,0 +1,16 @@
+.contentWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 24px;
+  /* padding-right: 32px; */
+}
+
+.listSection {
+  flex-grow: 1;
+}
+
+.overviewSection {
+  flex-shrink: 0;
+}
