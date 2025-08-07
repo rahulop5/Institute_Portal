@@ -1,0 +1,169 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  /* align-items: center; */
+
+}
+
+.list {
+
+  padding-top: 1.5rem;
+  background-color: #f9f7fe;
+  border-radius: 12px;
+  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); */
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.listactions{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.heading {
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+}
+
+.table {
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.10);
+  background: #FFF;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
+}
+
+.row {
+  display: flex;
+  padding: 0.75rem 1.75rem;
+  align-items: flex-start;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+  align-items: center;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.header {
+  background-color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+  padding-left: 0;
+}
+
+.cellDate {
+  width: 120px;
+  min-width: 100px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.cellContent {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.actions p {
+  text-align: left;
+  font-size: 13px;
+  color: #000000;
+  border: 1px solid #FFB400;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Evaluate Button */
+
+.evaluatebutton {
+ text-align: right;
+}
+.evaluatebutton button {
+  width: 80%;
+  height: 50px;
+  padding: 12px 32px;
+  font-size: 16px;
+  /* font-weight: bold; */
+  color: #000000;
+  border: none;
+  border-radius: 30px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10)
+}
+
+.evaluatebutton button:hover {
+  background: #FF9D00;
+  color: white;
+  box-shadow: 0 4px 10px rgba(255, 153, 0, 0.4);
+}
+
+.updatebutton {
+  text-align: right;
+  width: 100%;
+}
+
+/* Add Update Button */
+.updatebutton p {
+  font-size: 13px;
+  color: #000000;
+  border: 1px solid #FFB400;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 90%;
+  
+}
+
+
+.updatebutton button {
+  font-size: 16px;
+  width: 80%;
+  height: 50px;
+  color: #bbb;
+  border: none;
+  border-radius: 30px;
+  background: #f2f2f2;
+  cursor: not-allowed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 
+  0 0 13.9px 0 rgba(0, 0, 0, 0.10), 
+  0 0 13.9px 0 rgba(0, 0, 0, 0.10), 
+  0 4px 6.7px 0 rgba(255, 255, 255, 0.63) inset;
+
+  margin-left: auto; /* aligns button to the right */
+}
+
+.lockIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
