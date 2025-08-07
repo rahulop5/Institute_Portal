@@ -205,6 +205,7 @@ export const getFacultyBTPDashboard = async (req, res) => {
           .map(formatProject);
 
         return res.status(200).json({
+          phase: currstate.currentPhase,
           email: user.email,
           guideproj: guideProjects.map(formatProject),
           evalproj: evalProjects.map(formatProject),
@@ -301,6 +302,16 @@ export const viewProject = async (req, res) => {
       bin: user.bin,
       phase: "IP",
       message: "Student Progress Dashboard",
+      //hardcoded start
+      nextEvalDate: {
+        month: "March",
+        day: 15,
+      },
+      currentScore: {
+        value: 48,
+        outOf: 50,
+      },
+      //hardcoded end
       project: {
         name: project.name,
         about: project.about,
@@ -319,7 +330,7 @@ export const viewProject = async (req, res) => {
           email: s.student.email,
         })),
         evaluations: formattedEvaluations,
-        latestUpdates: remainingUpdates, // updates after last evaluation
+        latestUpdates: project.updates // updates after last evaluation
       },
     });
   } catch (err) {
@@ -584,24 +595,36 @@ export const evaluateProjectasGuide = async (req, res) => {
     }
 
     if (project.guide.email !== req.user.email) {
-      return res.status(403).json({ message: "Access denied: You are not the guide" });
+      return res
+        .status(403)
+        .json({ message: "Access denied: You are not the guide" });
     }
 
-    const expectedStudentIds = project.students.map((s) => s.student._id.toString());
+    const expectedStudentIds = project.students.map((s) =>
+      s.student._id.toString()
+    );
     const sentStudentIds = marks.map((m) => m.studentId.toString());
 
     if (sentStudentIds.length !== expectedStudentIds.length) {
-      return res.status(400).json({ message: "Mismatch in number of students" });
+      return res
+        .status(400)
+        .json({ message: "Mismatch in number of students" });
     }
 
     const uniqueSentIds = new Set(sentStudentIds);
     if (uniqueSentIds.size !== expectedStudentIds.length) {
-      return res.status(400).json({ message: "Duplicate student entries in marks" });
+      return res
+        .status(400)
+        .json({ message: "Duplicate student entries in marks" });
     }
 
-    const missingIds = expectedStudentIds.filter((id) => !uniqueSentIds.has(id));
+    const missingIds = expectedStudentIds.filter(
+      (id) => !uniqueSentIds.has(id)
+    );
     if (missingIds.length > 0) {
-      return res.status(400).json({ message: "Some student IDs do not match the team" });
+      return res
+        .status(400)
+        .json({ message: "Some student IDs do not match the team" });
     }
 
     const marksgiven = marks.map((m) => ({
@@ -654,7 +677,9 @@ export const evaluateProjectasEval = async (req, res) => {
       .populate("panelEvaluations.evaluator");
 
     if (!evaluation) {
-      return res.status(404).json({ message: "Evaluation not found for this project" });
+      return res
+        .status(404)
+        .json({ message: "Evaluation not found for this project" });
     }
 
     // Find the evaluator entry
@@ -664,24 +689,36 @@ export const evaluateProjectasEval = async (req, res) => {
     );
 
     if (evaluatorIndex === -1) {
-      return res.status(403).json({ message: "You are not an evaluator for this project" });
+      return res
+        .status(403)
+        .json({ message: "You are not an evaluator for this project" });
     }
 
     if (evaluation.panelEvaluations[evaluatorIndex].submitted) {
-      return res.status(400).json({ message: "You have already submitted evaluation for this project" });
+      return res.status(400).json({
+        message: "You have already submitted evaluation for this project",
+      });
     }
 
     // Validate student IDs
-    const validStudentIds = evaluation.marksgiven.map((m) => m.student.toString());
+    const validStudentIds = evaluation.marksgiven.map((m) =>
+      m.student.toString()
+    );
     const sentStudentIds = panelmarks.map((p) => p.studentId.toString());
 
     if (validStudentIds.length !== sentStudentIds.length) {
-      return res.status(400).json({ message: "Mismatch in number of students" });
+      return res
+        .status(400)
+        .json({ message: "Mismatch in number of students" });
     }
 
-    const invalidIds = sentStudentIds.filter(id => !validStudentIds.includes(id));
+    const invalidIds = sentStudentIds.filter(
+      (id) => !validStudentIds.includes(id)
+    );
     if (invalidIds.length > 0) {
-      return res.status(400).json({ message: "One or more student IDs are invalid" });
+      return res
+        .status(400)
+        .json({ message: "One or more student IDs are invalid" });
     }
 
     // Save the panel marks
@@ -690,19 +727,19 @@ export const evaluateProjectasEval = async (req, res) => {
       marks: pm.marks,
     }));
 
-    evaluation.panelEvaluations[evaluatorIndex].panelmarks = formattedPanelMarks;
+    evaluation.panelEvaluations[evaluatorIndex].panelmarks =
+      formattedPanelMarks;
     evaluation.panelEvaluations[evaluatorIndex].remark = remark;
     evaluation.panelEvaluations[evaluatorIndex].submitted = true;
     evaluation.panelEvaluations[evaluatorIndex].submittedAt = new Date();
 
     await evaluation.save();
 
-    return res.status(200).json({ message: "Evaluation submitted successfully" });
+    return res
+      .status(200)
+      .json({ message: "Evaluation submitted successfully" });
   } catch (err) {
     console.error("Evaluator evaluation error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-

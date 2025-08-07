@@ -4,10 +4,10 @@ import EvaluationList from './EvaluationList';
 import Overview from './Overview'; 
 import styles from '../../../styles/EvaluationPage.module.css';
 
-export default function EvaluationPage() {
+export default function EvaluationPage({data}) {
   const [selectedTab, setSelectedTab] = useState('guiding');
 
-  const data = {
+  const data2 = {
     email: 'asha.iyer@example.com',
     guideproj: [
       {

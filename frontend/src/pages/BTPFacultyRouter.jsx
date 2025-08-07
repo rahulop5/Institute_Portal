@@ -1,21 +1,31 @@
-import { useLoaderData } from "react-router";
+import { Outlet, useMatch, useLoaderData } from "react-router";
 import ErrorPage from "./Error";
 import TopicAddtion from "../components/academics/btp/faculty/TopicAddition";
+import EvaluationPage from "../components/academics/btp/faculty/EvaluationPage";
 
+export default function BTPFacultyRouter() {
+  const data = useLoaderData();
+  const phase = data.phase;
 
-export default function BTPFacultyRouter(){
-    const data=useLoaderData();
-    const phase=data.phase;
-    switch (phase) {
-        case "NOT_STARTED":
-        case "TEAM_FORMATION":
-        case "FACULTY_ASSIGNMENT":
-            return <TopicAddtion data={data} />
-    
-        default:
-            return <ErrorPage />
-    }
+  const isViewingProject = useMatch("/academics/btp/faculty/:projid");
+
+  if (isViewingProject) {
+    return <Outlet />;
+  }
+
+  switch (phase) {
+    case "NOT_STARTED":
+    case "TEAM_FORMATION":
+    case "FACULTY_ASSIGNMENT":
+      return <TopicAddtion data={data} />;
+    case "IN_PROGRESS":
+      return <EvaluationPage data={data} />;
+    default:
+      return <ErrorPage />;
+  }
 }
+
+
 
 export async function loader(){
     const role=localStorage.getItem("role");

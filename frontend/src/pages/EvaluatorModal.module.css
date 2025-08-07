@@ -1,0 +1,247 @@
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 1000px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* .heading {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  text-align: center;
+} */
+
+.cardsContainer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.heading{
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 24px;
+  margin-left: 30px;
+  gap: 8px;
+  text-align: center;
+  align-items: center;
+}
+.studentCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 300px;
+  background: #f8f9ff00;
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  position: relative;
+  align-items: center;
+  box-shadow: 0 0 8px rgba(180, 180, 255, 0.5);
+}
+
+.avatarIcon {
+  font-size: 35px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.studentName {
+  font-weight: 400;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.infoText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 12px;
+  gap: 25px;
+}
+
+/* .label {
+  font-weight: 500;
+  color: #777;
+} */
+
+.infodata{
+  width: 60%;
+  align-items: center;
+}
+.marksInputLabel {
+  text-align: left;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 6px;
+  margin-left: 15px;
+}
+
+.marksInputContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.marksInput {
+  width: 60%;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  text-align: center;
+}
+
+.outOf {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.remarksContainer {
+  margin-top: 24px;
+}
+
+.remarksLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.remarksInput {
+  width: 100%;
+  min-height: 80px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  padding: 10px 12px;
+  resize: none;
+  font-size: 14px;
+}
+
+.charLimitWarning {
+  color: #d4a400;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.submitButton {
+  background-color: #8338ec;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submitButton:hover {
+  background-color: #6f2dc1;
+}
+
+
+.rollNumber {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px; /* spacing between icon and text */
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  color: #1f1f1f;
+}
+
+.rollNumberImg img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.rollNumberDetailsDiv {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.label {
+  font-weight: 500;
+  margin-bottom: 2px;
+  font-size: 13.5px;
+}
+
+.rollNumberValue {
+  font-size: 14px;
+}
+
+.binLabel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  color: #1f1f1f;
+  margin-right: 20px;
+}
+
+.binLabelImg img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.binLabelDetailsDiv {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.label {
+  font-weight: 500;
+  font-size: 13.5px;
+  margin-bottom: 2px;
+  color: #1f1f1f;
+}
+
+.binNumberValue {
+  font-size: 14px;
+  color: #1f1f1f;
+}
