@@ -122,7 +122,7 @@ function Requests({ data }) {
     {/* ikkada accepted requests ki styles */}
     <h2>Accepted Requests</h2>
     <div className={styles.container}>
-      {pendingRequests.length === 0 ? (
+      {acceptedrequests.length === 0 ? (
         <p>No pending requests.</p>
       ) : (
         acceptedrequests.map((req, index) => {

@@ -43,7 +43,7 @@ export default function BTPStudentList({ bin, onSelectStudent, selectedStudents,
                       onClick={() => onSelectStudent(student, parsedBin)}
                       aria-label={`Select student ${student.name}`}
                     >
-                      {isSelected ? "Unselect" : "Select"}
+                      {isSelected ? "Selected" : "Select"}
                     </button>
                   </div>
                 </div>

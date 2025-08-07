@@ -39,6 +39,37 @@ const data = {
   ],
 };
 
+const data2 = {
+  email: "asha.iyer@example.com",
+  guideproj: [
+    {
+      _id: "smth",
+      topic: "Assistive Technologies for Accessibility",
+      projid: "T1000202",
+      team: ["stu1", "stu2", "stu3"],
+    },
+    //...etc
+  ],
+  evalproj: [
+    {
+      _id: "smth",
+      topic: "Assistive Technologies for Accessibility",
+      projid: "T1000202",
+      team: ["stu1", "stu2", "stu3"],
+    },
+    //...etc
+  ],
+  evalreq: [
+    {
+      _id: "smth",
+      topic: "Assistive Technologies for Accessibility",
+      projid: "T1000202",
+      team: ["stu1", "stu2", "stu3"],
+    },
+    //...etc
+  ],
+};
+
 export const getFacultyBTPDashboard = async (req, res) => {
   const user = await Faculty.findOne({
     email: req.user.email,
@@ -130,15 +161,55 @@ export const getFacultyBTPDashboard = async (req, res) => {
 
       case "IN_PROGRESS":
         //can do this later
-        const projects = await BTP.find({
-          guide: user._id,
-        })
-          .populate("students.student")
-          .populate("guide");
+        const facultyId = user._id;
 
-        console.log(projects[0]);
+        const [guideProjects, evalProjects, evalRequestsRaw] =
+          await Promise.all([
+            // Projects guided by the faculty
+            BTP.find({ guide: facultyId })
+              .populate("students.student")
+              .select("name studentbatch students"),
 
-        break;
+            // Projects where faculty is an evaluator
+            BTP.find({ "evaluators.evaluator": facultyId })
+              .populate("students.student")
+              .select("name studentbatch students"),
+
+            // Evaluations where this faculty has not submitted yet
+            BTPEvaluation.find({
+              panelEvaluations: {
+                $elemMatch: {
+                  evaluator: facultyId,
+                  submitted: false,
+                },
+              },
+            })
+              .populate({
+                path: "projectRef",
+                populate: { path: "students.student" },
+              })
+              .select("projectRef"),
+          ]);
+
+        const formatProject = (project) => ({
+          _id: project._id,
+          topic: project.name,
+          projid: project._id.toString(), // or custom T10002xx format if exists
+          team: project.students.map((s) => s.student.name),
+        });
+
+        // Extract projects from evaluations (for evalreq)
+        const evalReqProjects = evalRequestsRaw
+          .map((e) => e.projectRef)
+          .filter((p) => p) // skip if no populated project
+          .map(formatProject);
+
+        return res.status(200).json({
+          email: user.email,
+          guideproj: guideProjects.map(formatProject),
+          evalproj: evalProjects.map(formatProject),
+          evalreq: evalReqProjects,
+        });
 
       case "COMPLETED":
         break;
@@ -156,7 +227,108 @@ export const getFacultyBTPDashboard = async (req, res) => {
   }
 };
 
-export const viewProject = async (req, res) => {};
+//take care of ts its not donw
+export const viewProject = async (req, res) => {
+  try {
+    if (!req.query.projid) {
+      return res.status(400).json({
+        message: "Invalid Request",
+      });
+    }
+    const user = await Faculty.findOne({
+      email: req.user.email,
+    });
+    if (!user) {
+      return res.status(404).json({
+        message: "Error finding the faculty",
+      });
+    }
+    const project = await BTP.findOne({
+      _id: req.query.projid,
+      guide: user._id,
+    })
+      .populate("students.student")
+      .populate("guide")
+      .populate("evaluators.evaluator");
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Cant Find Project",
+      });
+    }
+    const evaluations = await BTPEvaluation.find({
+      projectRef: project._id,
+    }).sort({ time: 1 });
+
+    const updates = project.updates.sort(
+      (a, b) => new Date(a.time) - new Date(b.time)
+    );
+
+    const formattedEvaluations = [];
+    let remainingUpdates = [...updates]; // mutable copy
+
+    for (let i = 0; i < evaluations.length; i++) {
+      const currEval = evaluations[i];
+      const nextEvalTime = evaluations[i + 1]?.time || null;
+
+      // Get updates before the *next* evaluation (or after current if last)
+      const evalUpdates = remainingUpdates.filter((u) => {
+        return u.time < (nextEvalTime || new Date(8640000000000000)); // max date if last
+      });
+
+      // Remove matched updates from remainingUpdates
+      remainingUpdates = remainingUpdates.filter(
+        (u) => !evalUpdates.includes(u)
+      );
+
+      formattedEvaluations.push({
+        _id: currEval._id,
+        time: currEval.time,
+        remark: currEval.remark,
+        resources: currEval.resources,
+        updates: evalUpdates,
+        canstudentsee: currEval.canstudentsee,
+        marksgiven: currEval.canstudentsee
+          ? currEval.marksgiven.filter(
+              (m) => m.student.toString() === user._id.toString()
+            )
+          : null,
+      });
+    }
+
+    return res.status(200).json({
+      email: user.email,
+      bin: user.bin,
+      phase: "IP",
+      message: "Student Progress Dashboard",
+      project: {
+        name: project.name,
+        about: project.about,
+        studentbatch: project.studentbatch,
+        guide: {
+          name: project.guide.name,
+          email: project.guide.email,
+        },
+        evaluators: project.evaluators.map((e) => ({
+          name: e.evaluator.name,
+          email: e.evaluator.email,
+        })),
+        team: project.students.map((s) => ({
+          _id: s.student._id,
+          name: s.student.name,
+          email: s.student.email,
+        })),
+        evaluations: formattedEvaluations,
+        latestUpdates: remainingUpdates, // updates after last evaluation
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      message: "Error loading the BTP dashboard in Progress phase",
+    });
+  }
+};
 
 export const addTopic = async (req, res) => {
   const user = await Faculty.findOne({
@@ -334,7 +506,7 @@ export const approveTopicRequest = async (req, res) => {
     });
 
     await newbtpproj.save();
-
+    console.log("done");
     return res.status(201).json({
       message: "Successfully approved team request",
     });
@@ -394,79 +566,143 @@ export const rejectTopicRequest = async (req, res) => {
 
 //IMP: for now we r letting the faculty do an evaluation whenever they now
 //itll be changed later...
-
 export const evaluateProjectasGuide = async (req, res) => {
   try {
-    if (!req.body.projid || !req.body.remark || !req.body.marks) {
-      return res.status(400).json({
-        message: "Invalid Request",
-      });
-    }
     const { projid, remark, marks } = req.body;
-    if (!Array.isArray(marks)) {
-      return res.status(400).json({
-        message: "Invalid request format",
-      });
-    }
-    const project = await BTP.findOne({
-      _id: projid,
-    }).populate("guide");
-    if (!project) {
-      return res.status(404).json({
-        message: "No project found",
-      });
-    }
-    if (project.guide.email !== req.user.email) {
-      return res.status(403).json({
-        message: "You dont have access to do this",
-      });
+
+    if (!projid || !remark || !Array.isArray(marks)) {
+      return res.status(400).json({ message: "Invalid request format" });
     }
 
-    //checkin if student ids match
-    const expectedStudentIds = project.students.map((s) =>
-      s.student.toString()
-    );
-    const sentStudentIds = marks.map((m) => m.student.toString());
+    const project = await BTP.findById(projid)
+      .populate("guide")
+      .populate("students.student")
+      .populate("evaluators.evaluator");
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (project.guide.email !== req.user.email) {
+      return res.status(403).json({ message: "Access denied: You are not the guide" });
+    }
+
+    const expectedStudentIds = project.students.map((s) => s.student._id.toString());
+    const sentStudentIds = marks.map((m) => m.studentId.toString());
 
     if (sentStudentIds.length !== expectedStudentIds.length) {
-      return res.status(400).json({
-        message: "Mismatch in number of students",
-      });
+      return res.status(400).json({ message: "Mismatch in number of students" });
     }
 
     const uniqueSentIds = new Set(sentStudentIds);
     if (uniqueSentIds.size !== expectedStudentIds.length) {
-      return res.status(400).json({
-        message: "Duplicate student entries in marks",
-      });
+      return res.status(400).json({ message: "Duplicate student entries in marks" });
     }
 
-    const missing = expectedStudentIds.filter((id) => !uniqueSentIds.has(id));
-    if (missing.length > 0) {
-      return res.status(400).json({
-        message: "One or more student IDs do not match the project team",
-      });
+    const missingIds = expectedStudentIds.filter((id) => !uniqueSentIds.has(id));
+    if (missingIds.length > 0) {
+      return res.status(400).json({ message: "Some student IDs do not match the team" });
     }
 
-    //resources ignored for now ill do later
+    const marksgiven = marks.map((m) => ({
+      student: m.studentId,
+      guidemarks: m.guidemarks,
+      totalgrade: null,
+    }));
+
+    const panelEvaluations = project.evaluators.map((ev) => ({
+      evaluator: ev.evaluator._id,
+      submitted: false,
+      submittedAt: null,
+      panelmarks: [],
+      remark: "",
+    }));
+
     const newEval = new BTPEvaluation({
-      projectRef: projid,
+      projectRef: project._id,
       time: new Date(),
       canstudentsee: false,
       remark,
-      // this is the format: [{ student, guidemarks }]
-      marksgiven: marks,
+      marksgiven,
+      panelEvaluations,
     });
 
     await newEval.save();
 
     return res.status(201).json({
-      message: "Evaluation successfully submitted",
+      message: "Guide evaluation successfully submitted",
     });
   } catch (err) {
-    console.log(err);
+    console.error("Guide Evaluation Error:", err);
     return res.status(500).json({
-      message: "Error evaluating the project",
+      message: "Internal error while evaluating project",
     });
   }
 };
+
+export const evaluateProjectasEval = async (req, res) => {
+  try {
+    const { projid, panelmarks, remark } = req.body;
+
+    if (!projid || !Array.isArray(panelmarks) || !remark) {
+      return res.status(400).json({ message: "Invalid request body" });
+    }
+
+    // Get the evaluation for the project
+    const evaluation = await BTPEvaluation.findOne({ projectRef: projid })
+      .populate("projectRef")
+      .populate("panelEvaluations.evaluator");
+
+    if (!evaluation) {
+      return res.status(404).json({ message: "Evaluation not found for this project" });
+    }
+
+    // Find the evaluator entry
+    const evaluatorEmail = req.user.email;
+    const evaluatorIndex = evaluation.panelEvaluations.findIndex(
+      (ev) => ev.evaluator.email === evaluatorEmail
+    );
+
+    if (evaluatorIndex === -1) {
+      return res.status(403).json({ message: "You are not an evaluator for this project" });
+    }
+
+    if (evaluation.panelEvaluations[evaluatorIndex].submitted) {
+      return res.status(400).json({ message: "You have already submitted evaluation for this project" });
+    }
+
+    // Validate student IDs
+    const validStudentIds = evaluation.marksgiven.map((m) => m.student.toString());
+    const sentStudentIds = panelmarks.map((p) => p.studentId.toString());
+
+    if (validStudentIds.length !== sentStudentIds.length) {
+      return res.status(400).json({ message: "Mismatch in number of students" });
+    }
+
+    const invalidIds = sentStudentIds.filter(id => !validStudentIds.includes(id));
+    if (invalidIds.length > 0) {
+      return res.status(400).json({ message: "One or more student IDs are invalid" });
+    }
+
+    // Save the panel marks
+    const formattedPanelMarks = panelmarks.map((pm) => ({
+      student: pm.studentId,
+      marks: pm.marks,
+    }));
+
+    evaluation.panelEvaluations[evaluatorIndex].panelmarks = formattedPanelMarks;
+    evaluation.panelEvaluations[evaluatorIndex].remark = remark;
+    evaluation.panelEvaluations[evaluatorIndex].submitted = true;
+    evaluation.panelEvaluations[evaluatorIndex].submittedAt = new Date();
+
+    await evaluation.save();
+
+    return res.status(200).json({ message: "Evaluation submitted successfully" });
+  } catch (err) {
+    console.error("Evaluator evaluation error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+

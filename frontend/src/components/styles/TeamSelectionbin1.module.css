@@ -57,7 +57,7 @@
 }
 .team-selection-content{
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding-top: 2rem;
 }
 
@@ -249,18 +249,28 @@
 }
 .select-button {
   padding: 6px 12px;
-  background-color: #F8F6FF;
-  color: rgb(0, 0, 0);
-  border: rgb(211, 211, 205) 1px solid;
-  border-radius: 6px;
+  background-color: #ffffff;
+  color: rgb(255, 166, 0);
+ border: 3px solid rgb(255, 166, 0);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.select-button-selected {
+  padding: 6px 12px;
+  background-color: rgb(255, 166, 0);
+  color: rgb(255, 255, 255);
+ /* border: 3px solid rgb(255, 166, 0); */
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.9rem;
 }
 
-.select-button:hover {
-  background-color: #e0dff2; /* Slightly darker on hover */
+
+/* .select-button:hover {
+  background-color: #e0dff2; 
   transition: background-color 0.3s ease;
-}
+} */
 .student-row:last-child {
   border-bottom: none;
 }
@@ -439,20 +449,20 @@
 
 .student-actions button {
   padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
+  /* border-radius: 8px; */
+  /* border: none; */
   cursor: pointer;
 }
 
-.student-actions button:first-child {
+/* .student-actions button:first-child {
   background-color: #fdd;
   color: #900;
-}
+} */
 
-.student-actions button:last-child {
+/* .student-actions button:last-child {
   background-color: #def;
   color: #0077cc;
-}
+} */
 
 .spanclasstf{
   display: flex;

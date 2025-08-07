@@ -206,7 +206,7 @@ export const getBTPDashboard = async (req, res) => {
                   inteam: 0,
                   phase: "TF",
                   bin: user.bin,
-                  teams:[],
+                  teams: [],
                   message:
                     "You are currently not in any full or partial team. Form a team by finding a bin1 student",
                 });
@@ -435,13 +435,15 @@ export const getBTPDashboard = async (req, res) => {
             "students.student": user._id,
           })
             .populate("students.student")
-            .populate("guide");
+            .populate("guide")
+            .populate("evaluators.evaluator");
           if (projectarr.length !== 1) {
             return res.status(400).json({
               message: "Either no project found or too many projects found",
             });
           }
           const project = projectarr[0];
+          console.log(project);
           const evaluations = await BTPEvaluation.find({
             projectRef: project._id,
           }).sort({ time: 1 });
@@ -481,7 +483,6 @@ export const getBTPDashboard = async (req, res) => {
                 : null,
             });
           }
-
           return res.status(200).json({
             email: user.email,
             bin: user.bin,
@@ -495,13 +496,17 @@ export const getBTPDashboard = async (req, res) => {
                 name: project.guide.name,
                 email: project.guide.email,
               },
+              evaluators: project.evaluators.map((e) => ({
+                name: e.evaluator.name,
+                email: e.evaluator.email,
+              })),
               team: project.students.map((s) => ({
                 _id: s.student._id,
                 name: s.student.name,
                 email: s.student.email,
               })),
               evaluations: formattedEvaluations,
-              latestUpdates: remainingUpdates, // updates after last evaluation
+              latestUpdates: updates, // updates after last evaluation
             },
           });
         } catch (err) {

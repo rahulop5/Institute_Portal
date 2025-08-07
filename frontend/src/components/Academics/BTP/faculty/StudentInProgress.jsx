@@ -1,8 +1,9 @@
+import { useLoaderData } from "react-router";
 import styles from "../../../styles/StudentInProgress.module.css";
 import Updatelist from "./UpdateList";
 
 export default function StudentInProgress() {
-  const data = {
+  const data2 = {
     email: "vihaan.isha1@example.com",
     bin: 1,
     message: "Student Progress Dashboard",
@@ -41,7 +42,7 @@ export default function StudentInProgress() {
       latestUpdates: [],
     },
   };
-
+  const data = useLoaderData();
   // Derived values
   const evalCount = data.project.evaluations.length;
   const completedCount = data.project.evaluations.filter(
@@ -184,7 +185,24 @@ export default function StudentInProgress() {
           </div>
         </div>
       </div>
-      <Updatelist />
+      <Updatelist updates={data.project.latestUpdates} />
     </>
   );
+}
+
+export async function loader({ params }) {
+  const { projid } = params;
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`http://localhost:3000/faculty/btp/viewproject?projid=${projid}`, {
+    headers: {
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Response("Failed to load project", { status: response.status });
+  }
+  const data = await response.json();
+  return data;
 }

@@ -6,7 +6,9 @@ import {
     deleteTopic,
     approveTopicRequest,
     evaluateProjectasGuide,
-    rejectTopicRequest
+    rejectTopicRequest,
+    viewProject,
+    evaluateProjectasEval
 } from "../controllers/facultybtpController.js";
 
 const router=express.Router();
@@ -18,5 +20,7 @@ router.delete("/deletetopic", authFacultyMiddleware, deleteTopic);
 router.post("/approvetopicrequest", authFacultyMiddleware, approveTopicRequest);
 router.delete("/rejecttopicreq", authFacultyMiddleware, rejectTopicRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateProjectasGuide);
+router.post("/evaluateevaluator", authFacultyMiddleware, evaluateProjectasEval);
+router.get("/viewproject", authFacultyMiddleware, viewProject);
 
 export default router;
