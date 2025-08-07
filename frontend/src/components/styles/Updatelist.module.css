@@ -7,17 +7,17 @@
 
 .list {
 
-  padding-top: 1.5rem;
+  padding-top: .5rem;
   background-color: #f9f7fe;
   border-radius: 12px;
   /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); */
-  max-width: 100%;
+  max-width: 80%;
   overflow-x: auto;
 }
 
 .listactions{
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
   gap: 2rem;
 }
@@ -154,12 +154,13 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
+   margin-left: auto;
   box-shadow: 
-  0 0 13.9px 0 rgba(0, 0, 0, 0.10), 
-  0 0 13.9px 0 rgba(0, 0, 0, 0.10), 
+  0 0 13.9px 0 rgba(0, 0, 0, 0.10)
+  0 0 13.9px 0 rgba(0, 0, 0, 0.10)
   0 4px 6.7px 0 rgba(255, 255, 255, 0.63) inset;
 
-  margin-left: auto; /* aligns button to the right */
+ 
 }
 
 .lockIcon {

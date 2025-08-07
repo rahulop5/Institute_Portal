@@ -3,7 +3,68 @@ import styles from "../../../styles/Requests.module.css";
 import studentIcon from "../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";
 
-function Requests({ data }) {
+const data = {
+  topics: {
+    _id: "topic123",
+    requests: [
+      {
+        isapproved: false,
+        topicDetails: {
+          _id: "t001",
+          topic: "AI in Education"
+        },
+        teamid: {
+          _id: "team001",
+          bin1: {
+            student: {
+              name: "Alice",
+              rollno: "21CS001"
+            }
+          },
+          bin2: {
+            student: {
+              name: "Bob"
+            }
+          },
+          bin3: {
+            student: {
+              name: "Charlie"
+            }
+          }
+        }
+      },
+      {
+        isapproved: true,
+        topicDetails: {
+          _id: "t002",
+          topic: "Quantum Computing"
+        },
+        teamid: {
+          _id: "team002",
+          bin1: {
+            student: {
+              name: "Dave",
+              rollno: "21CS002"
+            }
+          },
+          bin2: {
+            student: {
+              name: "Eve"
+            }
+          },
+          bin3: {
+            student: {
+              name: "Frank"
+            }
+          }
+        }
+      }
+    ]
+  }
+};
+
+
+function Requests({ }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const submit = useSubmit();
 

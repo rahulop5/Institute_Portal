@@ -49,16 +49,32 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+ 
 }
 
 .evaluationRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
+  
 }
+.statusContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px; /* spacing between icon and text */
+}
+
+.statusIconWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.statusTextWrapper {
+  display: flex;
+  align-items: center;
+}
+
 
 .status {
   display: flex;
@@ -77,8 +93,8 @@
 }
 
 .statusIcon {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
 }
 
 
@@ -100,19 +116,37 @@
 
 /* Members Card */
 .membersCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background-color: #ffffff;
   padding: 1.5rem;
+  padding-left: 3rem;
   border-radius: 20px;
 box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 }
 
 .membersrow{
-    gap: 80px;
-    display: flex;
-    justify-content: normal;
-    align-items: center;
-    margin-bottom: 1rem;
+  display: flex;
+  gap: 100px;
+  align-items: center;
+  padding: 5px 0;
+  /* border-bottom: 1px solid #eee; */
 }
+
+.icon{
+    display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+  .userIcon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
 .cardHeading {
   font-size: 1.1rem;
   font-weight: 600;
@@ -135,8 +169,9 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 /* Guide + Evaluators Grid */
 .guideCard {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     background-color: #ffffff;
     border-radius: 15px;
     padding: 0.6rem 1.2rem;
@@ -144,7 +179,38 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
     font-size: 0.95rem;
     /* width: 25vw; */
     height: 5vh;
-    gap: 0.5rem;
+    gap: 6rem;
+}
+
+.label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+  margin-left: 50px;
+  color: #000;
+}
+
+.guideInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guideIcon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.nameWrapper {
+  font-size: 14px;
+  color: #333;
 }
 
 .evaluatorCard {
@@ -163,13 +229,19 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 .evaluatorRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  /* justify-content: space-between; */
+  gap: 4.5rem;
+  padding-left: 2.3rem;
+}
+
+.labeleval {
+  font-weight: 500;
+  font-size: 16px;
 }
 
 .label {
   font-weight: 600;
-  color: #444;
+  color: #000000;
   white-space: nowrap;
 }
 
@@ -186,6 +258,22 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   font-size: 1rem;
 }
 
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evaluatorIcon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.nameWrapper {
+  font-size: 14px;
+  color: #333;
+}
 
 
 .guideInfo {
@@ -196,9 +284,7 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   font-weight: 500;
 }
 
-.icon {
-  font-size: 1rem;
-}
+
 
 
 
@@ -207,7 +293,7 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
     /* width: 19vw; */
     display: flex;
     flex-direction: column;
-    gap: 1.3rem;
+    gap: 1.9rem;
 }
 
 /* Progress Card */
@@ -229,19 +315,33 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 .progressFill {
   position: absolute;
   height: 10px;
-  width: 35%; /* change this based on progress */
-  background-color: #007bff;
+  width: 35%; 
+  background-color: #6092FF;
   border-radius: 5px 0 0 5px;
 }
 
 .checkpoint {
   position: absolute;
-  top: -5px;
-  width: 10px;
-  height: 10px;
+  top: 15px;
+  
+
+  left: 20px;
+  width: 8px;
+  height: 8px;
   background-color: #fff;
-  border: 2px solid #000;
+  border: 1px solid #000;
   border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.checkpoint::before {
+  content: '';
+  position: absolute;
+  bottom: 100%; /* Position line above the circle */
+  left: 50%;
+  width: 1px;
+  height: 6px; /* Length of the line */
+  background-color: #000;
   transform: translateX(-50%);
 }
 
@@ -252,18 +352,19 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   gap: 1rem;
 }
 
-.dateCard,
+
 .scoreCard {
   background-color: #ffffff;
   padding: 1.2rem;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   text-align: center;
+  border: 0.5px solid #2a9d00;
 }
 
 .smallLabel {
   font-size: 0.85rem;
-  color: #777;
+  color: #000000;
   margin-bottom: 0.3rem;
 }
 
@@ -273,16 +374,23 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 }
 
 .scoreValue {
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: bold;
   color: #2e7d32;
 }
 
 .outOf {
-  font-size: 1rem;
+  font-size: 1.5rem;
   color: #333;
 }
 
+.dateCard{
+   background-color: #ffffff;
+  padding: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
 /* Phase Card */
 .phaseCard {
   background-color: #ffffff;

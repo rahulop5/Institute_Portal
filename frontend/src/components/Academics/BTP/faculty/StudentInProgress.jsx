@@ -1,6 +1,9 @@
 import { useLoaderData } from "react-router";
 import styles from "../../../styles/StudentInProgress.module.css";
 import Updatelist from "./UpdateList";
+import completedIcon from "../../../../assets/completed.svg";
+import pendingIcon from "../../../../assets/pendingsvg.svg";
+import studenitcon from "../../../../assets/studenticon.svg";
 
 export default function StudentInProgress() {
   const data2 = {
@@ -77,16 +80,18 @@ export default function StudentInProgress() {
                         isCompleted ? styles.completed : styles.pending
                       }`}
                     >
-                      <img
-                        src={
-                          isCompleted
-                            ? "/completed-icon.svg"
-                            : "/pending-icon.svg"
-                        }
-                        alt={isCompleted ? "Completed" : "Pending"}
-                        className={styles.statusIcon}
-                      />
-                      <p>{isCompleted ? "Completed" : "Pending"}</p>
+                      <div className={styles.statusContent}>
+                        <div className={styles.statusIconWrapper}>
+                          <img
+                            src={isCompleted ? completedIcon : pendingIcon}
+                            alt={isCompleted ? "Completed" : "Pending"}
+                            className={styles.statusIcon}
+                          />
+                        </div>
+                        <div className={styles.statusTextWrapper}>
+                          <p>{isCompleted ? "Completed" : "Pending"}</p>
+                        </div>
+                      </div>
                     </span>
                   </div>
                 );
@@ -99,8 +104,17 @@ export default function StudentInProgress() {
             <div className={styles.membersCard}>
               {data.project.team.map((member, index) => (
                 <div className={styles.membersrow} key={member._id}>
-                  <span>{`Member ${index + 1}`}</span>
-                  <span className={styles.icon}>👤 {member.name}</span>
+                  <span>
+                    <strong>{`Member ${index + 1} `}</strong>
+                  </span>
+                  <span className={styles.icon}>
+                    <img
+                      src={studenitcon}
+                      alt="User Icon"
+                      className={styles.userIcon}
+                    />
+                    {member.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -110,20 +124,35 @@ export default function StudentInProgress() {
               {/* Guide */}
               <div className={styles.guideCard}>
                 <span className={styles.label}>Guide</span>
-                <span className={styles.guideInfo}>
-                  <span className={styles.icon}>👩‍🏫</span>
-                  {data.project.guide.name}
-                </span>
+                <div className={styles.guideInfo}>
+                  <div className={styles.iconWrapper}>
+                    <img
+                      src={studenitcon}
+                      alt="Guide Icon"
+                      className={styles.guideIcon}
+                    />
+                  </div>
+                  <div className={styles.nameWrapper}>
+                    {data.project.guide.name}
+                  </div>
+                </div>
               </div>
 
               {/* Evaluators */}
               <div className={styles.evaluatorCard}>
                 {data.project.evaluators.map((evalr, i) => (
                   <div className={styles.evaluatorRow} key={i}>
-                    <span className={styles.label}>Evaluator {i + 1}</span>
-                    <span className={styles.evaluatorInfo}>
-                      <span className={styles.icon}>👤</span> {evalr.name}
-                    </span>
+                    <span className={styles.labeleval}>Evaluator {i + 1}</span>
+                    <div className={styles.evaluatorInfo}>
+                      <div className={styles.iconWrapper}>
+                        <img
+                          src={studenitcon}
+                          alt="Evaluator Icon"
+                          className={styles.evaluatorIcon}
+                        />
+                      </div>
+                      <div className={styles.nameWrapper}>{evalr.name}</div>
+                    </div>
                   </div>
                 ))}
               </div>

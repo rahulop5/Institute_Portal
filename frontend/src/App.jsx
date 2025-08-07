@@ -11,7 +11,7 @@ import { action as sendTRAction } from "./components/academics/btp/student/TF/Te
 import BTPStudentRouter, { loader as btpLoader} from "./pages/BTPStudentRouter.jsx";
 import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
-import TopicAddtion from "./components/academics/btp/faculty/TopicAddition.jsx";
+import TopicAddition from "./components/academics/btp/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFacultyRouter.jsx";
 import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import { action2 as deleteTopicAction, action as addTopicAction } from "./components/academics/btp/faculty/Topicslist.jsx";
@@ -81,8 +81,7 @@ const router=createBrowserRouter([
       },
       
       { path: "logout", action: logoutAction },
-      { path: "temp", element: <EvaluationPage /> },
-      { path: "temp2", element: <DummyPage /> },
+      { path: "temp", element: <StudentInProgress /> },
     ]
   },
 ]);
