@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
+import env from "dotenv";
+
+env.config();
 
 async function connectDB(){
     try{
-        await mongoose.connect("mongodb://localhost:27017/clgproject", {
+        await mongoose.connect(process.env.MONGO_URI, {
             dbName: "clgproject",
         });
         console.log("DB connected");

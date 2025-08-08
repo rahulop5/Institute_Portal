@@ -11,13 +11,14 @@
   background-color: #f9f7fe;
   border-radius: 12px;
   /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); */
-  max-width: 80%;
+  max-width: 100%;
   overflow-x: auto;
 }
 
 .listactions{
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   justify-content: space-between;
   gap: 2rem;
 }
@@ -28,12 +29,19 @@
 }
 
 .table {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
   border: 1px solid #ffffff;
   border-radius: 10px;
-  overflow: hidden;
   border: 2px solid rgba(0, 0, 0, 0.10);
   background: #FFF;
   box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
+  flex: 1; /* allow it to take available space */
+  max-height: 100%; /* in case parent limits height */
+  overflow-y: auto; /* show scroll if needed */
+
+
 }
 
 .row {
@@ -73,6 +81,7 @@
 
 
 .actions {
+   width: 30%;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -80,6 +89,7 @@
 }
 
 .actions p {
+ 
   text-align: left;
   font-size: 13px;
   color: #000000;
