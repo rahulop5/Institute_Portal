@@ -34,8 +34,8 @@ export default function BTPStudentList({ bin, onSelectStudent, selectedStudents,
                     <div className={classes["student-name"]}>{student.name}</div>
                     <div className={classes["student-meta"]}>{student.email}</div>
                   </div>
-                  <div>
-                    <span className={classes["student-roll"]}>{student.rollno}</span>
+                  <div className={classes["student-roll"]}>
+                    {student.rollno}
                   </div>
                   <div className={classes["student-actions"]}>
                     <button

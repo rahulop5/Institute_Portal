@@ -3,7 +3,7 @@ import styles from "../../../styles/Requests.module.css";
 import studentIcon from "../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";
 
-const data = {
+const data2 = {
   topics: {
     _id: "topic123",
     requests: [
@@ -64,7 +64,7 @@ const data = {
 };
 
 
-function Requests({ }) {
+function Requests({ data }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const submit = useSubmit();
 

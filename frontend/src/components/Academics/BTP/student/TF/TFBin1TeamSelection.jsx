@@ -10,9 +10,9 @@ export default function TFBin1TeamSelection({
   handleStudentSelect,
   handleSendRequest,
   selectedStudents,
-  studentIcon
+  studentIcon,
 }) {
-  const [search, setSearch]=useState("");
+  const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Debounce logic (delay search by like 300ms)
@@ -52,7 +52,9 @@ export default function TFBin1TeamSelection({
           <input
             type="text"
             placeholder="Search by name, email, or roll number"
-            onChange={(e)=>{setSearch(e.target.value)}}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             value={search}
             className={classes["search-input"]}
             aria-label="Search students"
@@ -69,13 +71,19 @@ export default function TFBin1TeamSelection({
         bin={selectedBin}
         onSelectStudent={handleStudentSelect}
         selectedStudents={selectedStudents}
-        available={selectedBin === 2 ? data?.availablebin2 : data?.availablebin3}
+        available={
+          selectedBin === 2 ? data?.availablebin2 : data?.availablebin3
+        }
         search={debouncedSearch}
       />
 
       <div className={classes["added-students"]}>
-        <h2>Team Selection Bucket</h2>
-        <div className={classes["team-table"]}>
+        <h2>Selection Bucket</h2>
+        <div
+          className={`${classes["team-table"]} ${
+            Object.keys(selectedStudents).length > 0 ? classes.active : ""
+          }`}
+        >
           {Object.entries(selectedStudents).map(([bin, student]) => (
             <div key={student.rollno} className={classes["team-row"]}>
               <div className={classes["student-name-icon"]}>
@@ -84,13 +92,22 @@ export default function TFBin1TeamSelection({
                   alt="avatar"
                   className={classes["avatar-icon"]}
                 />
-                <span>{student.name}</span>
+                <div className={classes["student-name"]}>{student.name}</div>
               </div>
-              <span>{student.rollno}</span>
-              <span>{bin}</span>
-              <button className={classes["reject-button"]} onClick={()=>{handleStudentSelect(student, parseInt(bin))}} >
-                Remove
-              </button>
+              <div className={classes["team-info"]}>
+                <div>{student.rollno}</div>
+                <div>{bin}</div>
+                <div>
+                  <button
+                    className={classes["remove-button"]}
+                    onClick={() => {
+                      handleStudentSelect(student, parseInt(bin));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
           {Object.keys(selectedStudents).length === 0 && (
@@ -103,6 +120,7 @@ export default function TFBin1TeamSelection({
           selectedStudents[2] && selectedStudents[3] ? classes["active"] : ""
         }`}
         onClick={handleSendRequest}
+        disabled={!(selectedStudents[2] && selectedStudents[3])}
       >
         Send Request
       </button>

@@ -438,7 +438,7 @@ export const getBTPDashboard = async (req, res) => {
             .populate("guide")
             .populate("evaluators.evaluator");
           if (projectarr.length !== 1) {
-            return res.status(400).json({
+            return res.status(404).json({
               message: "Either no project found or too many projects found",
             });
           }
