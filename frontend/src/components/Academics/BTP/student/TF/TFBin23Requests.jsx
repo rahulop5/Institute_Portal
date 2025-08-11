@@ -2,7 +2,7 @@ import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
 export default function TFBin23Requests({incomingRequests, studentIcon, handleAccept, handleReject}) {
   return (
-  <div className={classes["incoming-requests"]}>
+  <div className={incomingRequests.length===0? undefined:classes["incoming-requests"]}>
     {incomingRequests.map((request, index) => (
       <div key={index} className={classes["request-card"]}>
         <div className={classes["request-info"]}>

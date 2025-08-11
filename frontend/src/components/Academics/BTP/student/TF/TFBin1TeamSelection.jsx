@@ -29,7 +29,7 @@ export default function TFBin1TeamSelection({
   return (
     <>
       {/* <h1>Team Formation</h1> */}
-      <div className={classes["team-selection-content"]}>
+      <div className={classes["team-selection-contentbin1"]}>
         <div className={classes["team-selection-buttons"]}>
           <h2>Team Selection</h2>
           <div className={classes["team-selection-button-group"]}>

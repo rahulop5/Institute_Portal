@@ -1,4 +1,7 @@
 import classes from "../../../../styles/FacultySelection.module.css";
+import tick from "../../../../../assets/confirmedtick.png";
+import pending from "../../../../../assets/pendingclock.png";
+import fadedclock from "../../../../../assets/fadedclock.png"
 
 export default function RequestList({ requests }) {
   return (
@@ -9,8 +12,12 @@ export default function RequestList({ requests }) {
         <div className={classes["requestcard"]} key={idx}>
           <div className={classes["requestcard-main"]}>
             <div>
-              <h3 className={classes["requestcard-topic"]}>{req.requestedTopic.topic}</h3>
-              <p className={classes["requestcard-desc"]}>{req.requestedTopic.about}</p>
+              <h3 className={classes["requestcard-topic"]}>
+                {req.requestedTopic.topic}
+              </h3>
+              <p className={classes["requestcard-desc"]}>
+                {req.requestedTopic.about}
+              </p>
             </div>
             <div className={classes["requestcard-faculty"]}>
               <img
@@ -25,20 +32,25 @@ export default function RequestList({ requests }) {
               </span>
             </div>
           </div>
-
-          <div className={classes["requestcard-status"]}>
-            {req.isapproved ? (
-              <>
-                <span className={classes["approved-icon"]}>✅</span>
-                <span className={classes["approved-label"]}>Confirmed</span>
-              </>
-            ) : (
-              <>
-                <span className={classes["pending-icon"]}>🕒</span>
-                <span className={classes["pending-label"]}>Pending...</span>
-              </>
-            )}
+          <div class="status-container">
+            <div class="status-item">
+              <img
+                src={pending}
+                alt="Pending"
+                class="status-icon active"
+              />
+              <span class="status-text active">Pending...</span>
+            </div>
+            <div class="status-line"></div>
+            <div class="status-item">
+              <div>
+                <img src={fadedclock} alt="Confirmed" class="status-icon tick" />
+                <span class="status-text">Confirmed</span>
+              </div>
+            </div>
           </div>
+
+          
         </div>
       ))}
     </div>

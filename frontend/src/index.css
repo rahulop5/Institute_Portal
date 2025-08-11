@@ -72,8 +72,6 @@ main {
 
 main p{
   color: var(--secondary-text-clr);
-  margin-top: 5px;
-  margin-bottom: 15px;
 }
 .container{
   border: 1px solid var(--line-clr);
@@ -228,3 +226,62 @@ main p{
   background-color: #eee;
 }
 
+.status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  gap: 8px;
+  margin-right: 6rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-item>div{
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+  gap: 10px;
+}
+
+.status-icon {
+  width: 25px;
+  /* height: 20px; */
+  border-radius: 50%;
+ 
+}
+
+.status-icon.active {
+  /* Circle behind clock */
+  z-index: 1000;
+}
+
+
+.status-text {
+  font-size: 16px;
+  color: #999;
+}
+
+.status-text.active {
+  color: black;
+  font-weight: 500;
+}
+
+.status-line {
+  position: absolute;
+  top: 20px;
+  left: 12px;
+  width: 2px;
+  height: calc(100% - 40px);
+  background: repeating-linear-gradient(
+    to bottom,
+    #ccc,
+    #ccc 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}

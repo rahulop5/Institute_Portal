@@ -6,52 +6,9 @@ import pendingIcon from "../../../../assets/pendingsvg.svg";
 import studenitcon from "../../../../assets/studenticon.svg";
 
 export default function StudentInProgress() {
-  const data2 = {
-    email: "vihaan.isha1@example.com",
-    bin: 1,
-    message: "Student Progress Dashboard",
-    nextEvalDate: {
-      month: "March",
-      day: 15,
-    },
-    currentScore: {
-      value: 48,
-      outOf: 50,
-    },
-    project: {
-      name: "Deployment Services",
-      about:
-        "Its a backend service that helps to deploy things using docker etc",
-      studentbatch: "2022",
-      guide: {
-        name: "Dr. Asha Iyer",
-        email: "asha.iyer@example.com",
-      },
-      evaluators: [
-        { name: "Dr. Asha Iyer", email: "asha.iyer@example.com" },
-        { name: "Dr. Asha Iyer", email: "asha.iyer@example.com" },
-      ],
-      team: [
-        { _id: "1", name: "Vihaan Isha", email: "vihaan.isha1@example.com" },
-        { _id: "2", name: "Vivaan Sneha", email: "vivaan.sneha21@example.com" },
-        { _id: "3", name: "Diya Sai", email: "diya.sai38@example.com" },
-      ],
-      evaluations: [
-        {},
-        {},
-        {},
-        // { },
-      ],
-      latestUpdates: [],
-    },
-  };
   const data = useLoaderData();
   // Derived values
   const evalCount = data.project.evaluations.length;
-  const completedCount = data.project.evaluations.filter(
-    (e) => e.status === "completed"
-  ).length;
-  const progressPercent = (completedCount / 4) * 100;
   const phase = evalCount <= 2 ? "Semester 1" : "Semester 2";
 
   return (

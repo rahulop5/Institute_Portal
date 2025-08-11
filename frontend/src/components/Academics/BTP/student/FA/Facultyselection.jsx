@@ -7,6 +7,7 @@ import ApprovedCard from "./ApprovedCard";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import FSTeamthere from "./FSTeamshow";
 import classes from "../../../../styles/FacultySelection.module.css";
+import TFTeamthereBin1 from "../TF/TFTeamthereBin1";
 
 export default function FacultySelection({ data }) {
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
@@ -97,6 +98,7 @@ export default function FacultySelection({ data }) {
         </>
       )}
       <FSTeamthere teamData={data.team} studentIcon={studentIcon} />
+      {/* <TFTeamthereBin1 teamData={data.team} studentIcon={studentIcon} /> */}
     </>
   );
 }

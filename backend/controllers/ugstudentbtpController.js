@@ -486,6 +486,16 @@ export const getBTPDashboard = async (req, res) => {
           return res.status(200).json({
             email: user.email,
             bin: user.bin,
+            //hardcoded start
+            nextEvalDate: {
+              month: "March",
+              day: 15,
+            },
+            currentScore: {
+              value: 48,
+              outOf: 50,
+            },
+            //hardcoded end
             phase: "IP",
             message: "Student Progress Dashboard",
             project: {

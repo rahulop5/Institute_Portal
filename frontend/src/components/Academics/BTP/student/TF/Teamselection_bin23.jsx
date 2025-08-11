@@ -1,8 +1,9 @@
 import { redirect, useSubmit } from "react-router";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import TFBin23Requests from "./TFBin23Requests";
-import TFBin23teamthere from "./TFBin23teamthere";
 import classes from "../../../../styles/TeamSelectionbin1.module.css";
+import warning from "../../../../../assets/warning.png";
+import TFTeamthereBin1 from "./TFTeamthereBin1";
 
 // Dummy incoming request data (replace with actual backend data later)
 const incomingRequests = [
@@ -153,7 +154,7 @@ export default function BTPTeamselection_bin23({ data }) {
 
   return (
     <div className={classes["team-selection"]}>
-      <div className={classes["team-selection-content"]}>
+      <div className={classes["team-selection-contentbin23"]}>
         {data.inteam === 0 ? (
           <>
             {data.teams.length > 0 ? (
@@ -172,8 +173,13 @@ export default function BTPTeamselection_bin23({ data }) {
               </div>
             ) : (
               <>
-                <div className={classes["warning-message"]}>
-                  <p>No Incoming Requests</p>
+                <div className={classes["warning-messagenoreq"]}>
+                  <div>
+                    <img src={warning} alt="no requests" />
+                  </div>
+                  <div>
+                    <p>No Incoming Requests</p>
+                  </div>
                 </div>
               </>
             )}
@@ -185,10 +191,7 @@ export default function BTPTeamselection_bin23({ data }) {
             />
           </>
         ) : (
-          <TFBin23teamthere
-            approvedTeam={data?.team}
-            studentIcon={studentIcon}
-          />
+          <TFTeamthereBin1 teamData={data} studentIcon={studentIcon} />
         )}
       </div>
     </div>

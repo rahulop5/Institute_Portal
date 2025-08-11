@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import styles from "../../../styles/Requests.module.css";
 import studentIcon from "../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";

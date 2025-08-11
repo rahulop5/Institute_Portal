@@ -55,7 +55,7 @@ export default function BTPTeamselection_bin1({ data }) {
 
   return (
     <>
-      <div className={classes["team-selection"]}>
+      <div className={classes["team-selectionbin1"]}>
         {data.inteam === 0 ? (
           <TFBin1TeamSelection
             selectedBin={selectedBin}

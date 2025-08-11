@@ -1,4 +1,8 @@
 import classes from "../../../../styles/FacultySelection.module.css";
+import tick from "../../../../../assets/confirmedtick.png";
+import pending from "../../../../../assets/pendingclock.png";
+import fadedtick from "../../../../../assets/fadedtick.png";
+
 
 export default function ApprovedCard({ request }) {
   return (
@@ -29,9 +33,18 @@ export default function ApprovedCard({ request }) {
           </div>
         </div>
 
-        <div className={classes["requestcard-status"]}>
-          <span className={classes["approved-icon"]}>✅</span>
-          <span className={classes["approved-label"]}>Confirmed</span>
+        <div class="status-container">
+          <div class="status-item">
+            <img src={fadedtick} alt="Pending" class="status-icon active" />
+            <span class="status-text">Pending...</span>
+          </div>
+          <div class="status-line"></div>
+          <div class="status-item">
+            <div>
+              <img src={tick} alt="Confirmed" class="status-icon tick" />
+              <span class="status-text active">Confirmed</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

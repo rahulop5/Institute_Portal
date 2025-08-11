@@ -34,11 +34,49 @@
   cursor: pointer;
 }
 
+.warning-message{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: larger;
+  text-align: center;
+  /* box-shadow: 0px 0px 13.9px 0px rgba(0, 0, 0, 0.10); */
+  border-radius: 5px;
+  height: 10vh;
+}
+
+.warning-messagenoreq{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: larger;
+  text-align: center;
+  /* box-shadow: 0px 0px 13.9px 0px rgba(0, 0, 0, 0.10); */
+  border-radius: 5px;
+  height: 60vh;
+}
+
+.warning-messagenoreq p{
+  font-size: 35px;
+}
+
+.warning-messagenoreq img{
+  height: 35px;
+  margin-right: 1vw;
+}
 
 .team-selection {
   /* margin-left: 200px;   Match sidebar width */
   /* padding-left: 3rem; */
   padding-top: 1rem;
+  min-height: calc(100vh - 70px);
+  background-color: #f5f5ff; /* Optional: slight background */
+  color: #000
+}
+
+.team-selectionbin1 {
+  /* margin-left: 200px;   Match sidebar width */
+  /* padding-left: 3rem; */
   min-height: calc(100vh - 70px);
   background-color: #f5f5ff; /* Optional: slight background */
   color: #000
@@ -55,10 +93,15 @@
   font-weight: 400;
   color: #000;
 }
-.team-selection-content{
+.team-selection-contentbin1{
   display: flex;
   flex-direction: row;
   padding-top: 2rem;
+}
+
+.team-selection-contentbin23{
+  display: flex;
+  flex-direction: column;
 }
 
 .team-selection-buttons{
@@ -158,9 +201,9 @@
 .accept-button,
 .reject-button {
   padding: 5px 15px;
-  border: 1.5px solid #ccc;
+  border: 2px solid #ccc;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   font-weight: 500;
   background-color: white;
@@ -170,20 +213,27 @@
 .accept-button {
   border-color: #30d158;
   color: #30d158;
+  height: 4vh;
+  width: 8vw;
 }
 
 .accept-button:hover {
   background-color: #30d158;
   color: white;
+
 }
 
 .reject-button {
   border-color: #888;
   color: #444;
+  height: 4vh;
+  width: 6vw;
+  font-size: 14px;
 }
 
 .reject-button:hover {
-  background-color: #eee;
+  background-color: #adadad;
+  color: white;
 }
 
 
@@ -231,36 +281,49 @@
 
 
 .student-roll {
-  flex: 1;
+  display: flex;
+  align-items: center;
   font-size: 0.9rem;
   color: #333;
   text-align: left;
 }
 
 .student-actions {
-  flex: 1;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
 }
 .select-button {
   padding: 6px 12px;
   background-color: #ffffff;
-  color: rgb(255, 166, 0);
- border: 3px solid rgb(255, 166, 0);
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-.select-button-selected {
-  padding: 6px 12px;
-  background-color: rgb(255, 166, 0);
-  color: rgb(255, 255, 255);
- /* border: 3px solid rgb(255, 166, 0); */
+  color: #4285F4;
+  border: 1.5px solid #4285F4;
   border-radius: 999px;
   cursor: pointer;
   font-size: 0.9rem;
 }
 
+.select-button:hover{
+  background-color: #4285F4;
+  color: white;
+}
+
+.select-button-selected {
+  padding: 6px 12px;
+  background-color: #4285F4;
+  color: rgb(255, 255, 255);
+  border: 1.5px solid #4285F4;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.rollselect{
+  display: flex;
+  align-items: center;
+  width: 25%;
+  justify-content: space-between;
+}
 
 /* .select-button:hover {
   background-color: #e0dff2; 
@@ -391,6 +454,83 @@
   height: 40px;
 }
 
+.team-rowbin1 {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  align-items: center;
+  padding: 1.2rem 2rem;
+  padding-bottom: 1.5rem;
+  /* padding-right: 1rem; */
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 1.1rem;
+  height: 40px;
+  background-color: white;
+}
+
+.team-tablebin1 {
+  box-shadow: 0px 0px 13.9px 0px rgba(0, 0, 0, 0.10);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.avatar-iconbin1 {
+  width: 42px;
+  border-radius: 50%;
+  background-color: #dcdcdc;
+  margin-right: 10px;
+}
+
+.statusintfbin1{
+  display: flex;
+  justify-content: center;
+  margin-right: 10px;
+  height: 25px;
+  margin-left: 5rem;
+}
+
+.statusintfbin1 img{
+  margin-right: 10px;
+  height: 25px;
+}
+
+.memberdetails{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+
+.teamrow2{
+  display: flex;
+  flex-direction: row;  
+}
+
+.teamrow2>div>p{
+  color: #000;
+  margin-left: 7rem;
+}
+
+.fasentence{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20vh;
+}
+
+.fasentence img{
+  height: 40px;
+  margin-right: 1rem;
+}
+
+.fasentence p{
+  font-size: x-large;
+}
+
 .team-header {
   font-weight: bold;
   background-color: #f4f4f4;
@@ -416,16 +556,17 @@
 
 .remove-button {
   padding: 6px 12px;
+  height: 4vh;
   background-color: #60242000;
-  color: rgb(255, 0, 0);
-  border: 1px solid red;
+  color: #DB4437;
+  border: 1.5px solid #DB4437;
   border-radius: 999px;
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .remove-button:hover{
-  background-color: red;
+  background-color: #DB4437;
   color: white;
 }
 .team-info{
@@ -462,7 +603,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 .student-actions button {
