@@ -228,7 +228,6 @@ export const getFacultyBTPDashboard = async (req, res) => {
   }
 };
 
-//take care of ts its not donw
 export const viewProject = async (req, res) => {
   try {
     if (!req.query.projid) {
@@ -299,7 +298,6 @@ export const viewProject = async (req, res) => {
 
     return res.status(200).json({
       email: user.email,
-      bin: user.bin,
       phase: "IP",
       message: "Student Progress Dashboard",
       //hardcoded start
@@ -313,6 +311,7 @@ export const viewProject = async (req, res) => {
       },
       //hardcoded end
       project: {
+        id: project._id,
         name: project.name,
         about: project.about,
         studentbatch: project.studentbatch,
@@ -328,6 +327,8 @@ export const viewProject = async (req, res) => {
           _id: s.student._id,
           name: s.student.name,
           email: s.student.email,
+          rollno: s.student.rollno,
+          bin: s.student.bin
         })),
         evaluations: formattedEvaluations,
         latestUpdates: project.updates // updates after last evaluation
@@ -340,6 +341,102 @@ export const viewProject = async (req, res) => {
     });
   }
 };
+
+export const viewProjectEvaluator = async (req, res) => {
+  try {
+    if (!req.query.projid) {
+      return res.status(400).json({ message: "Invalid Request" });
+    }
+
+    // Find the evaluator user
+    const evaluatorUser = await Faculty.findOne({ email: req.user.email });
+    if (!evaluatorUser) {
+      return res.status(404).json({ message: "Error finding the faculty" });
+    }
+
+    // Fetch the project by projid only
+    const project = await BTP.findOne({ _id: req.query.projid })
+      .populate("students.student")
+      .populate("guide")
+      .populate("evaluators.evaluator");
+
+    if (!project) {
+      return res.status(404).json({ message: "Can't Find Project" });
+    }
+
+    // Check if this faculty is an evaluator for the project
+    const isEvaluator = project.evaluators.some(
+      (e) => e.evaluator._id.toString() === evaluatorUser._id.toString()
+    );
+    if (!isEvaluator) {
+      return res.status(403).json({ message: "You are not an evaluator for this project" });
+    }
+
+    // Get evaluations (but no updates)
+    const evaluations = await BTPEvaluation.find({
+      projectRef: project._id,
+    }).sort({ time: 1 });
+
+    const formattedEvaluations = evaluations.map((currEval) => ({
+      _id: currEval._id,
+      time: currEval.time,
+      remark: currEval.remark,
+      resources: currEval.resources,
+      canstudentsee: currEval.canstudentsee,
+      marksgiven: currEval.canstudentsee
+        ? currEval.marksgiven.filter(
+            (m) => m.student.toString() === evaluatorUser._id.toString()
+          )
+        : null,
+    }));
+
+    return res.status(200).json({
+      email: evaluatorUser.email,
+      bin: evaluatorUser.bin,
+      phase: "IP",
+      message: "Evaluator Project View",
+      //hardcoded start
+      nextEvalDate: {
+        month: "March",
+        day: 15,
+      },
+      currentScore: {
+        value: 48,
+        outOf: 50,
+      },
+      //hardcoded end
+      project: {
+        id: project._id,
+        name: project.name,
+        about: project.about,
+        studentbatch: project.studentbatch,
+        guide: {
+          name: project.guide.name,
+          email: project.guide.email,
+        },
+        evaluators: project.evaluators.map((e) => ({
+          name: e.evaluator.name,
+          email: e.evaluator.email,
+        })),
+        team: project.students.map((s) => ({
+          _id: s.student._id,
+          name: s.student.name,
+          email: s.student.email,
+          rollno: s.student.rollno,
+          bin: s.student.bin,
+        })),
+        evaluations: formattedEvaluations,
+        latestUpdates: [], // explicitly no updates for evaluator
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Error loading the BTP dashboard for evaluator" });
+  }
+};
+
 
 export const addTopic = async (req, res) => {
   const user = await Faculty.findOne({
@@ -579,6 +676,7 @@ export const rejectTopicRequest = async (req, res) => {
 //itll be changed later...
 export const evaluateProjectasGuide = async (req, res) => {
   try {
+    console.log(req.body)
     const { projid, remark, marks } = req.body;
 
     if (!projid || !remark || !Array.isArray(marks)) {
@@ -665,6 +763,7 @@ export const evaluateProjectasGuide = async (req, res) => {
 
 export const evaluateProjectasEval = async (req, res) => {
   try {
+    console.log(req.body);
     const { projid, panelmarks, remark } = req.body;
 
     if (!projid || !Array.isArray(panelmarks) || !remark) {

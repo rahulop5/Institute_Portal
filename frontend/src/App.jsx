@@ -18,7 +18,8 @@ import { action2 as deleteTopicAction, action as addTopicAction } from "./compon
 import { action as acceptReqAction, action2 as rejectReqAction } from "./components/academics/btp/faculty/Requests.jsx";
 import EvaluationPage from "./components/academics/btp/faculty/Evaluationpage.jsx";
 import StudentInProgress, { loader as projectLoader } from "./components/academics/btp/faculty/StudentInProgress.jsx";
-import DummyPage from "./pages/Testingg.jsx";
+import { evaluateEvaluatorAction, evaluateGuideAction } from "./components/academics/btp/faculty/EvaluatorModal.jsx";
+import ViewProjEvaluator, { evaluatorProjLoader } from "./components/academics/btp/faculty/ViewProjEvaluator.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -57,10 +58,13 @@ const router=createBrowserRouter([
                 loader: btpFacultyRouter,
                 children: [
                   {path: ":projid", loader: projectLoader, element: <StudentInProgress /> },
+                  {path: "evaluator/:projid", loader: evaluatorProjLoader, element: <ViewProjEvaluator /> },
                   {path: "addtopic", action: addTopicAction, element: <></>},
                   {path: "deletetopic", action: deleteTopicAction, element: <></>},
                   {path: "accepttopicrequest", action: acceptReqAction, element: <></>},
-                  {path: "rejecttopicrequest", action: rejectReqAction, element: <></>}
+                  {path: "rejecttopicrequest", action: rejectReqAction, element: <></>},
+                  {path: "evaluateguide", action: evaluateGuideAction, element: <></>},
+                  {path: "evaluateevaluator", action: evaluateEvaluatorAction, element: <></>}
                 ]
               }
             ]
@@ -81,7 +85,6 @@ const router=createBrowserRouter([
       },
       
       { path: "logout", action: logoutAction },
-      { path: "temp", element: <StudentInProgress /> },
     ]
   },
 ]);

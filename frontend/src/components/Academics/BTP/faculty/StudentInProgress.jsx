@@ -171,7 +171,11 @@ export default function StudentInProgress() {
           </div>
         </div>
       </div>
-      <Updatelist updates={data.project.latestUpdates} />
+      <Updatelist 
+        updates={data.project.latestUpdates}
+        team={data.project.team}
+        projid={data.project.id}
+      />
     </>
   );
 }

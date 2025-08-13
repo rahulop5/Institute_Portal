@@ -9,12 +9,11 @@
 
 /* Top container with topic and evaluations */
 .topContainer {
-   display: grid;
-    /* width: 55vw; */
-    grid-template-columns: 60% 40%;
-    gap: 1rem;
-    margin-bottom: 1.3rem;  
- 
+  display: grid;
+  /* width: 55vw; */
+  grid-template-columns: 60% 40%;
+  gap: 1rem;
+  margin-bottom: 1.3rem;
 }
 
 /* Topic Card Styles */
@@ -24,8 +23,8 @@
   background-color: #f9f9ff;
   border-radius: 12px;
   border-radius: 20px;
-  background: #FFF;
-  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
+  background: #fff;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
   padding: 1.6rem;
 }
 
@@ -45,18 +44,18 @@
 .evaluationCard {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 1.3rem;
+  padding: 1.6rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   display: flex;
+  /* gap: 2vh; */
+  justify-content: space-between;
   flex-direction: column;
- 
 }
 
 .evaluationRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
 }
 .statusContent {
   display: flex;
@@ -74,7 +73,6 @@
   display: flex;
   align-items: center;
 }
-
 
 .status {
   display: flex;
@@ -97,14 +95,10 @@
   height: 22px;
 }
 
-
 .unavailable {
   color: #777;
   background-color: #f0f0f000;
 }
-
-
-
 
 /* Bottom container grid */
 .bottomContainer {
@@ -123,10 +117,10 @@
   padding: 1.5rem;
   padding-left: 3rem;
   border-radius: 20px;
-box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
 }
 
-.membersrow{
+.membersrow {
   display: flex;
   gap: 100px;
   align-items: center;
@@ -134,14 +128,14 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   /* border-bottom: 1px solid #eee; */
 }
 
-.icon{
-    display: flex;
+.icon {
+  display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
 }
 
-  .userIcon {
+.userIcon {
   width: 30px;
   height: 30px;
   object-fit: contain;
@@ -168,18 +162,18 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 
 /* Guide + Evaluators Grid */
 .guideCard {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    /* justify-content: space-between; */
-    background-color: #ffffff;
-    border-radius: 15px;
-    padding: 0.6rem 1.2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    font-size: 0.95rem;
-    /* width: 25vw; */
-    height: 5vh;
-    gap: 6rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* justify-content: space-between; */
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 0.6rem 1.2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-size: 0.95rem;
+  /* width: 25vw; */
+  height: 5vh;
+  gap: 6rem;
 }
 
 .label {
@@ -224,6 +218,15 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   font-size: 0.95rem;
   /* width: 25vw; */
   margin-top: 1rem;
+}
+.noevaluator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noevaluator p {
+  margin-top: 2vh;
 }
 
 .evaluatorRow {
@@ -275,7 +278,6 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   color: #333;
 }
 
-
 .guideInfo {
   display: flex;
   align-items: center;
@@ -284,16 +286,12 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   font-weight: 500;
 }
 
-
-
-
-
 /* Right side container */
 .rightContainer {
-    /* width: 19vw; */
-    display: flex;
-    flex-direction: column;
-    gap: 1.9rem;
+  /* width: 19vw; */
+  display: flex;
+  flex-direction: column;
+  gap: 1.9rem;
 }
 
 /* Progress Card */
@@ -315,15 +313,14 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 .progressFill {
   position: absolute;
   height: 10px;
-  width: 35%; 
-  background-color: #6092FF;
+  width: 35%;
+  background-color: #6092ff;
   border-radius: 5px 0 0 5px;
 }
 
 .checkpoint {
   position: absolute;
   top: 15px;
-  
 
   left: 20px;
   width: 8px;
@@ -335,7 +332,7 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 }
 
 .checkpoint::before {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 100%; /* Position line above the circle */
   left: 50%;
@@ -351,7 +348,6 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
-
 
 .scoreCard {
   background-color: #ffffff;
@@ -384,8 +380,8 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   color: #333;
 }
 
-.dateCard{
-   background-color: #ffffff;
+.dateCard {
+  background-color: #ffffff;
   padding: 1.2rem;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -400,7 +396,6 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
   text-align: center;
 }
 
-
 .mainGrid {
   display: grid;
   grid-template-columns: 75% 25%;
@@ -412,8 +407,8 @@ box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.10);
 }
 
 .leftWrapper {
-    /* width: 54vw; */
-    display: flex;
-    flex-direction: column;
-    gap: 0rem
+  /* width: 54vw; */
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
 }

@@ -8,8 +8,13 @@ export default function BTPFacultyRouter() {
   const phase = data.phase;
 
   const isViewingProject = useMatch("/academics/btp/faculty/:projid");
+  const isViewingProjectEvaluator = useMatch("/academics/btp/faculty/evaluator/:projid");
 
   if (isViewingProject) {
+    return <Outlet />;
+  }
+
+  if (isViewingProjectEvaluator) {
     return <Outlet />;
   }
 

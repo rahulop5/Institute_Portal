@@ -1,37 +1,13 @@
-// Inprogress.jsx
-import ProjectCard from "./ProjectCard";
-import EvaluationCard from "./EvaluationCard";
-import ProgressCard from "./ProgressCard";
-import NextEvalCard from "./NextEvalCard";
-import TeamCard from "./TeamCard";
-import RemarksCard from "./RemarksCard";
-import ScoreCard from "./ScoreCard";
-import EvaluationDetails from "./Evaluations";
-import AddUpdateCard from "./UpdateCard";
-import { redirect } from "react-router";
-import classes from "../../../../styles/Inprogress.module.css";
+import { useLoaderData } from "react-router";
+import styles from "../../../styles/StudentInProgress.module.css";
+import Updatelist from "./UpdateList";
+import completedIcon from "../../../../assets/completed.svg";
+import pendingIcon from "../../../../assets/pendingsvg.svg";
+import studenitcon from "../../../../assets/studenticon.svg";
 
-import styles from "../../../../styles/StudentInProgress.module.css";
-import Updatelist from "../../faculty/UpdateList";
-import completedIcon from "../../../../../assets/completed.svg";
-import pendingIcon from "../../../../../assets/pendingsvg.svg";
-import studenitcon from "../../../../../assets/studenticon.svg";
-
-export default function Inprogress({ data }) {
-  const today = new Date();
-  const nextEvalMonth = today.toLocaleString("default", { month: "long" });
-  const nextEvalDay = today.getDate();
-
-  const latestEvaluation = data.project.evaluations.find(
-    (e) => e.time && e.remark
-  );
-  const latestRemark = latestEvaluation?.remark || "No Remarks are given yet.";
-
-  const scoreEvaluation = data.project.evaluations.find(
-    (e) => e.marksgiven !== null && e.marksgiven !== undefined
-  );
-  const currentScore = scoreEvaluation?.marksgiven ?? "NaN";
-
+export default function ViewProjEvaluator() {
+  const data = useLoaderData();
+  // Derived values
   const evalCount = data.project.evaluations.length;
   const phase = evalCount <= 2 ? "Semester 1" : "Semester 2";
 
@@ -120,34 +96,22 @@ export default function Inprogress({ data }) {
               </div>
 
               {/* Evaluators */}
-              <div
-                className={styles.evaluatorCard}
-                style={{ minHeight: "8vh" }}
-              >
-                {data.project.evaluators &&
-                data.project.evaluators.length > 0 ? (
-                  data.project.evaluators.map((evalr, i) => (
-                    <div className={styles.evaluatorRow} key={i}>
-                      <span className={styles.labeleval}>
-                        Evaluator {i + 1}
-                      </span>
-                      <div className={styles.evaluatorInfo}>
-                        <div className={styles.iconWrapper}>
-                          <img
-                            src={studenitcon}
-                            alt="Evaluator Icon"
-                            className={styles.evaluatorIcon}
-                          />
-                        </div>
-                        <div className={styles.nameWrapper}>{evalr.name}</div>
+              <div className={styles.evaluatorCard}>
+                {data.project.evaluators.map((evalr, i) => (
+                  <div className={styles.evaluatorRow} key={i}>
+                    <span className={styles.labeleval}>Evaluator {i + 1}</span>
+                    <div className={styles.evaluatorInfo}>
+                      <div className={styles.iconWrapper}>
+                        <img
+                          src={studenitcon}
+                          alt="Evaluator Icon"
+                          className={styles.evaluatorIcon}
+                        />
                       </div>
+                      <div className={styles.nameWrapper}>{evalr.name}</div>
                     </div>
-                  ))
-                ) : (
-                  <div className={styles.noevaluator}>
-                    <p>Evaluators have not been assigned yet</p>
                   </div>
-                )}
+                ))}
               </div>
             </div>
           </div>
@@ -207,43 +171,30 @@ export default function Inprogress({ data }) {
           </div>
         </div>
       </div>
-      <Updatelist updates={data.project.latestUpdates} />
-      {data.bin === 1 ? <AddUpdateCard key={Date.now()} /> : null}
+      <Updatelist
+        isEvaluator={true} 
+        updates={data.project.latestUpdates}
+        team={data.project.team}
+        projid={data.project.id}
+      />
     </>
   );
 }
 
-export async function action({ request }) {
-  const formData = await request.formData();
-  const updateDataJSON = formData.get("update");
+
+export async function evaluatorProjLoader({ params }) {
+  const { projid } = params;
   const token = localStorage.getItem("token");
 
-  const reqdata = {
-    update: updateDataJSON,
-  };
-
-  const response = await fetch("http://localhost:3000/student/btp/addupdate", {
-    method: "POST",
+  const response = await fetch(`http://localhost:3000/faculty/btp/viewprojectevaluator?projid=${projid}`, {
     headers: {
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(reqdata),
   });
-
   if (!response.ok) {
-    throw new Response(
-      JSON.stringify({
-        message: "Error sending team request",
-      }),
-      {
-        status: 500,
-      }
-    );
+    throw new Response("Failed to load project", { status: response.status });
   }
-
-  const result = await response.json();
-  console.log(response);
-
-  return redirect("/academics/btp/student");
+  const data = await response.json();
+  return data;
 }

@@ -6,14 +6,24 @@ import nextpageIcon from "../../../../assets/nextpage.svg";
 export default function EvaluationList({ data, tab }) {
   const navigate = useNavigate();
   const handleNext = (projid) => {
-    navigate(`/academics/btp/faculty/${projid}`);
+    switch (tab) {
+      case "guiding":
+        navigate(`/academics/btp/faculty/${projid}`);
+        break;
+      case "evaluating":
+        navigate(`/academics/btp/faculty/evaluator/${projid}`);
+        break;
+    
+      default:
+        navigate(`/academics/btp/faculty/evaluator/${projid}`);
+        break;
+    }
   };
 
   return (
     <div className={styles.container}>
       {data.length > 0 ? (
         <>
-          {" "}
           <div className={styles.header}>
             <div className={styles.topicheading}>Topic</div>
             <div className={styles.projectidheading}>Project ID</div>
@@ -39,7 +49,6 @@ export default function EvaluationList({ data, tab }) {
                   ))}
                 </div>
 
-                {/* Render ONLY one div in the last column */}
                 <div className={styles.nextPagediv}>
                   <button className={styles.nextPage} onClick={()=>handleNext(item.projid)} >
                     <img src={nextpageIcon} alt="Next Page" />
@@ -47,7 +56,7 @@ export default function EvaluationList({ data, tab }) {
                 </div>
               </div>
             ))}
-          </div>{" "}
+          </div>
         </>
       ) : (
         <>

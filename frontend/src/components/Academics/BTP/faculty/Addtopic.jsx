@@ -3,6 +3,5 @@ export default function Addtopic() {
     <div>
       <button>Add Topic</button>
     </div>
-    
   );
 }
