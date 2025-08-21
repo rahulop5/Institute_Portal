@@ -1,13 +1,14 @@
 .card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-  padding: 14px;
-  width: 180px; /* adjust as per design */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  margin: 10px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    padding: 0.7rem;
+    padding-left: 1.5rem;
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+     /* margin: 10px; */
 }
 
 .header {
@@ -29,22 +30,22 @@
 
 .members {
   display: flex;
-  gap: 8px;
+  gap: 0px;
   justify-content: flex-start;
 }
 
-.member {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid #b0b0b0;
-  background-color: #f0f0f0; /* placeholder gray */
+  border: 1px solid #b0b0b000;
+  background-color: #f0f0f000; /* placeholder gray */
+}
+
+.avatar img{
+  width: 40px;
+  background-color: transparent;
 }
 
 .statusBar {
@@ -60,4 +61,63 @@
 
 .red {
   background-color: #e63946; /* red */
+}
+
+
+.infobutton{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.infobutton button{
+  background-color: transparent;
+  border: none;
+}
+
+.member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: -8px;
+  position: relative; /* So tooltip is positioned relative to member */
+}
+
+.tooltip {
+  position: absolute;
+  top: 50px; /* distance below avatar (avatar is 40px + some gap) */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff; /* white like in image */
+  color: #000000; /* text color */
+  padding: 6px 14px;
+  border-radius: 10px; /* pill shape */
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10;
+}
+
+/* Show on hover */
+.member:hover .tooltip {
+  opacity: 1;
+  color: #000000;
+  visibility: visible;
+  transform: translateX(-50%) translateY(4px); /* slight downward motion */
+}
+
+/* Add a small arrow */
+.tooltip::before {
+  content: "";
+  position: absolute;
+  top: -6px; /* position above tooltip */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #fff transparent; /* triangle pointing up */
 }

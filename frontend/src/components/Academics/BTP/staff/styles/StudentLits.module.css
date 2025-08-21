@@ -1,0 +1,135 @@
+
+.student-list {
+  margin-top: 1rem;
+  padding: 1rem;
+  padding-top: 0.3rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.student-list-scroll {
+  max-height: 32vh; /* Controls the scroll area height */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Optional scrollbar styling */
+.student-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.student-list-scroll::-webkit-scrollbar-track{
+  background: rgb(195, 193, 193);
+  border-radius: 4px;
+}
+.student-list-scroll::-webkit-scrollbar-thumb {
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow:  0 0 5px rgba(0,0,0,0.3);
+}
+
+/* Each student row */
+.student-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+
+.student-roll {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.student-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.select-button {
+  padding: 6px 12px;
+  background-color: #ffffff;
+  color: #4285F4;
+  border: 1.5px solid #4285F4;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.select-button:hover{
+  background-color: #4285F4;
+  color: white;
+}
+
+.select-button-selected {
+  padding: 6px 12px;
+  background-color: #4285F4;
+  color: rgb(255, 255, 255);
+  border: 1.5px solid #4285F4;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.rollselect{
+  display: flex;
+  align-items: center;
+  width: 25%;
+  justify-content: space-between;
+}
+
+/* .select-button:hover {
+  background-color: #e0dff2; 
+  transition: background-color 0.3s ease;
+} */
+.student-row:last-child {
+  border-bottom: none;
+}
+
+/* Icon and info styling */
+.student-icon {
+  font-size: 24px;
+}
+
+.student-icon img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.student-info {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0; /* allow text to truncate instead of overflow */
+}
+.student-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.student-meta {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.student-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;  /* Distribute space evenly */
+  width: 100%;
+  padding-left: 12px;
+}
+
+

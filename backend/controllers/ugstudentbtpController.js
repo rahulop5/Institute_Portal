@@ -5,6 +5,25 @@ import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
 
+function buildSimplifiedTeam(team) {
+  const result = { _id: team._id };
+
+  ["bin1", "bin2", "bin3"].forEach((binKey) => {
+    const bin = team[binKey];
+    if (bin && bin.student) {
+      result[binKey] = {
+        email: bin.student.email,
+        rollno: bin.student.rollno,
+        name: bin.student.name,
+        approved: bin.approved,
+      };
+    }
+  });
+
+  return result;
+}
+
+
 //sending user details too in the response
 export const getBTPDashboard = async (req, res) => {
   try {
@@ -129,29 +148,32 @@ export const getBTPDashboard = async (req, res) => {
                 });
               }
               const team = teams[0];
-              const simplifiedTeam = {
-                _id: team._id,
-                bin1: {
-                  email: team?.bin1.student.email,
-                  rollno: team.bin1.student.rollno,
-                  name: team?.bin1.student.name,
-                  approved: team?.bin1.approved,
-                },
-                bin2: {
-                  email: team?.bin2.student.email,
-                  rollno: team.bin2.student.rollno,
-                  name: team?.bin2.student.name,
-                  approved: team?.bin2.approved,
-                },
-                bin3: {
-                  email: team?.bin3.student.email,
-                  rollno: team.bin3.student.rollno,
-                  name: team?.bin3.student.name,
-                  approved: team?.bin3.approved,
-                },
-              };
+
+              // const simplifiedTeam = {
+              //   _id: team._id,
+              //   bin1: {
+              //     email: team?.bin1?.student.email,
+              //     rollno: team.bin1?.student.rollno,
+              //     name: team?.bin1?.student.name,
+              //     approved: team?.bin1?.approved,
+              //   },
+              //   bin2: {
+              //     email: team?.bin2?.student.email,
+              //     rollno: team.bin2?.student.rollno,
+              //     name: team?.bin2?.student.name,
+              //     approved: team?.bin2?.approved,
+              //   },
+              //   bin3: {
+              //     email: team?.bin3?.student.email,
+              //     rollno: team.bin3?.student.rollno,
+              //     name: team?.bin3?.student.name,
+              //     approved: team?.bin3?.approved,
+              //   },
+              // };
+              const simplifiedTeam = buildSimplifiedTeam(team);
+
               //im gonna send team id and student email to frontend
-              if (!team.bin2.approved || !team.bin3.approved) {
+              if (!team?.bin2?.approved || !team?.bin3?.approved) {
                 return res.status(200).json({
                   name: user.name,
                   email: user.email,
@@ -754,56 +776,40 @@ export const approveTeamRequest = async (req, res) => {
 export const rejectTeamRequest = async (req, res) => {
   try {
     if (!req.body.teamid) {
-      return res.status(400).json({
-        message: "No team id found",
-      });
+      return res.status(400).json({ message: "No team id found" });
     }
     if (!req.user) {
-      return res.status(500).json({
-        message: "No user found",
-      });
+      return res.status(500).json({ message: "No user found" });
     }
-    const binstr = `bin${req.user.bin}.student`;
-    const teams = await BTPTeam.find({
-      [binstr]: req.user._id,
-    });
-    const binstrshort = `bin${req.user.bin}`;
-    const currteam = teams.filter((team) => {
-      return team._id.toString() === req.body.teamid;
-    });
-    if (currteam.length === 0) {
-      return res.status(400).json({
-        message: "Cant reject a request u didnt get",
-      });
-    }
-    if (currteam.length === 1) {
-      if (currteam[0][binstrshort].approved) {
-        return res.status(400).json({
-          message: "Cant reject once u approved",
-        });
-      }
-      const deletee = await BTPTeam.deleteOne({
+
+    const binstr = `bin${req.user.bin}`;
+    const studentField = `${binstr}.student`;
+
+    // Atomic find + update
+    const currteam = await BTPTeam.findOneAndUpdate(
+      {
         _id: req.body.teamid,
+        [studentField]: req.user._id,
+        [`${binstr}.approved`]: { $ne: true }, // reject only if not approved
+      },
+      { $unset: { [binstr]: "" } }, // wipe just that bin
+      { new: true } // return updated doc if needed
+    );
+
+    if (!currteam) {
+      return res.status(400).json({
+        message: "Cannot reject request (either not found or already approved)",
       });
-      if (deletee.deletedCount !== 1) {
-        return res.status(500).json({
-          message: "Unable to reject the request",
-        });
-      }
-      return res.status(201).json({
-        message: "Successfully rejected the request",
-      });
-    } else {
-      //im throwing here instead of returning becoz i want it to get printed in the server logs see catch block
-      throw {
-        status: 500,
-        message: "More than one team found with the same team id",
-      };
     }
+
+    return res.status(200).json({
+      message: "Successfully rejected the request",
+    });
+
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(err.status || 500).json({
-      message: err.message || "Error approving the request",
+      message: err.message || "Error rejecting the request",
     });
   }
 };

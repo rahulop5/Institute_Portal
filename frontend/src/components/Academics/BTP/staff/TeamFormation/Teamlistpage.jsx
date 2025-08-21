@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from './Header';
 import TeamCard from './TeamCard';
+import UnallocatedStudents from './UnallocatedStudents';
 import styles from '../styles/TeamListPage.module.css';
 
 export const teamsData = {
@@ -124,7 +125,7 @@ export const teamsData = {
   ],
 };
 export default function TeamListPage() {
-  const [activeTab, setActiveTab] = useState('Formed'); // default Fully Formed
+  const [activeTab, setActiveTab] = useState('Formed');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -141,20 +142,21 @@ export default function TeamListPage() {
 
       <div className={styles.gridContainer}>
         {activeTab === 'Formed' &&
-          fullyFormedTeams.map((team, index) => <TeamCard key={index} team={team} />)}
+          fullyFormedTeams.map((team, index) => (
+            <TeamCard key={index} team={team} />
+          ))}
 
         {activeTab === 'Partial' &&
-          partiallyFormedTeams.map((team, index) => <TeamCard key={index} team={team} />)}
-
-        {activeTab === 'Unallocated' &&
-          unallocatedMembers.map((member, index) => (
-            <div key={index} className={styles.unallocatedCard}>
-              <div className={styles.avatar}></div>
-              <p>{member.name}</p>
-              <small>Bin: {member.bin}</small>
-            </div>
+          partiallyFormedTeams.map((team, index) => (
+            <TeamCard key={index} team={team} />
           ))}
+
+        {activeTab === "Unallocated" && (
+          <UnallocatedStudents unallocatedData={unallocatedMembers} />
+        )}
+
       </div>
+
     </div>
   );
 }

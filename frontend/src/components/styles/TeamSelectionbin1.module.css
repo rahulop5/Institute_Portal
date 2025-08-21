@@ -652,3 +652,28 @@
 .reject-button2:hover {
   background-color: rgb(255, 239, 239);
 }
+
+
+
+.empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px; /* match row height */
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+}
+
+.add-member-btn {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-member-btn:hover {
+  color: #000;
+}
+
