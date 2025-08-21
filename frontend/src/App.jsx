@@ -16,10 +16,13 @@ import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFaculty
 import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import { action2 as deleteTopicAction, action as addTopicAction } from "./components/academics/btp/faculty/Topicslist.jsx";
 import { action as acceptReqAction, action2 as rejectReqAction } from "./components/academics/btp/faculty/Requests.jsx";
-import EvaluationPage from "./components/academics/btp/faculty/Evaluationpage.jsx";
+// import EvaluationPage from "./components/academics/btp/faculty/Evaluationpage.jsx";
 import StudentInProgress, { loader as projectLoader } from "./components/academics/btp/faculty/StudentInProgress.jsx";
 import { evaluateEvaluatorAction, evaluateGuideAction } from "./components/academics/btp/faculty/EvaluatorModal.jsx";
 import ViewProjEvaluator, { evaluatorProjLoader } from "./components/academics/btp/faculty/ViewProjEvaluator.jsx";
+import FileUploadPage from "./components/Academics/BTP/staff/NotStarted/fileUploadPage.jsx";
+import Header from "./components/Header.jsx";
+import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -31,6 +34,7 @@ const router=createBrowserRouter([
     loader: tokenLoader,
     children: [
       { index: true, element: <Homepage />, loader: checkAuthLoader },
+      { path: "temp", element: <TeamListPage /> },
       { path: "academics",
         loader: checkAuthLoader,
         children: [
