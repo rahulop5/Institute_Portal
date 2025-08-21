@@ -1,0 +1,63 @@
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  padding: 14px;
+  width: 180px; /* adjust as per design */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.teamName {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.infoIcon {
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.members {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #b0b0b0;
+  background-color: #f0f0f0; /* placeholder gray */
+}
+
+.statusBar {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 4px;
+}
+
+.green {
+  background-color: #28a745; /* green */
+}
+
+.red {
+  background-color: #e63946; /* red */
+}
