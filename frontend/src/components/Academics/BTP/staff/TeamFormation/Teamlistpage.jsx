@@ -140,13 +140,19 @@ export default function TeamListPage() {
       <h1 className={styles.pageTitle}>Team Formation</h1>
       <Header onTabChange={handleTabChange} />
 
-      <div className={styles.gridContainer}>
-        {activeTab === 'Formed' &&
+      <div
+        className={
+          activeTab === "Unallocated"
+            ? styles.unallocatedContainer
+            : styles.gridContainer
+        }
+      >
+        {activeTab === "Formed" &&
           fullyFormedTeams.map((team, index) => (
             <TeamCard key={index} team={team} />
           ))}
 
-        {activeTab === 'Partial' &&
+        {activeTab === "Partial" &&
           partiallyFormedTeams.map((team, index) => (
             <TeamCard key={index} team={team} />
           ))}
@@ -154,7 +160,6 @@ export default function TeamListPage() {
         {activeTab === "Unallocated" && (
           <UnallocatedStudents unallocatedData={unallocatedMembers} />
         )}
-
       </div>
 
     </div>

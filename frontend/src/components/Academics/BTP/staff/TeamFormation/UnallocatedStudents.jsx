@@ -16,9 +16,7 @@ export default function UnallocatedStudents({ unallocatedData }) {
 
   return (
     <div>
-    
       <div className={classes["team-selection-buttons"]}>
-        <h2>Team Selection</h2>
         <div className={classes["team-selection-button-group"]}>
           <button
             className={selectedBin === 1 ? classes["active"] : ""}
@@ -45,7 +43,7 @@ export default function UnallocatedStudents({ unallocatedData }) {
         students={filteredStudents.map((item) => ({
           name: item.student.name,
           rollno: item.student.roll,
-          email: `${item.student.roll}@example.com`, // placeholder email
+          email: `${item.student.roll}@example.com`, 
         }))}
       />
     </div>

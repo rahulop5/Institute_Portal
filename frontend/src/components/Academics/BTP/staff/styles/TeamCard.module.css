@@ -19,7 +19,7 @@
 }
 
 .teamName {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -67,7 +67,7 @@
 .infobutton{
   display: flex;
   justify-content: flex-end;
-  margin-top: auto;
+  margin-top: 3px;
 }
 
 .infobutton button{

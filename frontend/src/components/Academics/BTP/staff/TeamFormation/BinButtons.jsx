@@ -1,7 +1,7 @@
 // import React, { useState } from "react";
 // import classes from "../styles/BinButtons.module.css";
 
-// export default function UnallocatedStudents({ unallocatedData }) {
+export default function UnallocatedStudents({ unallocatedData }) {
 //   const [selectedBin, setSelectedBin] = useState(1);
 
 //   const handleBinChange = (bin) => {
@@ -12,7 +12,8 @@
 //     (student) => student.bin === selectedBin
 //   );
 
-//   return (
+  return (
+    <></>
 //     <div>
 //       <div className={classes["team-selection-buttons"]}>
 //         <h2>Team Selection</h2>
@@ -38,5 +39,5 @@
 //         </div>
 //       </div>
 //     </div>
-//   );
-// }
+  );
+}

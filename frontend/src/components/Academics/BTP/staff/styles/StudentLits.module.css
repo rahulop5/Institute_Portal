@@ -1,7 +1,6 @@
-
 .student-list {
   margin-top: 1rem;
-  padding: 1rem;
+  /* padding: 1rem; */
   padding-top: 0.3rem;
   background-color: #fff;
   border-radius: 10px;
@@ -11,7 +10,8 @@
 }
 
 .student-list-scroll {
-  max-height: 32vh; /* Controls the scroll area height */
+  max-height: 32vh;
+  /* Controls the scroll area height */
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -21,25 +21,45 @@
   width: 8px;
 }
 
-.student-list-scroll::-webkit-scrollbar-track{
+.student-list-scroll::-webkit-scrollbar-track {
   background: rgb(195, 193, 193);
   border-radius: 4px;
 }
+
 .student-list-scroll::-webkit-scrollbar-thumb {
   background-color: #ffffff;
   border-radius: 4px;
-  box-shadow:  0 0 5px rgba(0,0,0,0.3);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
 /* Each student row */
 .student-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  /* gap: 12px; */
+  padding: 1vh 3vw;
   border-bottom: 1px solid #eee;
 }
 
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1vh 6vw;
+  font-weight: bold;
+  background-color: #f4f4f400;
+  border-bottom: 2px solid #d0d0d0;
+}
+
+.header-name {
+  flex: 2;
+  /* Match with name column width */
+}
+
+.header-roll {
+  flex: 1;
+  /* Match with roll number width */
+  text-align: center;
+}
 
 .student-roll {
   display: flex;
@@ -49,40 +69,11 @@
   text-align: left;
 }
 
-.student-actions {
+
+.rollselect {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-}
-.select-button {
-  padding: 6px 12px;
-  background-color: #ffffff;
-  color: #4285F4;
-  border: 1.5px solid #4285F4;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.select-button:hover{
-  background-color: #4285F4;
-  color: white;
-}
-
-.select-button-selected {
-  padding: 6px 12px;
-  background-color: #4285F4;
-  color: rgb(255, 255, 255);
-  border: 1.5px solid #4285F4;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.rollselect{
-  display: flex;
-  align-items: center;
-  width: 25%;
+  width: 23%;
   justify-content: space-between;
 }
 
@@ -111,8 +102,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 0; /* allow text to truncate instead of overflow */
+  min-width: 0;
+  /* allow text to truncate instead of overflow */
 }
+
 .student-name {
   font-weight: 500;
   font-size: 1.1rem;
@@ -127,9 +120,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;  /* Distribute space evenly */
+  justify-content: space-between;
+  /* Distribute space evenly */
   width: 100%;
   padding-left: 12px;
 }
-
-

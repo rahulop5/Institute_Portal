@@ -1,13 +1,18 @@
 import React from "react";
 import studentIcon from "../../../../../assets/studenticon.svg";
-import BinButtons from "./BinButtons"
+import BinButtons from "./BinButtons";
 import classes from "../styles/StudentLits.module.css";
 
 const StudentList = ({ students }) => {
     return (
         <div>
-
             <div className={classes["student-list"]}>
+                {/* Header Row */}
+                <div className={classes["student-header"]}>
+                    <div className={classes["header-name"]}>Name</div>
+                    <div className={classes["header-roll"]}>Roll Number</div>
+                </div>
+
                 <div className={classes["student-list-scroll"]}>
                     {students.map((student) => (
                         <div className={classes["student-row"]} key={student.rollno}>

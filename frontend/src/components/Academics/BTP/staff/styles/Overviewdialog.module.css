@@ -1,0 +1,243 @@
+/* Modal backdrop and content (assuming these exist in your base styles) */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+background: #fff;
+    padding: 2rem 4rem;
+    border-radius: 12px;
+    width: 55%;
+    /* max-width: 900px; */
+    height: 50vh;
+    /* overflow-y: auto; */
+}
+
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  /* gap: 10px; */
+  /* margin-bottom: 16px; */
+}
+
+.overviewTitle {
+  font-size: 18px;
+  font-weight: 300;
+  margin-right: 8px;
+}
+
+.teamName {
+  font-size: 32px;
+  margin-top: -12px;
+  font-weight: 600;
+}
+
+/* Cards container */
+.cardsContainer {
+    display: flex;
+    justify-content: space-between;
+    /* gap: 20px; */
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.studentCard {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  width: 280px;
+  text-align: center;
+  position: relative;
+}
+
+.avatarIcon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.studentName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.studentEmail {
+  font-size: 13px;
+  color: #555;
+}
+
+.infodata {
+  margin-left: 1vw;
+  margin-top: 2.5vh;
+  text-align: left;
+}
+
+.rollNumber,
+.binLabel {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rollNumberImg,
+.binLabelImg {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.label {
+  font-size: 12px;
+  color: #666;
+}
+
+.rollNumberValue,
+.binNumberValue {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.5vh;
+  font-size: 14px;
+}
+
+.statusWrapper{
+    display: flex;
+    gap: 8px;
+    flex-direction: row;
+}
+
+.statusIcon{
+    height: 20px;
+}
+.statusConfirmed {
+  color: rgb(0, 0, 0);
+  font-weight: 600;
+}
+
+.statusPending {
+  color: rgb(0, 0, 0);
+  font-weight: 600;
+}
+
+/* Action Buttons under each member */
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 2.5vh;
+}
+
+.actionButtons button {
+  background: transparent;
+
+  border-radius: 20px;
+  width: 50px;
+  padding: 0.5rem 2.5rem;
+  /* height: 50px; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.notification{
+    border: 1px solid #FFBC35
+}
+
+.notification:hover{
+    background-color: #FFBC35;
+}
+
+.replace{
+   border: 1px solid #5F92FF;
+}
+
+.replace:hover{
+    background-color: #5F92FF;
+
+}
+
+.trash{
+    border: 1.5px solid #FF0000;
+}
+
+.trash:hover{
+    background-color: #FF0000;
+
+}
+
+
+
+.profileimg{
+    height: 50px;
+}
+/* Footer styling */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.footerWarning {
+  font-size: 14px;
+  color: #d97706;
+}
+
+.footerButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.submitButton {
+  background: #16a34a;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.submitButton:hover {
+  background: #15803d;
+}
+
+.deleteButton {
+  background-color: #ef4444;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.deleteButton:hover {
+  background-color: #dc2626;
+}

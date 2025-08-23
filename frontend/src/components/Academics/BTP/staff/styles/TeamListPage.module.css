@@ -25,6 +25,10 @@
   margin-top: 20px;
 }
 
+.unallocatedContainer{
+  margin-top: 3vh;
+}
+
 .unallocatedCard {
   background: #fff;
   border-radius: 12px;
