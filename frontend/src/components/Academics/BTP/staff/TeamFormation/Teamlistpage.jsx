@@ -124,44 +124,71 @@ export const teamsData = {
     { student: { name: "Roshni L", roll: "S20230012125" }, bin: { id: 3 } },
   ],
 };
+
 export default function TeamListPage() {
+  // ✅ keep your data and tabs; make them stateful so replacement can update the UI
+  const [teams, setTeams] = useState(teamsData.teams);
+  const [unallocatedMembers, setUnallocatedMembers] = useState(teamsData.unallocatedMembers);
   const [activeTab, setActiveTab] = useState('Formed');
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab) => setActiveTab(tab);
+
+  // ✅ main replacement handler (order: newStudent, oldMember, memberIndex, teamName)
+  const handleReplaceStudent = (newStudent, oldMember, memberIndex, teamName) => {
+    // Update the right team & member (preserve isApproved from old member)
+    setTeams(prev =>
+      prev.map(team => {
+        if (team.teamName !== teamName) return team;
+        const updatedMembers = team.members.map((m, i) =>
+          i === memberIndex
+            ? { ...oldMember, student: newStudent.student, bin: newStudent.bin }
+            : m
+        );
+        return { ...team, members: updatedMembers };
+      })
+    );
+
+    // Remove newStudent from unallocated; add oldMember back to unallocated
+    setUnallocatedMembers(prev => {
+      const filtered = prev.filter(u => u.student.roll !== newStudent.student.roll);
+      // Unallocated shape does not need isApproved; just student + bin
+      return [...filtered, { student: oldMember.student, bin: oldMember.bin }];
+    });
   };
 
-  const fullyFormedTeams = teamsData.teams.filter((team) => team.isTeamFormed);
-  const partiallyFormedTeams = teamsData.teams.filter((team) => !team.isTeamFormed);
-  const unallocatedMembers = teamsData.unallocatedMembers;
+  const fullyFormedTeams = teams.filter((team) => team.isTeamFormed);
+  const partiallyFormedTeams = teams.filter((team) => !team.isTeamFormed);
 
   return (
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>Team Formation</h1>
       <Header onTabChange={handleTabChange} />
 
-      <div
-        className={
-          activeTab === "Unallocated"
-            ? styles.unallocatedContainer
-            : styles.gridContainer
-        }
-      >
+      <div className={activeTab === "Unallocated" ? styles.unallocatedContainer : styles.gridContainer}>
         {activeTab === "Formed" &&
           fullyFormedTeams.map((team, index) => (
-            <TeamCard key={index} team={team} />
+            <TeamCard
+              key={index}
+              team={team}
+              unallocatedData={unallocatedMembers}
+              onConfirmReplace={handleReplaceStudent}
+            />
           ))}
 
         {activeTab === "Partial" &&
           partiallyFormedTeams.map((team, index) => (
-            <TeamCard key={index} team={team} />
+            <TeamCard
+              key={index}
+              team={team}
+              unallocatedData={unallocatedMembers}
+              onConfirmReplace={handleReplaceStudent}
+            />
           ))}
 
         {activeTab === "Unallocated" && (
           <UnallocatedStudents unallocatedData={unallocatedMembers} />
         )}
       </div>
-
     </div>
   );
 }

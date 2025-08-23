@@ -7,43 +7,38 @@ import whitereplace from "../../../../../assets/whitereplace.png";
 import trash from "../../../../../assets/trashcan.png";
 import whitetrash from "../../../../../assets/whitetrash.png";
 
-export default function ActionButtons({ index }) {
-    const [hoveredButton, setHoveredButton] = React.useState(null);
+export default function ActionButtons({ index, onReplace }) {
+  const [hoveredButton, setHoveredButton] = React.useState(null);
 
-    return (
-        <div className={styles.actionButtons}>
-            <button
-                className={styles.notification}
-                onMouseEnter={() => setHoveredButton("notify")}
-                onMouseLeave={() => setHoveredButton(null)}
-            >
-                <img
-                    src={hoveredButton === "notify" ? whitebell : colorbell}
-                    alt="Notify"
-                />
-            </button>
+  return (
+    <div className={styles.actionButtons}>
+      <button
+        className={styles.notification}
+        onMouseEnter={() => setHoveredButton("notify")}
+        onMouseLeave={() => setHoveredButton(null)}
+        type="button"
+      >
+        <img src={hoveredButton === "notify" ? whitebell : colorbell} alt="Notify" />
+      </button>
 
-            <button
-                className={styles.replace}
-                onMouseEnter={() => setHoveredButton("replace")}
-                onMouseLeave={() => setHoveredButton(null)}
-            >
-                <img
-                    src={hoveredButton === "replace" ? whitereplace : swap}
-                    alt="Swap"
-                />
-            </button>
+      <button
+        className={styles.replace}
+        onMouseEnter={() => setHoveredButton("replace")}
+        onMouseLeave={() => setHoveredButton(null)}
+        onClick={onReplace}
+        type="button"
+      >
+        <img src={hoveredButton === "replace" ? whitereplace : swap} alt="Swap" />
+      </button>
 
-            <button
-                className={styles.trash}
-                onMouseEnter={() => setHoveredButton("trash")}
-                onMouseLeave={() => setHoveredButton(null)}
-            >
-                <img
-                    src={hoveredButton === "trash" ? whitetrash : trash}
-                    alt="Delete"
-                />
-            </button>
-        </div>
-    );
+      <button
+        className={styles.trash}
+        onMouseEnter={() => setHoveredButton("trash")}
+        onMouseLeave={() => setHoveredButton(null)}
+        type="button"
+      >
+        <img src={hoveredButton === "trash" ? whitetrash : trash} alt="Delete" />
+      </button>
+    </div>
+  );
 }

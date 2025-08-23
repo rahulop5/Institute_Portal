@@ -4,7 +4,7 @@ import info from "../../../../../assets/info.svg";
 import studenticon from "../../../../../assets/studenticon.svg";
 import Overviewdialog from "./Overviewdialog";
 
-export default function TeamCard({ team }) {
+export default function TeamCard({ team, unallocatedData, onConfirmReplace }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -30,7 +30,6 @@ export default function TeamCard({ team }) {
                   member.isApproved ? styles.green : styles.red
                 }`}
               />
-              {/* Tooltip */}
               <div className={styles.tooltip}>
                 <p>{member.student.name}</p>
                 <p>Bin: {member.bin.id}</p>
@@ -41,11 +40,12 @@ export default function TeamCard({ team }) {
         )}
       </div>
 
-      
       <Overviewdialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         team={team}
+        unallocatedData={unallocatedData}
+        onConfirmReplace={onConfirmReplace}
       />
     </div>
   );
