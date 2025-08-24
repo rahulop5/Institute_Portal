@@ -9,42 +9,71 @@ export default function ReplaceDialog({
   member,
   memberIndex,
   teamName,
+  mode,
   unallocatedData,
   onConfirmReplace,
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  const sameBin = selectedStudent?.bin?.id === member?.bin?.id;
+  // For Replace, enforce same bin; for Add, allow any
+  const sameBin = mode === "replace"
+    ? selectedStudent?.bin?.id === member?.bin?.id
+    : true;
 
-  const handleConfirm = () => {
-    if (!selectedStudent) return;
-    if (!sameBin) return; // safety; also disabled in UI
-    onConfirmReplace(selectedStudent, member, memberIndex);
-    onClose();
-  };
+const handleConfirm = () => {
+  if (!selectedStudent) return;
+  if (mode === "replace" && selectedStudent.bin.id !== member.bin.id) return;
+
+  // Build the updatedTeam object
+  const updatedTeam = { ...team };
+  if (mode === "replace") {
+    updatedTeam.members[memberIndex] = {
+      student: selectedStudent.student,
+      bin: selectedStudent.bin,
+      isApproved: false
+    };
+  } else if (mode === "add") {
+    updatedTeam.members[memberIndex] = {
+      student: selectedStudent.student,
+      bin: selectedStudent.bin,
+      isApproved: false
+    };
+  }
+
+  // Call onUpdateTeam with proper arguments
+  onUpdateTeam(updatedTeam, member, mode, selectedStudent);
+
+  onClose();
+};
+
 
   return createPortal(
     <div className={styles.modalBackdrop} onClick={handleBackdropClick}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.heading}>
-          <h3 className={styles.overviewTitle}>Replace Member</h3>
+          <h3 className={styles.overviewTitle}>
+            {mode === "replace" ? "Replace Member" : "Add Member"}
+          </h3>
           <h2 className={styles.teamName}>{teamName}</h2>
         </div>
 
-        <div className={styles.memberDetails}>
-          <p><strong>Replacing:</strong> {member?.student?.name} ({member?.student?.roll})</p>
-          <p><strong>Bin required:</strong> {member?.bin?.id}</p>
-        </div>
+        {mode === "replace" && (
+          <div className={styles.memberDetails}>
+            <p><strong>Replacing:</strong> {member?.student?.name} ({member?.student?.roll})</p>
+            <p><strong>Bin required:</strong> {member?.bin?.id}</p>
+          </div>
+        )}
 
         <UnallocatedStudents
           unallocatedData={unallocatedData}
           isSelectMode={true}
-          allowedBin={member?.bin?.id}
+          allowedBin={mode === "replace" ? member?.bin?.id : null}
           onSelectStudent={(student) => setSelectedStudent(student)}
         />
 
@@ -56,7 +85,7 @@ export default function ReplaceDialog({
             disabled={!selectedStudent || !sameBin}
             type="button"
           >
-            Confirm
+            {mode === "replace" ? "Confirm" : "Add"}
           </button>
         </div>
       </div>

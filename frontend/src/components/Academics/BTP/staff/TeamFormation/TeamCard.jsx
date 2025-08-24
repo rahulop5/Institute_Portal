@@ -4,7 +4,7 @@ import info from "../../../../../assets/info.svg";
 import studenticon from "../../../../../assets/studenticon.svg";
 import Overviewdialog from "./Overviewdialog";
 
-export default function TeamCard({ team, unallocatedData, onConfirmReplace }) {
+export default function TeamCard({ team, unallocatedData, onConfirmReplace,onUpdateTeam }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -46,6 +46,7 @@ export default function TeamCard({ team, unallocatedData, onConfirmReplace }) {
         team={team}
         unallocatedData={unallocatedData}
         onConfirmReplace={onConfirmReplace}
+        onUpdateTeam={onUpdateTeam}
       />
     </div>
   );

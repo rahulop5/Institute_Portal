@@ -126,16 +126,16 @@ export const teamsData = {
 };
 
 export default function TeamListPage() {
-  // ✅ keep your data and tabs; make them stateful so replacement can update the UI
+
   const [teams, setTeams] = useState(teamsData.teams);
   const [unallocatedMembers, setUnallocatedMembers] = useState(teamsData.unallocatedMembers);
   const [activeTab, setActiveTab] = useState('Formed');
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
-  // ✅ main replacement handler (order: newStudent, oldMember, memberIndex, teamName)
+
   const handleReplaceStudent = (newStudent, oldMember, memberIndex, teamName) => {
-    // Update the right team & member (preserve isApproved from old member)
+ 
     setTeams(prev =>
       prev.map(team => {
         if (team.teamName !== teamName) return team;
@@ -148,16 +148,45 @@ export default function TeamListPage() {
       })
     );
 
-    // Remove newStudent from unallocated; add oldMember back to unallocated
-    setUnallocatedMembers(prev => {
-      const filtered = prev.filter(u => u.student.roll !== newStudent.student.roll);
-      // Unallocated shape does not need isApproved; just student + bin
-      return [...filtered, { student: oldMember.student, bin: oldMember.bin }];
-    });
-  };
+  
+     setUnallocatedMembers(prev => {
+    let updatedUnallocated = [...prev];
+
+    if (mode === "delete") {
+      // Add the removed member back to unallocated
+      if (affectedMember) {
+        updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
+      }
+    } else if (mode === "replace" || mode === "add") {
+      // Remove the new student from unallocated
+      updatedUnallocated = updatedUnallocated.filter(u => u.student.roll !== newStudent.student.roll);
+      // If replacing, add the old member back to unallocated
+      if (mode === "replace" && affectedMember) {
+        updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
+      }
+    }
+
+    return updatedUnallocated;
+  });
+};
 
   const fullyFormedTeams = teams.filter((team) => team.isTeamFormed);
   const partiallyFormedTeams = teams.filter((team) => !team.isTeamFormed);
+
+
+  const handleUpdateTeam = (updatedTeam, affectedMember, mode, newStudent) => {
+  // Update the teams array
+  setTeams(prev =>
+    prev.map(team =>
+      team.teamName === updatedTeam.teamName ? updatedTeam : team
+    )
+  );
+
+  if (removedMember) {
+    setUnallocatedMembers(prev => [...prev, { student: removedMember.student, bin: removedMember.bin }]);
+  }
+};
+
 
   return (
     <div className={styles.pageContainer}>
@@ -172,6 +201,7 @@ export default function TeamListPage() {
               team={team}
               unallocatedData={unallocatedMembers}
               onConfirmReplace={handleReplaceStudent}
+              onUpdateTeam={handleUpdateTeam}
             />
           ))}
 
@@ -182,6 +212,7 @@ export default function TeamListPage() {
               team={team}
               unallocatedData={unallocatedMembers}
               onConfirmReplace={handleReplaceStudent}
+                onUpdateTeam={handleUpdateTeam}
             />
           ))}
 
