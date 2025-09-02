@@ -9,49 +9,60 @@ import whiteadd from "../../../../../assets/addwhite.png";
 import trash from "../../../../../assets/trashcan.png";
 import whitetrash from "../../../../../assets/whitetrash.png";
 
-export default function ActionButtons({ index, onReplace, onDelete, onAdd, mode }) {
-  const [hoveredButton, setHoveredButton] = React.useState(null);
+export default function ActionButtons({ index, isApproved, onNotify, onReplace, onDelete }) {
+    const [hoveredButton, setHoveredButton] = React.useState(null);
 
-  return (
-    <div className={styles.actionButtons}>
-      <button
-        className={styles.notification}
-        onMouseEnter={() => setHoveredButton("notify")}
-        onMouseLeave={() => setHoveredButton(null)}
-        type="button"
-      >
-        <img src={hoveredButton === "notify" ? whitebell : colorbell} alt="Notify" />
-      </button>
+    const handleMouseEnter = (button) => {
+        if (!isApproved || button !== "notify") {
+            setHoveredButton(button);
+        }
+    };
 
+    const handleMouseLeave = () => {
+        setHoveredButton(null);
+    };
 
-      <button
-        className={styles.replace}
-        onMouseEnter={() => setHoveredButton("replace")}
-        onMouseLeave={() => setHoveredButton(null)}
-        onClick={mode === "replace" ? onReplace : onAdd}
-        type="button"
-      >
-        <img
-          src={
-            hoveredButton === "replace"
-              ? mode === "replace" ? whitereplace : whiteadd
-              : mode === "replace" ? swap : add
-          }
-          alt={mode === "replace" ? "Replace" : "Add"}
-        />
-      </button>
+    return (
+        <div className={styles.actionButtons}>
+            {/* Notify Button */}
+            <button
+                className={`${styles.notification} ${isApproved ? styles.inactive : ""}`}
+                disabled={isApproved}
+                onClick={() => !isApproved && onNotify(index)}
+                onMouseEnter={() => handleMouseEnter("notify")}
+                onMouseLeave={handleMouseLeave}
+            >
+                <img
+                    src={hoveredButton === "notify" ? whitebell : colorbell}
+                    alt="Notify"
+                />
+            </button>
 
-      {mode === "replace" && (
-        <button
-          className={styles.trash}
-          onMouseEnter={() => setHoveredButton("trash")}
-          onMouseLeave={() => setHoveredButton(null)}
-          onClick={onDelete}
-          type="button"
-        >
-          <img src={hoveredButton === "trash" ? whitetrash : trash} alt="Delete" />
-        </button>
-      )}
-    </div>
-  );
+            {/* Replace Button */}
+            <button
+                className={styles.replace}
+                onClick={() => onReplace(index)}
+                onMouseEnter={() => handleMouseEnter("replace")}
+                onMouseLeave={handleMouseLeave}
+            >
+                <img
+                    src={hoveredButton === "replace" ? whitereplace : swap}
+                    alt="Swap"
+                />
+            </button>
+
+            {/* Delete Button */}
+            <button
+                className={styles.trash}
+                onClick={() => onDelete(index)}
+                onMouseEnter={() => handleMouseEnter("trash")}
+                onMouseLeave={handleMouseLeave}
+            >
+                <img
+                    src={hoveredButton === "trash" ? whitetrash : trash}
+                    alt="Delete"
+                />
+            </button>
+        </div>
+    );
 }
