@@ -536,6 +536,68 @@ export const deallocateFacultyforTeam = async (req, res) => {
   }
 };
 
+// Advance from round k -> k+1 for all teams (or single team if teamId provided)
+export const advancePreferenceRound = async (req, res) => {
+  try {
+    const query = { facultyAssigned: false, currentPreference: { $gte: 1, $lte: 4 } };
+    const teams = await BTPTeam.find(query);
+    if (teams.length === 0) {
+      return res.status(200).json({ message: "No teams to advance" });
+    }
+
+    for (const team of teams) {
+      const k = team.currentPreference;
+      if (k < 1 || k > 4) continue;
+
+      // 1) Delete unapproved requests for round k across ALL BTPTopic docs
+      await BTPTopic.updateMany(
+        { "requests.teamid": team._id, "requests.preference": k },
+        { $pull: { requests: { teamid: team._id, preference: k, isapproved: false } } }
+      );
+
+      // 2) If already assigned in the meantime, skip pushing next
+      const freshTeam = await BTPTeam.findById(team._id);
+      if (freshTeam.facultyAssigned) continue;
+
+      // 3) Move to next round if exists
+      if (k < 4) {
+        const next = k + 1;
+        const pNext = freshTeam.preferences.find(p => p.order === next);
+        if (pNext) {
+          const doc = await BTPTopic.findById(pNext.topicDoc);
+          if (doc) {
+            const already = doc.requests.some(r =>
+              r.teamid.toString() === freshTeam._id.toString() &&
+              r.topic.toString() === pNext.topicId.toString() &&
+              r.preference === next
+            );
+            if (!already) {
+              doc.requests.push({
+                teamid: freshTeam._id,
+                topic: pNext.topicId,
+                isapproved: false,
+                preference: next
+              });
+              await doc.save();
+            }
+          }
+          freshTeam.currentPreference = next;
+          await freshTeam.save();
+        }
+      } else {
+        // Round 4 ended and not assigned — do nothing more here (could mark exhausted if you want)
+      }
+    }
+    return res.status(200).json({ message: "Advanced preference round successfully" });
+  } catch (err) {
+    console.log(err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Error advancing preference round",
+    });
+  }
+};
+
+
 export const endFacultyAssignmentPhase = async (req, res) => {
   try {
     if (!req.query.batch) {

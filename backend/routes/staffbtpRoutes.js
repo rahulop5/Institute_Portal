@@ -1,6 +1,7 @@
 import express from "express";
 import { authStaffMiddleware } from "../controllers/authController.js";
 import {
+    advancePreferenceRound,
     allocateFacultytoTeam,
     assignEvaluator,
     createTeambyStaff,
@@ -27,5 +28,6 @@ router.post("/allocatefaculty", authStaffMiddleware, allocateFacultytoTeam);
 router.delete("/deallocatefaculty", authStaffMiddleware, deallocateFacultyforTeam);
 router.get("/endFAphase", authStaffMiddleware, endFacultyAssignmentPhase);
 router.post("/assignevaluator", authStaffMiddleware, assignEvaluator);
+router.post("/advancepreferencernd", authStaffMiddleware, advancePreferenceRound);
 
 export default router;

@@ -8,6 +8,7 @@ import {
     facultyAssignmentRequest,
     getBTPDashboard,
     rejectTeamRequest,
+    setTeamPreferences,
     verifyBinAndPhase
 } from "../controllers/ugstudentbtpController.js";
 
@@ -19,6 +20,8 @@ router.post("/approverequest", authStudentMiddleware, verifyBinAndPhase({bin: [2
 router.delete("/rejectrequest", authStudentMiddleware, verifyBinAndPhase({bin: [2, 3], phase: "TEAM_FORMATION"}), rejectTeamRequest);
 router.post("/addteammember", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "TEAM_FORMATION"}), addTeamMember);
 router.post("/requestfaculty", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "FACULTY_ASSIGNMENT"}), facultyAssignmentRequest);
+router.post("/setpreferences", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "FACULTY_ASSIGNMENT"}), setTeamPreferences);
 router.post("/addupdate", authStudentMiddleware, verifyBinAndPhase({bin: [1], phase: "IN_PROGRESS"}), addUpdatetoProject)
+
 
 export default router;

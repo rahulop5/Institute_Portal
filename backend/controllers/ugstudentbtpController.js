@@ -212,11 +212,11 @@ export const getBTPDashboard = async (req, res) => {
               }
 
               const binkey = `bin${user.bin}`;
-              console.log(teams[0][binkey].approved)
+              console.log(teams[0][binkey].approved);
               if (teams.length === 1 && teams[0][binkey].approved) {
                 const team = teams[0];
                 const simplifiedTeam = buildSimplifiedTeam(team);
-                console.log(simplifiedTeam)
+                console.log(simplifiedTeam);
                 if (team.isteamformed) {
                   return res.status(200).json({
                     email: user.email,
@@ -327,10 +327,7 @@ export const getBTPDashboard = async (req, res) => {
           const topics = await BTPTopic.find().populate("faculty");
           let approvedRequest = null;
           const outgoingRequests = [];
-
-          //did this in 2 cases
-          // 1) any of the faculty accepts the request in which all the other outgoing requests will be deleted and only the approved req is shown
-          // 2) if no request is approved we just show the status of outgoing requests
+          const activePref = team.currentPreference || 1;
 
           topics.forEach((topic) => {
             topic.requests.forEach((request) => {
@@ -338,7 +335,6 @@ export const getBTPDashboard = async (req, res) => {
                 const matchedTopic = topic.topics.find(
                   (t) => t._id.toString() === request.topic.toString()
                 );
-
                 const requestData = {
                   topicDocId: topic._id,
                   faculty: {
@@ -348,12 +344,13 @@ export const getBTPDashboard = async (req, res) => {
                   },
                   requestedTopic: matchedTopic,
                   isapproved: request.isapproved,
+                  preference: request.preference,
                 };
-                //ideal case(not security wise integrity wise)
-                //i.e what do u do if there are more than 1 approved req ik its not possible but what if smone hacks and does it
+
                 if (request.isapproved) {
                   approvedRequest = requestData;
-                } else {
+                } else if (request.preference === activePref) {
+                  // only show active round
                   outgoingRequests.push(requestData);
                 }
               }
@@ -400,7 +397,7 @@ export const getBTPDashboard = async (req, res) => {
             .populate("guide")
             .populate("evaluators.evaluator");
           if (projectarr.length !== 1) {
-            console.log(projectarr.length)
+            console.log(projectarr.length);
             return res.status(404).json({
               message: "Either no project found or too many projects found",
             });
@@ -708,7 +705,6 @@ export const approveTeamRequest = async (req, res) => {
   }
 };
 
-
 export const rejectTeamRequest = async (req, res) => {
   try {
     if (!req.body.teamid) {
@@ -741,7 +737,6 @@ export const rejectTeamRequest = async (req, res) => {
     return res.status(200).json({
       message: "Successfully rejected the request",
     });
-
   } catch (err) {
     console.error(err);
     return res.status(err.status || 500).json({
@@ -752,7 +747,7 @@ export const rejectTeamRequest = async (req, res) => {
 
 export const addTeamMember = async (req, res) => {
   try {
-    console.log(req.user)
+    console.log(req.user);
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -763,17 +758,23 @@ export const addTeamMember = async (req, res) => {
     }
 
     if (![2, 3].includes(Number(bin))) {
-      return res.status(400).json({ message: "You can only add to bin2 or bin3" });
+      return res
+        .status(400)
+        .json({ message: "You can only add to bin2 or bin3" });
     }
 
     const team = await BTPTeam.findOne({ "bin1.student": req.user._id });
     if (!team) {
-      return res.status(404).json({ message: "Team not found for current user" });
+      return res
+        .status(404)
+        .json({ message: "Team not found for current user" });
     }
 
     // Ensure that slot is empty
     if (team[`bin${bin}`] && team[`bin${bin}`].student) {
-      return res.status(400).json({ message: `Bin${bin} already has a member` });
+      return res
+        .status(400)
+        .json({ message: `Bin${bin} already has a member` });
     }
 
     // Find the student to add
@@ -784,7 +785,9 @@ export const addTeamMember = async (req, res) => {
 
     // Validate batch
     if (stu.batch !== team.batch) {
-      return res.status(400).json({ message: "Student batch does not match team batch" });
+      return res
+        .status(400)
+        .json({ message: "Student batch does not match team batch" });
     }
 
     // Validate bin number
@@ -793,10 +796,16 @@ export const addTeamMember = async (req, res) => {
     }
 
     // Check if student is already in an approved team
-    const existingTeams = await BTPTeam.find({ [`bin${bin}.student`]: stu._id });
+    const existingTeams = await BTPTeam.find({
+      [`bin${bin}.student`]: stu._id,
+    });
     for (let t of existingTeams) {
       if (t[`bin${bin}`].approved) {
-        return res.status(400).json({ message: `${stu.email} is already in another approved team` });
+        return res
+          .status(400)
+          .json({
+            message: `${stu.email} is already in another approved team`,
+          });
       }
     }
     // Add to team
@@ -810,7 +819,6 @@ export const addTeamMember = async (req, res) => {
     return res.status(200).json({
       message: `Added ${stu.email} to bin${bin} successfully. Request pending approval.`,
     });
-
   } catch (err) {
     console.log(err);
     return res.status(err.status || 500).json({
@@ -819,83 +827,163 @@ export const addTeamMember = async (req, res) => {
   }
 };
 
+export const setTeamPreferences = async (req, res) => {
+  try {
+    const { teamId, preferences } = req.body;
+    // preferences: [{ topicDoc, topicId }, ...] length must be 4
+
+    if (!teamId || !Array.isArray(preferences) || preferences.length !== 4) {
+      return res.status(400).json({ message: "Send exactly 4 preferences" });
+    }
+
+    const team = await BTPTeam.findById(teamId);
+    if (!team) return res.status(404).json({ message: "Team not found" });
+    if (!team.isteamformed) {
+      return res.status(400).json({ message: "Team not fully approved yet" });
+    }
+    // Only bin1 can set
+    if (team.bin1.student.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Only bin1 can set preferences" });
+    }
+    if (team.facultyAssigned) {
+      return res.status(400).json({ message: "Faculty already assigned" });
+    }
+
+    // Validate topics exist; also dedupe
+    const seen = new Set();
+    for (let i = 0; i < 4; i++) {
+      const p = preferences[i];
+      if (!p || !p.topicDoc || !p.topicId) {
+        return res.status(400).json({ message: `Invalid preference at index ${i}` });
+      }
+      const key = `${p.topicDoc}:${p.topicId}`;
+      if (seen.has(key)) {
+        return res.status(400).json({ message: "Duplicate topics in preferences" });
+      }
+      seen.add(key);
+
+      const doc = await BTPTopic.findById(p.topicDoc);
+      if (!doc) return res.status(400).json({ message: `Topic doc not found for pref ${i + 1}` });
+      const sub = doc.topics.id(p.topicId);
+      if (!sub) return res.status(400).json({ message: `Topic not found for pref ${i + 1}` });
+    }
+
+    // Save preferences to team
+    team.preferences = preferences.map((p, idx) => ({
+      topicDoc: p.topicDoc,
+      topicId: p.topicId,
+      order: idx + 1
+    }));
+    team.currentPreference = 1;
+    await team.save();
+
+    // Send ONLY round-1 requests to corresponding topic doc
+    const pref1 = team.preferences.find(p => p.order === 1);
+    const doc1 = await BTPTopic.findById(pref1.topicDoc);
+    // Prevent duplicates if already present
+    const exists = doc1.requests.some(r =>
+      r.teamid.toString() === team._id.toString() &&
+      r.topic.toString() === pref1.topicId.toString() &&
+      r.preference === 1
+    );
+    if (!exists) {
+      doc1.requests.push({
+        teamid: team._id,
+        topic: pref1.topicId,
+        isapproved: false,
+        preference: 1
+      });
+      await doc1.save();
+    }
+
+    return res.status(201).json({ message: "Preferences saved and Round-1 request sent" });
+  } catch (err) {
+    console.log(err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Error setting preferences",
+    });
+  }
+};
 
 //here if any of the req is already approved then we shouldnt allow them to send the request
 export const facultyAssignmentRequest = async (req, res) => {
   if (!req.body.docId || !req.body.topicId || !req.body.teamId) {
-    return res.status(400).json({
-      message: "Invalid details sent",
-    });
+    return res.status(400).json({ message: "Invalid details sent" });
   }
   try {
     const { docId, topicId, teamId } = req.body;
-    console.log(req.body);
-    //checking if these ppl are already in any team
-    const alreadyApproved = await BTPTopic.findOne({
-      requests: {
-        $elemMatch: {
-          teamid: teamId,
-          isapproved: true,
-        },
-      },
-    });
 
-    console.log(alreadyApproved);
-    if (alreadyApproved) {
-      return res.status(400).json({
-        message:
-          "A faculty has already approved your request. You cannot send new ones.",
-      });
-    }
-
-    const facdoc = await BTPTopic.findOne({
-      _id: docId,
-    });
-    if (!facdoc) {
-      return res.status(400).json({
-        message: "No faculty with that topic found",
-      });
-    }
-    const topic = facdoc.topics.id(topicId);
-    if (!topic) {
-      return res.status(400).json({
-        message: "No topic with that facutly found",
-      });
-    }
-    const team = await BTPTeam.findOne({
-      _id: teamId,
-    });
-    if (!team) {
-      return res.status(400).json({
-        message: "Invalid team",
-      });
-    }
+    const team = await BTPTeam.findById(teamId);
+    if (!team) return res.status(400).json({ message: "Invalid team" });
     if (team.bin1.student.toString() !== req.user._id.toString()) {
-      return res.status(400).json({
-        message: "Wrong Team Id",
-      });
+      return res.status(400).json({ message: "Wrong Team Id" });
     }
-    const checkreq = facdoc.requests.filter((request) => {
-      return (
-        request.teamid.toString() === teamId &&
-        request.topic.toString() === topicId
-      );
+    if (!team.isteamformed) {
+      return res.status(400).json({ message: "Team not formed" });
+    }
+    if (team.facultyAssigned) {
+      return res.status(400).json({ message: "Faculty already assigned" });
+    }
+    if (team.currentPreference < 1 || team.currentPreference > 4) {
+      return res.status(400).json({ message: "Preferences not initialized" });
+    }
+
+    // Only allow sending request that matches the active preference
+    const active = team.preferences.find(
+      (p) => p.order === team.currentPreference
+    );
+    if (
+      !active ||
+      active.topicDoc.toString() !== docId ||
+      active.topicId.toString() !== topicId
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Can only send active preference request" });
+    }
+
+    const facdoc = await BTPTopic.findById(docId);
+    if (!facdoc)
+      return res
+        .status(400)
+        .json({ message: "No faculty with that topic found" });
+    const topic = facdoc.topics.id(topicId);
+    if (!topic)
+      return res
+        .status(400)
+        .json({ message: "No topic with that faculty found" });
+
+    // Block if already approved elsewhere
+    const alreadyApproved = await BTPTopic.findOne({
+      requests: { $elemMatch: { teamid: teamId, isapproved: true } },
     });
-    if (checkreq.length !== 0) {
-      return res.status(400).json({
-        message: "Request already sent",
-      });
+    if (alreadyApproved) {
+      return res.status(400).json({ message: "Already approved by a faculty" });
     }
-    const newrequest = {
+
+    // Prevent duplicate request
+    const exists = facdoc.requests.some(
+      (r) =>
+        r.teamid.toString() === teamId &&
+        r.topic.toString() === topicId &&
+        r.preference === team.currentPreference
+    );
+    if (exists)
+      return res
+        .status(400)
+        .json({ message: "Request already sent for this round" });
+
+    facdoc.requests.push({
       teamid: teamId,
       topic: topicId,
       isapproved: false,
-    };
-    facdoc.requests.push(newrequest);
-    await facdoc.save();
-    return res.status(201).json({
-      message: "Request sent successfully",
+      preference: team.currentPreference,
     });
+    await facdoc.save();
+
+    return res
+      .status(201)
+      .json({ message: "Request sent for active preference" });
   } catch (err) {
     console.log(err);
     return res.status(err.status || 500).json({

@@ -528,101 +528,85 @@ export const deleteTopic = async (req, res) => {
 //delete other requests the team sent
 // gotta set the limit on how many requests prof can accept
 export const approveTopicRequest = async (req, res) => {
-  if (!req.body.topicid || !req.body.teamid) {
-    return res.status(400).json({
-      message: "Invalid request",
-    });
-  }
   try {
-    const { topicid, teamid } = req.body;
-    const fac = await Faculty.findOne({
-      email: req.user.email,
-    });
-    if (!fac) {
-      return res.status(400).json({
-        message: "No faculty found",
-      });
+    const { teamid, topicid } = req.body;
+    if (!teamid || !topicid) {
+      return res.status(400).json({ message: "Team ID and Topic ID are required" });
     }
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // 1) find faculty record for current user
+    const fac = await Faculty.findOne({ email: req.user.email });
+    if (!fac) return res.status(400).json({ message: "No faculty found" });
+
+    // 2) find the BTPTopic document that contains the topic subdoc (topicid)
     const factopicdoc = await BTPTopic.findOne({
       faculty: fac._id,
+      "topics._id": topicid,
     });
     if (!factopicdoc) {
-      return res.status(400).json({
-        message: "No topics found under this faculty",
-      });
+      return res.status(400).json({ message: "No topics found under this faculty / invalid topic id" });
     }
-    const topic = factopicdoc.topics.id(topicid);
-    if (!topic) {
-      return res.status(400).json({
-        message: "No topic found with that topic id",
-      });
+
+    // get the topic subdocument for metadata
+    const topicSub = factopicdoc.topics.id(topicid);
+    if (!topicSub) return res.status(400).json({ message: "No topic found with that topic id" });
+
+    // 3) find the request inside this faculty doc that matches team & topic
+    const request = factopicdoc.requests.find(
+      (r) => r.teamid.toString() === teamid && r.topic.toString() === topicid
+    );
+    if (!request) return res.status(400).json({ message: "No request found with that team id for this topic" });
+    if (request.isapproved) return res.status(400).json({ message: "Already approved the request" });
+
+    // 4) Atomically lock the team (only if team is formed and not already assigned)
+    const updatedTeam = await BTPTeam.findOneAndUpdate(
+      { _id: teamid, isteamformed: true, facultyAssigned: false },
+      {
+        $set: {
+          facultyAssigned: true,
+          assigned: {
+            faculty: fac._id,
+            topicDoc: factopicdoc._id,
+            topicId: topicid,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedTeam) {
+      // figure out reason for failure for clearer message
+      const existingTeam = await BTPTeam.findById(teamid);
+      if (!existingTeam) return res.status(404).json({ message: "Team not found" });
+      if (!existingTeam.isteamformed) return res.status(400).json({ message: "Team is not fully formed yet" });
+      return res.status(400).json({ message: "Team already assigned" });
     }
-    const request = factopicdoc.requests.find((request) => {
-      return (
-        request.teamid.toString() === teamid &&
-        request.topic.toString() === topicid
-      );
-    });
-    if (!request) {
-      return res.status(400).json({
-        message: "No request found with that team id",
-      });
-    }
-    if (request.isapproved) {
-      return res.status(400).json({
-        message: "Already approved the request",
-      });
-    }
+
+    // 5) mark this request as approved (persist in faculty doc)
     request.isapproved = true;
     await factopicdoc.save();
 
-    //uk deleting other pending requests from that team to other faculties or other topics
-    const smth = await BTPTopic.updateMany(
-      {
-        $or: [
-          { "requests.teamid": teamid, faculty: { $ne: fac._id } },
-          { "requests.teamid": teamid, "requests.topic": { $ne: topicid } },
-        ],
-      },
-      {
-        $pull: {
-          requests: {
-            teamid: teamid,
-            topic: { $ne: topicid },
-          },
-        },
-      }
-    );
-
-    //create an instance in the BTP projects to avoid massive computational tasks later
-    const team = await BTPTeam.findOne({
-      _id: teamid,
-    });
-    const studentIds = [
-      team.bin1.student,
-      team.bin2.student,
-      team.bin3.student,
-    ];
+    // 6) create BTP project (skip missing bins)
+    const studentIds = [updatedTeam.bin1?.student, updatedTeam.bin2?.student, updatedTeam.bin3?.student].filter(Boolean);
     const formattedStudents = studentIds.map((id) => ({ student: id }));
-    //add the other stuff later like give them option type shi after this phase
+
     const newbtpproj = new BTP({
-      name: topic.topic,
-      about: topic.about,
-      studentbatch: team.batch,
+      name: topicSub.topic,
+      about: topicSub.about,
+      studentbatch: updatedTeam.batch,
       students: formattedStudents,
       guide: fac._id,
     });
 
     await newbtpproj.save();
-    console.log("done");
-    return res.status(201).json({
-      message: "Successfully approved team request",
-    });
+
+    return res.status(201).json({ message: "Successfully approved and assigned team to this faculty/topic" });
   } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error approving the request",
-    });
+    console.error(err);
+    return res.status(err.status || 500).json({ message: err.message || "Error approving the request" });
   }
 };
 
