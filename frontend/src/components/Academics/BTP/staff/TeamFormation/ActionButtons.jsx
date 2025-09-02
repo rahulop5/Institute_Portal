@@ -9,7 +9,7 @@ import whiteadd from "../../../../../assets/addwhite.png";
 import trash from "../../../../../assets/trashcan.png";
 import whitetrash from "../../../../../assets/whitetrash.png";
 
-export default function ActionButtons({ index, isApproved, onNotify, onReplace, onDelete }) {
+export default function ActionButtons({ index, isApproved, onDelete, onReplace, onNotify }) {
     const [hoveredButton, setHoveredButton] = React.useState(null);
 
     const handleMouseEnter = (button) => {
@@ -24,7 +24,7 @@ export default function ActionButtons({ index, isApproved, onNotify, onReplace, 
 
     return (
         <div className={styles.actionButtons}>
-            {/* Notify Button */}
+            {/* Notify button */}
             <button
                 className={`${styles.notification} ${isApproved ? styles.inactive : ""}`}
                 disabled={isApproved}
@@ -38,7 +38,7 @@ export default function ActionButtons({ index, isApproved, onNotify, onReplace, 
                 />
             </button>
 
-            {/* Replace Button */}
+            {/* Replace button */}
             <button
                 className={styles.replace}
                 onClick={() => onReplace(index)}
@@ -51,7 +51,7 @@ export default function ActionButtons({ index, isApproved, onNotify, onReplace, 
                 />
             </button>
 
-            {/* Delete Button */}
+            {/* Delete button */}
             <button
                 className={styles.trash}
                 onClick={() => onDelete(index)}

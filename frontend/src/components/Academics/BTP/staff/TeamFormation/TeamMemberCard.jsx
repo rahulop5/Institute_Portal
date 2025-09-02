@@ -10,11 +10,10 @@ import ActionButtons from "./ActionButtons";
 export default function TeamMemberCard({
   member,
   index,
-  onReplace,  
-  onDelete,    
-  onAdd     
+  onDelete = { onDelete },
+  onReplace = { onReplace },
+  onNotify = { onNotify },
 }) {
- 
   if (!member) {
     return (
       <div className={styles.studentCard}>
@@ -24,10 +23,10 @@ export default function TeamMemberCard({
 
         <div className={styles.infodata}></div>
 
-        <ActionButtons
-          index={index}
-          mode="add"
-          onAdd={onAdd}
+        <ActionButtons index={index} 
+        onDelete={onDelete}
+        onReplace={onReplace}
+        onNotify={onNotify}
         />
       </div>
     );
@@ -35,7 +34,8 @@ export default function TeamMemberCard({
 
   const name = member?.student?.name ?? "—";
   const roll = member?.student?.roll ?? "—";
-  const email = member?.student?.email ?? `${roll !== "—" ? roll : "user"}@example.com`;
+  const email =
+    member?.student?.email ?? `${roll !== "—" ? roll : "user"}@example.com`;
   const binId = member?.bin?.id ?? "—";
   const isApproved = !!member?.isApproved;
 
@@ -76,7 +76,11 @@ export default function TeamMemberCard({
                 className={styles.statusIcon}
               />
             </div>
-            <div className={isApproved ? styles.statusConfirmed : styles.statusPending}>
+            <div
+              className={
+                isApproved ? styles.statusConfirmed : styles.statusPending
+              }
+            >
               {isApproved ? "Confirmed" : "Pending..."}
             </div>
           </div>
@@ -85,10 +89,10 @@ export default function TeamMemberCard({
 
       <ActionButtons
         index={index}
-        onReplace={onReplace}
+        isApproved={member.isApproved}
         onDelete={onDelete}
-        mode="replace"
-        onAdd={onAdd}
+        onReplace={onReplace}
+        onNotify={onNotify}
       />
     </div>
   );

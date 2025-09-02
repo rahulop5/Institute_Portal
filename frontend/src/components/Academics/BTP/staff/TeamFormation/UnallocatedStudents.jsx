@@ -1,59 +1,39 @@
-import React, { useEffect, useState } from "react";
-import classes from "../styles/BinButtons.module.css";
+import React, { useState } from "react";
+import classes from "../styles/BinButtons.module.css"; // CSS with .team-selection-buttons etc.
 import StudentList from "./StudentList";
 
-export default function UnallocatedStudents({
-  unallocatedData = [],
-  isSelectMode = false,
-  onSelectStudent = () => {},
-  allowedBin, // optional: when present, bin filter is locked to this bin
-}) {
-  const initialBin = allowedBin ?? 1;
-  const [selectedBin, setSelectedBin] = useState(initialBin);
+export default function UnallocatedStudents({ unallocatedData }) {
+  const [selectedBin, setSelectedBin] = useState(1);
 
-  // If allowedBin changes (or provided), keep the UI in sync
-  useEffect(() => {
-    if (allowedBin) setSelectedBin(allowedBin);
-  }, [allowedBin]);
-
-  const handleBinChange = (bin) => {
-    if (allowedBin && bin !== allowedBin) return; // lock bins in replace dialog
-    setSelectedBin(bin);
-  };
-
-  const filteredStudents = unallocatedData.filter(
-    (student) => student.bin.id === selectedBin
-  );
+  const filteredStudents = unallocatedData
+    .filter((member) => member.bin.id === selectedBin)
+    .map((member) => ({
+      name: member.student.name,
+      rollno: member.student.roll,
+      email: member.email,
+      __raw: member, // Keeping original for actions
+    }));
 
   return (
     <div>
+      {/* Bin Selection Buttons */}
       <div className={classes["team-selection-buttons"]}>
+        <h2>Unallocated Students</h2>
         <div className={classes["team-selection-button-group"]}>
           {[1, 2, 3].map((bin) => (
             <button
               key={bin}
-              className={selectedBin === bin ? classes["active"] : ""}
-              onClick={() => handleBinChange(bin)}
-              disabled={!!allowedBin && bin !== allowedBin}
-              type="button"
+              className={`${selectedBin === bin ? classes.active : ""}`}
+              onClick={() => setSelectedBin(bin)}
             >
-              {`Bin ${bin}`}
+              Bin {bin}
             </button>
           ))}
         </div>
       </div>
 
-      <StudentList
-        isSelectMode={isSelectMode}
-        onSelect={onSelectStudent}
-        students={filteredStudents.map((item) => ({
-          name: item.student.name,
-          rollno: item.student.roll,
-          email: `${item.student.roll}@example.com`,
-          // Keep original object so confirm can send full shape back up
-          __raw: item,
-        }))}
-      />
+      {/* Student List */}
+      <StudentList students={filteredStudents} />
     </div>
   );
 }
