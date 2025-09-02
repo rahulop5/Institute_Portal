@@ -26,5 +26,4 @@ const btpschema = new mongoose.Schema({
   ]
 });
 
-
 export default mongoose.model("BTP", btpschema); 

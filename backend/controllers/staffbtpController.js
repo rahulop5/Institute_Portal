@@ -536,6 +536,153 @@ export const deallocateFacultyforTeam = async (req, res) => {
   }
 };
 
+export const approveFacultyToTeam = async (req, res) => {
+  try {
+    const { facultyId, teamId, topicDocId, topicId } = req.body;
+
+    if (!facultyId || !teamId || !topicDocId || !topicId) {
+      return res.status(400).json({
+        message: "facultyId, teamId, topicDocId, and topicId are required"
+      });
+    }
+
+    // Find the faculty's BTPTopic document
+    const btpTopicDoc = await BTPTopic.findOne({
+      _id: topicDocId,
+      faculty: facultyId
+    });
+    if (!btpTopicDoc) {
+      return res.status(404).json({ message: "Faculty topicDoc not found" });
+    }
+
+    // Check if faculty already approved this request
+    const request = btpTopicDoc.requests.find(
+      r => r.teamid.toString() === teamId && r.topic.toString() === topicId
+    );
+    if (!request || !request.isapproved) {
+      return res.status(400).json({ message: "Faculty has not approved this request yet" });
+    }
+
+    // Get the topic details for BTP creation
+    const topicObj = btpTopicDoc.topics.find(
+      t => t._id.toString() === topicId
+    );
+    if (!topicObj) {
+      return res.status(404).json({ message: "Topic not found in faculty's list" });
+    }
+
+    // Get the team
+    const teamDoc = await BTPTeam.findById(teamId)
+      .populate("bin1.student")
+      .populate("bin2.student")
+      .populate("bin3.student");
+    if (!teamDoc) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    // 🔒 Check if a BTP already exists for this faculty-topic-team combo
+    const existingBTP = await BTP.findOne({
+      guide: facultyId,
+      name: topicObj.topic,
+      studentbatch: teamDoc.batch,
+      "students.student": { $in: [
+        teamDoc.bin1?.student?._id,
+        teamDoc.bin2?.student?._id,
+        teamDoc.bin3?.student?._id
+      ].filter(Boolean) }
+    });
+
+    if (existingBTP) {
+      return res.status(400).json({
+        message: "This BTP already exists for the given faculty, team, and topic",
+        btp: existingBTP
+      });
+    }
+
+    // Build students array from bins
+    const studentsArray = [];
+    if (teamDoc.bin1) studentsArray.push({ student: teamDoc.bin1.student._id });
+    if (teamDoc.bin2) studentsArray.push({ student: teamDoc.bin2.student._id });
+    if (teamDoc.bin3) studentsArray.push({ student: teamDoc.bin3.student._id });
+
+    // Create new BTP document
+    const newBTP = new BTP({
+      name: topicObj.topic,
+      about: topicObj.about,
+      studentbatch: teamDoc.batch,
+      students: studentsArray,
+      guide: facultyId,
+      evaluators: [],
+      updates: []
+    });
+    await newBTP.save();
+
+    // Update team to lock it
+    teamDoc.facultyAssigned = true;
+    teamDoc.assigned = {
+      faculty: facultyId,
+      topicDoc: topicDocId,
+      topicId: topicId
+    };
+    await teamDoc.save();
+
+    return res.status(200).json({
+      message: "Staff approved the team. BTP created successfully.",
+      btp: newBTP,
+      team: teamDoc
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Error approving staff to team"
+    });
+  }
+};
+
+export const rejectFacultyFromTeam = async (req, res) => {
+  try {
+    const { topicDocId, teamId, topicId } = req.body;
+
+    if (!topicDocId || !teamId || !topicId) {
+      return res.status(400).json({ message: "topicDocId, teamId, and topicId are required" });
+    }
+
+    // Pull only if isapproved = true
+    const updatedTopicDoc = await BTPTopic.findOneAndUpdate(
+      { 
+        _id: topicDocId,
+        "requests.teamid": teamId,
+        "requests.topic": topicId,
+        "requests.isapproved": true
+      },
+      {
+        $pull: { requests: { teamid: teamId, topic: topicId, isapproved: true } }
+      },
+      { new: true }
+    );
+
+    if (!updatedTopicDoc) {
+      return res.status(404).json({
+        message: "No approved request found for this team in the given topicDoc"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Faculty request rejected successfully",
+      data: updatedTopicDoc
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Error rejecting faculty",
+    });
+  }
+};
+
+
+
+
 // Advance from round k -> k+1 for all teams (or single team if teamId provided)
 export const advancePreferenceRound = async (req, res) => {
   try {
@@ -596,7 +743,6 @@ export const advancePreferenceRound = async (req, res) => {
     });
   }
 };
-
 
 export const endFacultyAssignmentPhase = async (req, res) => {
   try {

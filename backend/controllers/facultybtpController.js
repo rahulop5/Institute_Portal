@@ -590,18 +590,18 @@ export const approveTopicRequest = async (req, res) => {
     await factopicdoc.save();
 
     // 6) create BTP project (skip missing bins)
-    const studentIds = [updatedTeam.bin1?.student, updatedTeam.bin2?.student, updatedTeam.bin3?.student].filter(Boolean);
-    const formattedStudents = studentIds.map((id) => ({ student: id }));
+    // const studentIds = [updatedTeam.bin1?.student, updatedTeam.bin2?.student, updatedTeam.bin3?.student].filter(Boolean);
+    // const formattedStudents = studentIds.map((id) => ({ student: id }));
 
-    const newbtpproj = new BTP({
-      name: topicSub.topic,
-      about: topicSub.about,
-      studentbatch: updatedTeam.batch,
-      students: formattedStudents,
-      guide: fac._id,
-    });
+    // const newbtpproj = new BTP({
+    //   name: topicSub.topic,
+    //   about: topicSub.about,
+    //   studentbatch: updatedTeam.batch,
+    //   students: formattedStudents,
+    //   guide: fac._id,
+    // });
 
-    await newbtpproj.save();
+    // await newbtpproj.save();
 
     return res.status(201).json({ message: "Successfully approved and assigned team to this faculty/topic" });
   } catch (err) {

@@ -3,6 +3,7 @@ import { authStaffMiddleware } from "../controllers/authController.js";
 import {
     advancePreferenceRound,
     allocateFacultytoTeam,
+    approveFacultyToTeam,
     assignEvaluator,
     createTeambyStaff,
     deallocateFacultyforTeam,
@@ -10,6 +11,7 @@ import {
     endFacultyAssignmentPhase,
     endTeamFormationPhase,
     getStaffBTPDashboard,
+    rejectFacultyFromTeam,
     uploadCSVSheet,
     verifyPhase
 } from "../controllers/staffbtpController.js";
@@ -29,5 +31,7 @@ router.delete("/deallocatefaculty", authStaffMiddleware, deallocateFacultyforTea
 router.get("/endFAphase", authStaffMiddleware, endFacultyAssignmentPhase);
 router.post("/assignevaluator", authStaffMiddleware, assignEvaluator);
 router.post("/advancepreferencernd", authStaffMiddleware, advancePreferenceRound);
+router.post("/approvefacultytoteam", authStaffMiddleware, approveFacultyToTeam);
+router.delete("/rejectfacultyfromteam", authStaffMiddleware, rejectFacultyFromTeam);
 
 export default router;

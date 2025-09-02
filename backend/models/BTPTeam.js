@@ -21,7 +21,7 @@ const teamSchema = new mongoose.Schema({
       order: { type: Number, required: true, enum: [1, 2, 3, 4] },
     }
   ],
-  currentPreference: { type: Number, default: 0 }, // 0 = not started; 1..4 = active round
+  currentPreference: { type: Number, default: 1 }, // 0 = not started; 1..4 = active round
   facultyAssigned: { type: Boolean, default: false },
   assigned: {
     faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
