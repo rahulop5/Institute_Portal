@@ -78,6 +78,7 @@ export default function FacultySelection({ data }) {
               topics={selectedFacultyTopics}
               handleApply={handleApply}
               bin={data.bin}
+              mode="student"
             />
           )}
 
