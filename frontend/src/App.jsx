@@ -23,6 +23,7 @@ import ViewProjEvaluator, { evaluatorProjLoader } from "./components/academics/b
 import FileUploadPage from "./components/Academics/BTP/staff/NotStarted/fileUploadPage.jsx";
 import Header from "./components/Header.jsx";
 import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
+import FacultyManagement from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -34,7 +35,7 @@ const router=createBrowserRouter([
     loader: tokenLoader,
     children: [
       { index: true, element: <Homepage />, loader: checkAuthLoader },
-      { path: "temp", element: <TeamListPage /> },
+      { path: "temp", element: <TeamListPage/> },
       { path: "academics",
         loader: checkAuthLoader,
         children: [

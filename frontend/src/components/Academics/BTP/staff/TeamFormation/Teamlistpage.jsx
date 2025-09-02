@@ -153,14 +153,14 @@ export default function TeamListPage() {
     let updatedUnallocated = [...prev];
 
     if (mode === "delete") {
-      // Add the removed member back to unallocated
+      
       if (affectedMember) {
         updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
       }
     } else if (mode === "replace" || mode === "add") {
-      // Remove the new student from unallocated
+      
       updatedUnallocated = updatedUnallocated.filter(u => u.student.roll !== newStudent.student.roll);
-      // If replacing, add the old member back to unallocated
+      
       if (mode === "replace" && affectedMember) {
         updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
       }
@@ -175,7 +175,7 @@ export default function TeamListPage() {
 
 
   const handleUpdateTeam = (updatedTeam, affectedMember, mode, newStudent) => {
-  // Update the teams array
+
   setTeams(prev =>
     prev.map(team =>
       team.teamName === updatedTeam.teamName ? updatedTeam : team

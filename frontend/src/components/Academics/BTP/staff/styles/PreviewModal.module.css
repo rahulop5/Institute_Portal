@@ -1,4 +1,4 @@
-/* Overlay with blur effect */
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -13,7 +13,7 @@
   z-index: 1000;
 }
 
-/* Main modal box */
+
 .modalContent {
   display: flex;
   flex-direction: column;
@@ -26,6 +26,11 @@
 }
 
 /* Heading */
+.header{
+    display: flex;
+  justify-content: space-between;
+}
+
 .header h2 {
   margin: 0;
   font-size: 3vh;
@@ -83,11 +88,20 @@ td {
 /* Footer section */
 .footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: right;
   align-items: center;
   margin-top: 16px;
 }
 
+.checkboxContainer{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkboxContainer p{
+  width: 20vw;;
+}
 .checkboxLabel {
   font-size: 14px;
   color: #444;
@@ -99,19 +113,21 @@ td {
 
 /* Confirm button */
 .confirmButton {
-  background-color: #21a366;
-  color: #fff;
+  border: 2px solid #15A71F;
+  background-color: white;
+  color: #15A71F;
   font-size: 16px;
   font-weight: 500;
-  border: none;
+  /* border: none; */
   border-radius: 50px;
-  padding: 12px 32px;
+  padding: 1.5vh 6vw;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .confirmButton:hover {
-  background-color: #1e8e5b;
+  background-color: #15A71F;
+  color: white;box-shadow: inset 0 4px 4px rgba(255, 255, 255, 0.6);
 }
 
 /* Scrollbar styles */
@@ -129,4 +145,42 @@ td {
 .scrollableList::-webkit-scrollbar-track {
   background: rgb(195, 193, 193);
   border-radius: 4px;
+}
+
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: rgb(142, 132, 132);
+ 
+  right: 0;
+}
+
+.closeButton:hover {
+   color: #333;
+}
+
+.confirmButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+
+.notChecked {
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 50px;
+  padding: 1.5vh 6vw;
+  background-color: #ffffff; 
+  color: #777;
+  cursor: not-allowed;
+}
+
+
+.checkboxLabel input[type="checkbox"] {
+  width: 18px;  
+  height: 18px; 
+  cursor: pointer;
 }

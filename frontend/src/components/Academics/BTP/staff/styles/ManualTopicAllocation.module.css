@@ -4,7 +4,7 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     padding: 0.7rem;
     padding-left: 1.5rem;
-    width: 180px;
+    /* width: 180px; */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -137,11 +137,11 @@
 }
 
 .assignButton {
-   border: 2px solid #FF8000;
+   border: 1.75px solid #FF8000;
    background-color: white;
   color: #FF8000;
   /* border: none; */
-  border-radius: 8px;
+  border-radius: 999px;
   padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
@@ -151,12 +151,49 @@
 
 .assignButton:hover {
  background-color: #FF8000;
+ border: 1.75px solid white;
  color: white; /* slightly darker on hover */
-  transform: translateY(-2px);
+  /* transform: translateY(-2px);
+  transform: translateY(-2px); */
+  box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.8);
+              /* 0 4px 6px rgba(0, 0, 0, 0.2);  */
 }
 
 .membersContainer{
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  gap: 3rem;
+}
+
+.manualContainer{
+    display: flex;
+   flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+
+.teamsContainer {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-height: 60vh; /* restrict height */
+    overflow-y: auto; /* scroll only when content exceeds */
+    padding-bottom: 8px; /* optional: avoid last card cut off */
+    box-sizing: border-box;
+}
+
+.mainheading h1,h2{
+    font-weight: 400;
+}
+
+.mainheading h1{
+    margin-left: -1.5rem;
+}
+
+.mainheading h2{
+    /* margin-left: -1.5rem; */
+    margin-top: 1rem;
 }

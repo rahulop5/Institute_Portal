@@ -1,17 +1,24 @@
+import { useState } from "react";
 import styles from "../styles/PreviewModal.module.css";
 import studenticon from "../../../../../assets/studenticon.svg";
 
 export default function PreviewModal({ previewData, onClose }) {
+  const [isChecked, setIsChecked] = useState(false);
+
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
-        
-        {/* Heading */}
+        {/* Header */}
         <div className={styles.header}>
           <h2>Preview</h2>
+          <div>
+            <button className={styles.closeButton} onClick={onClose}>
+              ✖
+            </button>
+          </div>
         </div>
 
-        {/* Table */}
+        {/* Table Section */}
         <div className={`${styles.tableSection} ${styles.scrollableList}`}>
           <table>
             <thead>
@@ -25,7 +32,7 @@ export default function PreviewModal({ previewData, onClose }) {
             <tbody>
               {previewData.map((row, index) => (
                 <tr key={index}>
-                  <td>{index+1}</td>
+                  <td>{index + 1}</td>
                   <td className={styles.nameCell}>
                     <img
                       src={studenticon}
@@ -44,16 +51,30 @@ export default function PreviewModal({ previewData, onClose }) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <label className={styles.checkboxLabel}>
-            <input type="checkbox" />
-            I acknowledge that the upload of this file is <strong>irreversible</strong>
-            and triggers phase shift for all users.
-          </label>
-          <button onClick={onClose} className={styles.confirmButton}>
+          <div className={styles.checkboxContainer}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => setIsChecked(!isChecked)}
+              />
+            </label>
+            <div>
+              <p>
+                I acknowledge that the upload of this file triggers{" "}
+                <strong>phase shift</strong> for all users.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className={isChecked ? styles.confirmButton : styles.notChecked}
+            disabled={!isChecked}
+          >
             Confirm
           </button>
         </div>
-        
       </div>
     </div>
   );
