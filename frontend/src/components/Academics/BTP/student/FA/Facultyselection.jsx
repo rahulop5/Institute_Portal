@@ -72,7 +72,7 @@ export default function FacultySelection({ data }) {
       ) : (
         <>
           {/* Faculty not yet assigned */}
-          <FacultyList topics={data.topics} onShowTopics={handleShowTopics} />
+          <FacultyList faculties={data.topics} onShowTopics={handleShowTopics}  />
           {selectedFacultyTopics && (
             <TopicCards
               topics={selectedFacultyTopics}

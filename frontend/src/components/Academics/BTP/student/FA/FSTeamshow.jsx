@@ -38,23 +38,23 @@ export default function FSTeamthere({ teamData, studentIcon }) {
                     }`}
                   >
                     {member.approved ? (
-                      <p className={classes["statusintfbin1"]}>
+                      <div className={classes["statusintfbin1"]}>
                         <div>
                           <img src={tick} alt="Approved" />
                         </div>
                         <div>
                           <p>Approved</p>
                         </div>
-                      </p>
+                      </div>
                     ) : (
-                      <p className={classes["statusintfbin1"]}>
+                      <div className={classes["statusintfbin1"]}>
                         <div>
                           <img src={pending} alt="Not Approved" />
                         </div>
                         <div>
                           <p>Not Approved</p>
                         </div>
-                      </p>
+                      </div>
                     )}
                   </span>
                 </div>

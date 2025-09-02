@@ -23,7 +23,6 @@ function buildSimplifiedTeam(team) {
   return result;
 }
 
-
 //sending user details too in the response
 export const getBTPDashboard = async (req, res) => {
   try {
@@ -48,8 +47,8 @@ export const getBTPDashboard = async (req, res) => {
       case "NOT_STARTED":
         return res.status(200).json({
           email: user.email,
-          message: "BTP Projects did not start yet",
           phase: "NS",
+          message: "BTP Projects did not start yet",
         });
 
       case "TEAM_FORMATION":
@@ -148,28 +147,6 @@ export const getBTPDashboard = async (req, res) => {
                 });
               }
               const team = teams[0];
-
-              // const simplifiedTeam = {
-              //   _id: team._id,
-              //   bin1: {
-              //     email: team?.bin1?.student.email,
-              //     rollno: team.bin1?.student.rollno,
-              //     name: team?.bin1?.student.name,
-              //     approved: team?.bin1?.approved,
-              //   },
-              //   bin2: {
-              //     email: team?.bin2?.student.email,
-              //     rollno: team.bin2?.student.rollno,
-              //     name: team?.bin2?.student.name,
-              //     approved: team?.bin2?.approved,
-              //   },
-              //   bin3: {
-              //     email: team?.bin3?.student.email,
-              //     rollno: team.bin3?.student.rollno,
-              //     name: team?.bin3?.student.name,
-              //     approved: team?.bin3?.approved,
-              //   },
-              // };
               const simplifiedTeam = buildSimplifiedTeam(team);
 
               //im gonna send team id and student email to frontend
@@ -233,30 +210,13 @@ export const getBTPDashboard = async (req, res) => {
                     "You are currently not in any full or partial team. Form a team by finding a bin1 student",
                 });
               }
+
               const binkey = `bin${user.bin}`;
+              console.log(teams[0][binkey].approved)
               if (teams.length === 1 && teams[0][binkey].approved) {
                 const team = teams[0];
-                const simplifiedTeam = {
-                  _id: team._id,
-                  bin1: {
-                    email: team?.bin1.student.email,
-                    rollno: team.bin1.student.rollno,
-                    name: team?.bin1.student.name,
-                    approved: team?.bin1.approved,
-                  },
-                  bin2: {
-                    email: team?.bin2.student.email,
-                    rollno: team.bin2.student.rollno,
-                    name: team?.bin2.student.name,
-                    approved: team?.bin2.approved,
-                  },
-                  bin3: {
-                    email: team?.bin3.student.email,
-                    rollno: team.bin3.student.rollno,
-                    name: team?.bin3.student.name,
-                    approved: team?.bin3.approved,
-                  },
-                };
+                const simplifiedTeam = buildSimplifiedTeam(team);
+                console.log(simplifiedTeam)
                 if (team.isteamformed) {
                   return res.status(200).json({
                     email: user.email,
@@ -279,27 +239,7 @@ export const getBTPDashboard = async (req, res) => {
               //handle the case where bin2 approved but length>1
               else {
                 const newteams = teams.map((team) => {
-                  const simplifiedTeam = {
-                    _id: team._id,
-                    bin1: {
-                      email: team?.bin1.student.email,
-                      rollno: team.bin1.student.rollno,
-                      name: team?.bin1.student.name,
-                      approved: team?.bin1.approved,
-                    },
-                    bin2: {
-                      email: team?.bin2.student.email,
-                      rollno: team.bin2.student.rollno,
-                      name: team?.bin2.student.name,
-                      approved: team?.bin2.approved,
-                    },
-                    bin3: {
-                      email: team?.bin3.student.email,
-                      rollno: team.bin3.student.rollno,
-                      name: team?.bin3.student.name,
-                      approved: team?.bin3.approved,
-                    },
-                  };
+                  const simplifiedTeam = buildSimplifiedTeam(team);
                   return simplifiedTeam;
                 });
                 return res.status(200).json({
@@ -697,69 +637,64 @@ export const createTeam = async (req, res) => {
 export const approveTeamRequest = async (req, res) => {
   try {
     if (!req.body.teamid) {
-      return res.status(400).json({
-        message: "No team id found",
-      });
+      return res.status(400).json({ message: "No team id found" });
     }
     if (!req.user) {
-      return res.status(500).json({
-        message: "No user found",
-      });
+      return res.status(500).json({ message: "No user found" });
     }
+
     const binstr = `bin${req.user.bin}.student`;
+    const binstrshort = `bin${req.user.bin}`;
+
     const teams = await BTPTeam.find({
       [binstr]: req.user._id,
     });
-    const binstrshort = `bin${req.user.bin}`;
+
     teams.forEach((team) => {
-      if (team[binstrshort].approved) {
+      if (team[binstrshort] && team[binstrshort].approved) {
         throw {
           status: 400,
           message: "Cant be in more than one team",
         };
       }
     });
-    const currteam = teams.filter((team) => {
-      return team._id.toString() === req.body.teamid;
-    });
+
+    const currteam = teams.filter(
+      (team) => team._id.toString() === req.body.teamid
+    );
+
     if (currteam.length === 0) {
       return res.status(400).json({
-        message: "Cant approve a request u didnt get",
+        message: "Cant approve a request you didnt get",
       });
     }
+
     if (currteam.length === 1) {
       const binstrapproved = `${binstrshort}.approved`;
-      let setter = {
-        [binstrapproved]: true,
-      };
+      let setter = { [binstrapproved]: true };
+
       const otherbin = req.user.bin === 2 ? "bin3" : "bin2";
-      if (currteam[0][otherbin].approved) {
-        setter = {
-          ...setter,
-          isteamformed: true,
-        };
+      // check if other bin exists and is already approved
+      if (currteam[0][otherbin] && currteam[0][otherbin].approved) {
+        setter.isteamformed = true;
       }
+
       await BTPTeam.findByIdAndUpdate(
         currteam[0]._id,
-        {
-          $set: setter,
-        },
-        {
-          new: true,
-        }
+        { $set: setter },
+        { new: true }
       );
-      const otherteams = teams.filter((team) => {
-        return team._id.toString() !== req.body.teamid;
-      });
-      const deletee = await BTPTeam.deleteMany({
+
+      // delete any other pending teams for this user
+      await BTPTeam.deleteMany({
         _id: { $ne: req.body.teamid },
         [binstr]: { $eq: req.user._id },
       });
+
       return res.status(201).json({
         message: "Approved team request successfully",
       });
     } else {
-      //im throwing here instead of returning becoz i want it to get printed in the server logs see catch block
       throw {
         status: 500,
         message: "More than one team found with the same team id",
@@ -772,6 +707,7 @@ export const approveTeamRequest = async (req, res) => {
     });
   }
 };
+
 
 export const rejectTeamRequest = async (req, res) => {
   try {
@@ -813,6 +749,76 @@ export const rejectTeamRequest = async (req, res) => {
     });
   }
 };
+
+export const addTeamMember = async (req, res) => {
+  try {
+    console.log(req.user)
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { bin, email } = req.body;
+    if (!bin || !email) {
+      return res.status(400).json({ message: "Bin and email are required" });
+    }
+
+    if (![2, 3].includes(Number(bin))) {
+      return res.status(400).json({ message: "You can only add to bin2 or bin3" });
+    }
+
+    const team = await BTPTeam.findOne({ "bin1.student": req.user._id });
+    if (!team) {
+      return res.status(404).json({ message: "Team not found for current user" });
+    }
+
+    // Ensure that slot is empty
+    if (team[`bin${bin}`] && team[`bin${bin}`].student) {
+      return res.status(400).json({ message: `Bin${bin} already has a member` });
+    }
+
+    // Find the student to add
+    const stu = await UGStudentBTP.findOne({ email });
+    if (!stu) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Validate batch
+    if (stu.batch !== team.batch) {
+      return res.status(400).json({ message: "Student batch does not match team batch" });
+    }
+
+    // Validate bin number
+    if (stu.bin !== Number(bin)) {
+      return res.status(400).json({ message: `Student is not from bin${bin}` });
+    }
+
+    // Check if student is already in an approved team
+    const existingTeams = await BTPTeam.find({ [`bin${bin}.student`]: stu._id });
+    for (let t of existingTeams) {
+      if (t[`bin${bin}`].approved) {
+        return res.status(400).json({ message: `${stu.email} is already in another approved team` });
+      }
+    }
+    // Add to team
+    team[`bin${bin}`] = {
+      student: stu._id,
+      approved: false,
+    };
+
+    await team.save();
+
+    return res.status(200).json({
+      message: `Added ${stu.email} to bin${bin} successfully. Request pending approval.`,
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Error adding team member",
+    });
+  }
+};
+
 
 //here if any of the req is already approved then we shouldnt allow them to send the request
 export const facultyAssignmentRequest = async (req, res) => {

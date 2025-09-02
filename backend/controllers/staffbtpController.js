@@ -6,6 +6,7 @@ import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import Faculty from "../models/Faculty.js";
+import Staff from "../models/Staff.js";
 
 //have to send the additional details to frontend
 export const getStaffBTPDashboard = async (req, res) => {
@@ -15,6 +16,9 @@ export const getStaffBTPDashboard = async (req, res) => {
         message: "No batch specified",
       });
     }
+    const user = await Staff.findOne({
+      email: req.user.email,
+    });
     const batch = req.query.batch;
     const currstate = await BTPSystemState.findOne({
       studentbatch: batch,
@@ -28,6 +32,8 @@ export const getStaffBTPDashboard = async (req, res) => {
       case "NOT_STARTED":
         return res.status(200).json({
           message: "Upload CSV Sheet of bins",
+          email: user.email,
+          phase: "NS",
         });
 
       case "TEAM_FORMATION":
@@ -91,10 +97,18 @@ export const getStaffBTPDashboard = async (req, res) => {
               bin: student.bin,
             })),
           };
-          return res.status(200).json(response);
+          return res.status(200).json({
+            email: user.email,
+            phase: "TF",
+            response: response,
+          });
         } catch (err) {
           console.error(err);
-          return res.status(500).json({ message: "Error loading BTP teams" });
+          return res.status(500).json({
+            email: user.email,
+            phase: "TF",
+            message: "Error loading BTP teams",
+          });
         }
 
       case "FACULTY_ASSIGNMENT":
@@ -134,6 +148,7 @@ export const getStaffBTPDashboard = async (req, res) => {
           });
 
           return res.status(200).json({
+            email: user.email,
             phase: "FA",
             topics: topics,
             assignedTeams: assignedTeams,
@@ -141,7 +156,13 @@ export const getStaffBTPDashboard = async (req, res) => {
           });
         } catch (err) {
           console.error(err);
-          return res.status(500).json({ message: "Error loading dashboard" });
+          return res
+            .status(500)
+            .json({
+              phase: "FA",
+              email: user.email,
+              message: "Error loading dashboard",
+            });
         }
 
       case "IN_PROGRESS":
@@ -550,10 +571,14 @@ export const assignEvaluator = async (req, res) => {
       return res.status(400).json({ message: "Incomplete request." });
     }
     if (facultyemail1 === facultyemail2) {
-      return res.status(400).json({ message: "Cannot assign the same faculty twice." });
+      return res
+        .status(400)
+        .json({ message: "Cannot assign the same faculty twice." });
     }
 
-    const project = await BTP.findOne({ _id: projid }).populate("guide evaluators.evaluator");
+    const project = await BTP.findOne({ _id: projid }).populate(
+      "guide evaluators.evaluator"
+    );
 
     if (!project) {
       return res.status(404).json({ message: "No project found." });
@@ -564,8 +589,13 @@ export const assignEvaluator = async (req, res) => {
     }
 
     // Ensure neither email is the guide's
-    if (project.guide.email === facultyemail1 || project.guide.email === facultyemail2) {
-      return res.status(400).json({ message: "Guide cannot be assigned as an evaluator." });
+    if (
+      project.guide.email === facultyemail1 ||
+      project.guide.email === facultyemail2
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Guide cannot be assigned as an evaluator." });
     }
 
     // Fetch faculty documents
@@ -573,29 +603,40 @@ export const assignEvaluator = async (req, res) => {
     const faculty2 = await Faculty.findOne({ email: facultyemail2 });
 
     if (!faculty1 || !faculty2) {
-      return res.status(404).json({ message: "One or both faculty members not found." });
+      return res
+        .status(404)
+        .json({ message: "One or both faculty members not found." });
     }
 
     // Check for duplicate assignment
-    const assignedIds = project.evaluators.map(ev => ev.evaluator._id.toString());
-    if (assignedIds.includes(faculty1._id.toString()) || assignedIds.includes(faculty2._id.toString())) {
-      return res.status(400).json({ message: "One or both evaluators already assigned to this project." });
+    const assignedIds = project.evaluators.map((ev) =>
+      ev.evaluator._id.toString()
+    );
+    if (
+      assignedIds.includes(faculty1._id.toString()) ||
+      assignedIds.includes(faculty2._id.toString())
+    ) {
+      return res.status(400).json({
+        message: "One or both evaluators already assigned to this project.",
+      });
     }
 
     // Final evaluator limit check
     if (project.evaluators.length + 2 > 2) {
-      return res.status(400).json({ message: "Assigning both would exceed evaluator limit." });
+      return res
+        .status(400)
+        .json({ message: "Assigning both would exceed evaluator limit." });
     }
     project.evaluators.push({ evaluator: faculty1._id });
     project.evaluators.push({ evaluator: faculty2._id });
 
     await project.save();
 
-    return res.status(200).json({ message: "Evaluators assigned successfully." });
-
+    return res
+      .status(200)
+      .json({ message: "Evaluators assigned successfully." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Error assigning evaluators." });
   }
 };
-

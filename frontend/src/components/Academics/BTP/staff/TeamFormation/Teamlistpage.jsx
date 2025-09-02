@@ -125,7 +125,7 @@ export const teamsData = {
   ],
 };
 
-export default function TeamListPage() {
+export default function TeamListPage({data}) {
 
   const [teams, setTeams] = useState(teamsData.teams);
   const [unallocatedMembers, setUnallocatedMembers] = useState(teamsData.unallocatedMembers);
@@ -148,7 +148,6 @@ export default function TeamListPage() {
       })
     );
 
-  
      setUnallocatedMembers(prev => {
     let updatedUnallocated = [...prev];
 

@@ -511,9 +511,15 @@
   flex-direction: row;  
 }
 
+.teamrow2>div{
+  display: flex;
+  justify-content: center;
+}
+
 .teamrow2>div>p{
   color: #000;
   margin-left: 7rem;
+  text-align: center;
 }
 
 .fasentence{
@@ -677,3 +683,22 @@
   color: #000;
 }
 
+.facultytopics-button {
+  align-self: flex-end;
+  padding: 0.4rem 1.2rem;
+  border: 1.8px solid #2a72e8;
+  border-radius: 999px;
+  background-color: transparent;
+  color: #2a72e8;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-left: auto;
+  margin-right: 2rem;
+}
+
+.facultytopics-button:hover {
+  background-color: #2a72e8;
+  color: white;
+}
