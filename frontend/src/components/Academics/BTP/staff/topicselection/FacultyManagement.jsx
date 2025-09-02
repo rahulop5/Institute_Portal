@@ -239,8 +239,7 @@ export const unallocatedTeams = [
   },
 ];
 
-
-export default function FacultyManagement() {
+export default function FacultyManagement({dataa}) {
 
   const [faculties, setFaculties] = useState(data);
   const [unallocated, setUnallocated] = useState(unallocatedTeams);
@@ -273,7 +272,6 @@ export default function FacultyManagement() {
   const handleStartAssignForTeam = (team) => {
     setTeamForTopicAllocation(team);
     setShowManualAllocation(false); 
-   
   };
 
 

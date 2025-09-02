@@ -1,7 +1,9 @@
 import express from "express";
 import { authStaffMiddleware } from "../controllers/authController.js";
 import {
+    advancePreferenceRound,
     allocateFacultytoTeam,
+    approveFacultyToTeam,
     assignEvaluator,
     createTeambyStaff,
     deallocateFacultyforTeam,
@@ -9,6 +11,7 @@ import {
     endFacultyAssignmentPhase,
     endTeamFormationPhase,
     getStaffBTPDashboard,
+    rejectFacultyFromTeam,
     uploadCSVSheet,
     verifyPhase
 } from "../controllers/staffbtpController.js";
@@ -27,5 +30,8 @@ router.post("/allocatefaculty", authStaffMiddleware, allocateFacultytoTeam);
 router.delete("/deallocatefaculty", authStaffMiddleware, deallocateFacultyforTeam);
 router.get("/endFAphase", authStaffMiddleware, endFacultyAssignmentPhase);
 router.post("/assignevaluator", authStaffMiddleware, assignEvaluator);
+router.post("/advancepreferencernd", authStaffMiddleware, advancePreferenceRound);
+router.post("/approvefacultytoteam", authStaffMiddleware, approveFacultyToTeam);
+router.delete("/rejectfacultyfromteam", authStaffMiddleware, rejectFacultyFromTeam);
 
 export default router;

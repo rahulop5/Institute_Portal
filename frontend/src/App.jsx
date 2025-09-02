@@ -24,6 +24,7 @@ import FileUploadPage from "./components/Academics/BTP/staff/NotStarted/fileUplo
 import Header from "./components/Header.jsx";
 import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
 import FacultyManagement from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
+import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -71,6 +72,10 @@ const router=createBrowserRouter([
                   {path: "evaluateguide", action: evaluateGuideAction, element: <></>},
                   {path: "evaluateevaluator", action: evaluateEvaluatorAction, element: <></>}
                 ]
+              },
+              {
+                path: "staff", element: <BTPStaffRouter />,
+                loader: btpStaffLoader,
               }
             ]
           }

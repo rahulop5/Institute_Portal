@@ -12,6 +12,9 @@ export async function loader(){
         case "Faculty":
             return redirect("/academics/btp/faculty")
 
+        case "Staff":
+            return redirect("/academics/btp/staff")
+
         default:
             throw new Response(JSON.stringify({
                 message: "Error loading BTP dashboard"

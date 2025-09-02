@@ -3,7 +3,11 @@ import pending from "../../../../../assets/pendingclock.png";
 import timer from "../../../../../assets/timerwaiting.png";
 import classes from "../../../../styles/TeamSelectionbin1.module.css";
 
-export default function TFTeamthereBin1({ teamData, studentIcon, onAddMember }) {
+export default function TFTeamthereBin1({
+  teamData,
+  studentIcon,
+  onAddMember,
+}) {
   const bins = ["bin1", "bin2", "bin3"];
 
   return (
@@ -58,14 +62,29 @@ export default function TFTeamthereBin1({ teamData, studentIcon, onAddMember }) 
                 </>
               ) : (
                 // Empty bin → show add button
-                <div className={classes["empty-slot"]}>
-                  <button
-                    className={classes["add-member-btn"]}
-                    onClick={() => onAddMember(binKey)}
-                  >
-                    + Add Member
-                  </button>
-                </div>
+                <>
+                  <div className={classes["student-name-icon"]}>
+                    <img
+                      src={studentIcon}
+                      alt="avatar"
+                      className={classes["avatar-iconbin1"]}
+                    />
+                    <div className={classes.memberdetails}>
+                      <span>No Student Found</span>
+                    </div>
+                  </div>
+                  <div className={classes["teamrow2"]}>
+                    <div>
+                      <p>No Roll Number</p>
+                    </div>
+                    <button
+                      className={classes["facultytopics-button"]}
+                      onClick={() => handleApply(topic)}
+                    >
+                      Add Student
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           );

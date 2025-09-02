@@ -16,7 +16,8 @@ const btptopicschema=new mongoose.Schema({
             _id: false,
             teamid: {type: mongoose.Schema.Types.ObjectId, ref: "BTPTeam", required: true},
             topic: { type: mongoose.Schema.Types.ObjectId, required: true },
-            isapproved: {type: Boolean, required: true, default: false}
+            isapproved: {type: Boolean, required: true, default: false},
+            preference: { type: Number, required: true }
         }
     ]
 });
