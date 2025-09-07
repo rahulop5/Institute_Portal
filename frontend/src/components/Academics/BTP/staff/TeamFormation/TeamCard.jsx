@@ -19,7 +19,6 @@ export default function TeamCard({ team, teamsData, setTeamsData }) {
         </div>
       </div>
 
-
       <div className={styles.members}>
         {team.members.slice(0, 3).map((member, index) => (
           <div key={index} className={styles.member}>

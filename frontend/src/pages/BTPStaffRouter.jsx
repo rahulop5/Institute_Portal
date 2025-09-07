@@ -46,7 +46,6 @@ export async function loader(){
                 });
             }
             const resData=await response.json();
-            console.log(resData)
             return resData;
         
         //handle other users later

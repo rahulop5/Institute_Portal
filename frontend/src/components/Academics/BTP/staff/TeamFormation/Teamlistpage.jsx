@@ -313,8 +313,6 @@ export default function TeamListPage({data}) {
   const handleTabChange = (tab) => setActiveTab(tab);
 
   const fullyFormedTeams = teamsData.fullyFormedTeams;
-  // const fullyFormedTeams = teamsData.teams.filter((team) => team.isTeamFormed);
-  // const partiallyFormedTeams = teamsData.teams.filter((team) => !team.isTeamFormed);
   const partiallyFormedTeams = teamsData.partiallyFormedTeams;
 
   const handleDeleteMember = (teamName, studentId) => {
@@ -384,6 +382,7 @@ export default function TeamListPage({data}) {
           <UnallocatedStudents
             unallocatedData={teamsData.unallocatedMembers}
             setTeamsData={setTeamsData}
+            isSelectMode={false}
           />
         )}
       </div>

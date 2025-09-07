@@ -9,13 +9,15 @@ export default function OverviewDialog({
   onClose,
   team,
   teamsData,
-  setTeamsData
+  setTeamsData,
 }) {
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
   const [selectedMemberIndex, setSelectedMemberIndex] = useState(null);
   const [studentToAdd, setStudentToAdd] = useState(null);
 
   if (!isOpen) return null;
+
+  console.log(team)
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -39,7 +41,6 @@ export default function OverviewDialog({
 
     const memberToRemove = team.members[selectedMemberIndex];
 
-    // Remove selected member from team and add to unallocated
     const updatedTeam = { ...team };
     updatedTeam.members[selectedMemberIndex] = {
       student: studentToAdd,
@@ -47,17 +48,24 @@ export default function OverviewDialog({
       isApproved: false, // reset approval for new student
     };
 
-    
     // Update unallocated: remove added student and add removed one
     const updatedUnallocated = teamsData.unallocatedMembers.filter(
-        (s) => s.id !== studentToAdd.id
+      (s) => s.id !== studentToAdd.id
     );
     updatedUnallocated.push(memberToRemove.student);
-    
+
     //gotta update the teamsdata state and keep the modal open for him to submit
 
     handleCancelReplace();
   };
+
+  const deleteStudent=()=>{
+    
+  }
+
+  const addStudent=()=>{
+
+  }
 
   return createPortal(
     <>
@@ -78,16 +86,20 @@ export default function OverviewDialog({
 
           {/* Team Members */}
           <div className={styles.cardsContainer}>
-            {team?.members?.map((member, index) => (
-              <TeamMemberCard
-                key={index}
-                member={member}
-                index={index}
-                onReplace={handleReplaceClick}
-                onDelete={(i) => console.log("Delete", i)}
-                onNotify={(i) => console.log("Notify", i)}
-              />
-            ))}
+            {[1, 2, 3].map((binNumber, index) => {
+              const member =
+                team?.members?.find((m) => m.bin === binNumber) || null;
+              return (
+                <TeamMemberCard
+                  key={binNumber}
+                  member={member}
+                  index={index}
+                  onReplace={handleReplaceClick}
+                  onDelete={(i) => console.log("Delete", i)}
+                  onNotify={(i) => console.log("Notify", i)}
+                />
+              );
+            })}
           </div>
 
           {/* Footer */}
@@ -113,6 +125,7 @@ export default function OverviewDialog({
                 unallocatedData={teamsData.unallocatedMembers}
                 onSelect={(student) => setStudentToAdd(student)}
                 selectedStudent={studentToAdd}
+                isSelectMode={true}
               />
               <div className={styles.modalActions}>
                 <button onClick={handleCancelReplace}>Cancel</button>

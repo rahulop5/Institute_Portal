@@ -10,9 +10,9 @@ import ActionButtons from "./ActionButtons";
 export default function TeamMemberCard({
   member,
   index,
-  onDelete = { onDelete },
+  onDelete,
   onReplace = { onReplace },
-  onNotify = { onNotify },
+  onNotify,
 }) {
   if (!member) {
     return (
@@ -23,10 +23,11 @@ export default function TeamMemberCard({
 
         <div className={styles.infodata}></div>
 
-        <ActionButtons index={index} 
-        onDelete={onDelete}
-        onReplace={onReplace}
-        onNotify={onNotify}
+        <ActionButtons
+          index={index}
+          onDelete={onDelete}
+          onReplace={onReplace}
+          onNotify={onNotify}
         />
       </div>
     );

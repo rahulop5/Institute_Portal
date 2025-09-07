@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import classes from "../styles/BinButtons.module.css"; // CSS with .team-selection-buttons etc.
 import StudentList from "./StudentList";
 
-export default function UnallocatedStudents({ unallocatedData }) {
+export default function UnallocatedStudents({ unallocatedData, isSelectMode }) {
   const [selectedBin, setSelectedBin] = useState(1);
 
   const filteredStudents = unallocatedData
@@ -33,7 +33,7 @@ export default function UnallocatedStudents({ unallocatedData }) {
       </div>
 
       {/* Student List */}
-      <StudentList students={filteredStudents} />
+      <StudentList students={filteredStudents} isSelectMode={isSelectMode} />
     </div>
   );
 }
