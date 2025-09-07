@@ -89,6 +89,17 @@ background: #fff;
   text-align: left;
 }
 
+.infodata2 {
+  margin-left: 1vw;
+  margin-top: 2.5vh;
+}
+
+.infodata2>img{
+  height: 150px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .rollNumber,
 .binLabel {
   display: flex;
