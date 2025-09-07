@@ -36,7 +36,7 @@ export default function TeamMemberCard({
   const roll = member?.student?.roll ?? "—";
   const email =
     member?.student?.email ?? `${roll !== "—" ? roll : "user"}@example.com`;
-  const binId = member?.bin?.id ?? "—";
+  const binId = member?.bin ?? "—";
   const isApproved = !!member?.isApproved;
 
   return (

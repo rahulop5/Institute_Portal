@@ -306,52 +306,16 @@ export const initialTeamsData = {
 };
 
 
-export default function TeamListPage() {
-  const [teamsData, setTeamsData] = useState(initialTeamsData);
+export default function TeamListPage({data}) {
+  const [teamsData, setTeamsData] = useState(data.response);
   const [activeTab, setActiveTab] = useState("Formed");
-
-
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
-  const fullyFormedTeams = teamsData.teams.filter((team) => team.isTeamFormed);
-  const partiallyFormedTeams = teamsData.teams.filter((team) => !team.isTeamFormed);
-
-  const handleReplaceStudent = (newStudent, oldMember, memberIndex, teamName) => {
- 
-    setTeams(prev =>
-      prev.map(team => {
-        if (team.teamName !== teamName) return team;
-        const updatedMembers = team.members.map((m, i) =>
-          i === memberIndex
-            ? { ...oldMember, student: newStudent.student, bin: newStudent.bin }
-            : m
-        );
-        return { ...team, members: updatedMembers };
-      })
-    );
-
-     setUnallocatedMembers(prev => {
-    let updatedUnallocated = [...prev];
-
-    if (mode === "delete") {
-      
-      if (affectedMember) {
-        updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
-      }
-    } else if (mode === "replace" || mode === "add") {
-      
-      updatedUnallocated = updatedUnallocated.filter(u => u.student.roll !== newStudent.student.roll);
-      
-      if (mode === "replace" && affectedMember) {
-        updatedUnallocated.push({ student: affectedMember.student, bin: affectedMember.bin });
-      }
-    }
-
-    return updatedUnallocated;
-  });
-};
-
+  const fullyFormedTeams = teamsData.fullyFormedTeams;
+  // const fullyFormedTeams = teamsData.teams.filter((team) => team.isTeamFormed);
+  // const partiallyFormedTeams = teamsData.teams.filter((team) => !team.isTeamFormed);
+  const partiallyFormedTeams = teamsData.partiallyFormedTeams;
 
   const handleDeleteMember = (teamName, studentId) => {
     setTeamsData(prevData => {

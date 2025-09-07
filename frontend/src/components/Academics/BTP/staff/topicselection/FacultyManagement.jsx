@@ -243,8 +243,7 @@ export default function FacultyManagement({dataa}) {
 
   const [faculties, setFaculties] = useState(data);
   const [unallocated, setUnallocated] = useState(unallocatedTeams);
-
-  const [selectedFaculty, setSelectedFaculty] = useState(null); // the full faculty entry object
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
   const [showManualAllocation, setShowManualAllocation] = useState(false);
 
@@ -377,7 +376,6 @@ export default function FacultyManagement({dataa}) {
             <TopicCards
               topics={selectedFacultyTopics}
               mode="faculty"
-              /* NEW: pass assignment context */
               selectedTeam={teamForTopicAllocation}
               onAssignTopic={handleAssignTopicToSelectedTeam}
             />

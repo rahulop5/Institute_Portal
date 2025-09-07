@@ -39,16 +39,11 @@ export const getStaffBTPDashboard = async (req, res) => {
       case "TEAM_FORMATION":
         try {
           const teams = await BTPTeam.find()
-            .populate("bin1.student", "name email bin")
-            .populate("bin2.student", "name email bin")
-            .populate("bin3.student", "name email bin");
+            .populate("bin1.student", "name email bin rollno")
+            .populate("bin2.student", "name email bin rollno")
+            .populate("bin3.student", "name email bin rollno");
 
-          const formedteams = teams.filter(
-            (team) => team.isteamformed === true
-          );
-          const partialteams = teams.filter(
-            (team) => team.isteamformed === false
-          );
+          console.log(teams[0])
 
           const studentIdsInTeams = new Set();
           teams.forEach((team) => {
@@ -62,41 +57,67 @@ export const getStaffBTPDashboard = async (req, res) => {
 
           const unteamedStudents = await UGStudentBTP.find({
             _id: { $nin: Array.from(studentIdsInTeams) },
-          }).select("email bin");
+          }).select("name email bin roll");
 
-          const formatTeam = (team) => {
+          // Format team into frontend shape
+          const formatTeam = (team, index) => {
+            const members = [];
+
+            if (team.bin1?.student) {
+              members.push({
+                student: {
+                  name: team.bin1.student.name,
+                  roll: team.bin1.student.rollno,
+                  email: team.bin1.student.email,
+                },
+                bin: team.bin1.student.bin,
+                isApproved: team.bin1.approved, // comes from bin schema
+              });
+            }
+            if (team.bin2?.student) {
+              members.push({
+                student: {
+                  name: team.bin2.student.name,
+                  roll: team.bin2.student.rollno,
+                  email: team.bin2.student.email,
+                },
+                bin: team.bin2.student.bin,
+                isApproved: team.bin2.approved,
+              });
+            }
+            if (team.bin3?.student) {
+              members.push({
+                student: {
+                  name: team.bin3.student.name,
+                  roll: team.bin3.student.rollno,
+                  email: team.bin3.student.email,
+                },
+                bin: team.bin3.student.bin,
+                isApproved: team.bin3.approved,
+              });
+            }
+
             return {
-              bin1: team.bin1?.student
-                ? {
-                    email: team.bin1.student.email,
-                    bin: team.bin1.student.bin,
-                    name: team.bin1.student.name,
-                  }
-                : null,
-              bin2: team.bin2?.student
-                ? {
-                    email: team.bin2.student.email,
-                    bin: team.bin2.student.bin,
-                    name: team.bin2.student.name,
-                  }
-                : null,
-              bin3: team.bin3?.student
-                ? {
-                    email: team.bin3.student.email,
-                    bin: team.bin3.student.bin,
-                    name: team.bin3.student.name,
-                  }
-                : null,
+              teamName: `Team ${index + 1}`,
+              isTeamFormed: team.isteamformed,
+              members,
             };
           };
+
           const response = {
-            fullyFormedTeams: formedteams.map(formatTeam),
-            partiallyFormedTeams: partialteams.map(formatTeam),
-            unteamedStudents: unteamedStudents.map((student) => ({
+            fullyFormedTeams: teams
+              .filter((t) => t.isteamformed === true)
+              .map(formatTeam),
+            partiallyFormedTeams: teams
+              .filter((t) => t.isteamformed === false)
+              .map(formatTeam),
+            unallocatedMembers: unteamedStudents.map((student) => ({
+              student: { name: student.name, roll: student.roll },
+              bin: { id: student.bin },
               email: student.email,
-              bin: student.bin,
             })),
           };
+
           return res.status(200).json({
             email: user.email,
             phase: "TF",
@@ -156,13 +177,11 @@ export const getStaffBTPDashboard = async (req, res) => {
           });
         } catch (err) {
           console.error(err);
-          return res
-            .status(500)
-            .json({
-              phase: "FA",
-              email: user.email,
-              message: "Error loading dashboard",
-            });
+          return res.status(500).json({
+            phase: "FA",
+            email: user.email,
+            message: "Error loading dashboard",
+          });
         }
 
       case "IN_PROGRESS":
@@ -542,14 +561,14 @@ export const approveFacultyToTeam = async (req, res) => {
 
     if (!facultyId || !teamId || !topicDocId || !topicId) {
       return res.status(400).json({
-        message: "facultyId, teamId, topicDocId, and topicId are required"
+        message: "facultyId, teamId, topicDocId, and topicId are required",
       });
     }
 
     // Find the faculty's BTPTopic document
     const btpTopicDoc = await BTPTopic.findOne({
       _id: topicDocId,
-      faculty: facultyId
+      faculty: facultyId,
     });
     if (!btpTopicDoc) {
       return res.status(404).json({ message: "Faculty topicDoc not found" });
@@ -557,18 +576,22 @@ export const approveFacultyToTeam = async (req, res) => {
 
     // Check if faculty already approved this request
     const request = btpTopicDoc.requests.find(
-      r => r.teamid.toString() === teamId && r.topic.toString() === topicId
+      (r) => r.teamid.toString() === teamId && r.topic.toString() === topicId
     );
     if (!request || !request.isapproved) {
-      return res.status(400).json({ message: "Faculty has not approved this request yet" });
+      return res
+        .status(400)
+        .json({ message: "Faculty has not approved this request yet" });
     }
 
     // Get the topic details for BTP creation
     const topicObj = btpTopicDoc.topics.find(
-      t => t._id.toString() === topicId
+      (t) => t._id.toString() === topicId
     );
     if (!topicObj) {
-      return res.status(404).json({ message: "Topic not found in faculty's list" });
+      return res
+        .status(404)
+        .json({ message: "Topic not found in faculty's list" });
     }
 
     // Get the team
@@ -585,17 +608,20 @@ export const approveFacultyToTeam = async (req, res) => {
       guide: facultyId,
       name: topicObj.topic,
       studentbatch: teamDoc.batch,
-      "students.student": { $in: [
-        teamDoc.bin1?.student?._id,
-        teamDoc.bin2?.student?._id,
-        teamDoc.bin3?.student?._id
-      ].filter(Boolean) }
+      "students.student": {
+        $in: [
+          teamDoc.bin1?.student?._id,
+          teamDoc.bin2?.student?._id,
+          teamDoc.bin3?.student?._id,
+        ].filter(Boolean),
+      },
     });
 
     if (existingBTP) {
       return res.status(400).json({
-        message: "This BTP already exists for the given faculty, team, and topic",
-        btp: existingBTP
+        message:
+          "This BTP already exists for the given faculty, team, and topic",
+        btp: existingBTP,
       });
     }
 
@@ -613,7 +639,7 @@ export const approveFacultyToTeam = async (req, res) => {
       students: studentsArray,
       guide: facultyId,
       evaluators: [],
-      updates: []
+      updates: [],
     });
     await newBTP.save();
 
@@ -622,20 +648,19 @@ export const approveFacultyToTeam = async (req, res) => {
     teamDoc.assigned = {
       faculty: facultyId,
       topicDoc: topicDocId,
-      topicId: topicId
+      topicId: topicId,
     };
     await teamDoc.save();
 
     return res.status(200).json({
       message: "Staff approved the team. BTP created successfully.",
       btp: newBTP,
-      team: teamDoc
+      team: teamDoc,
     });
-
   } catch (err) {
     console.error(err);
     return res.status(err.status || 500).json({
-      message: err.message || "Error approving staff to team"
+      message: err.message || "Error approving staff to team",
     });
   }
 };
@@ -645,32 +670,37 @@ export const rejectFacultyFromTeam = async (req, res) => {
     const { topicDocId, teamId, topicId } = req.body;
 
     if (!topicDocId || !teamId || !topicId) {
-      return res.status(400).json({ message: "topicDocId, teamId, and topicId are required" });
+      return res
+        .status(400)
+        .json({ message: "topicDocId, teamId, and topicId are required" });
     }
 
     // Pull only if isapproved = true
     const updatedTopicDoc = await BTPTopic.findOneAndUpdate(
-      { 
+      {
         _id: topicDocId,
         "requests.teamid": teamId,
         "requests.topic": topicId,
-        "requests.isapproved": true
+        "requests.isapproved": true,
       },
       {
-        $pull: { requests: { teamid: teamId, topic: topicId, isapproved: true } }
+        $pull: {
+          requests: { teamid: teamId, topic: topicId, isapproved: true },
+        },
       },
       { new: true }
     );
 
     if (!updatedTopicDoc) {
       return res.status(404).json({
-        message: "No approved request found for this team in the given topicDoc"
+        message:
+          "No approved request found for this team in the given topicDoc",
       });
     }
 
     return res.status(200).json({
       message: "Faculty request rejected successfully",
-      data: updatedTopicDoc
+      data: updatedTopicDoc,
     });
   } catch (err) {
     console.log(err);
@@ -680,13 +710,13 @@ export const rejectFacultyFromTeam = async (req, res) => {
   }
 };
 
-
-
-
 // Advance from round k -> k+1 for all teams (or single team if teamId provided)
 export const advancePreferenceRound = async (req, res) => {
   try {
-    const query = { facultyAssigned: false, currentPreference: { $gte: 1, $lte: 4 } };
+    const query = {
+      facultyAssigned: false,
+      currentPreference: { $gte: 1, $lte: 4 },
+    };
     const teams = await BTPTeam.find(query);
     if (teams.length === 0) {
       return res.status(200).json({ message: "No teams to advance" });
@@ -699,7 +729,11 @@ export const advancePreferenceRound = async (req, res) => {
       // 1) Delete unapproved requests for round k across ALL BTPTopic docs
       await BTPTopic.updateMany(
         { "requests.teamid": team._id, "requests.preference": k },
-        { $pull: { requests: { teamid: team._id, preference: k, isapproved: false } } }
+        {
+          $pull: {
+            requests: { teamid: team._id, preference: k, isapproved: false },
+          },
+        }
       );
 
       // 2) If already assigned in the meantime, skip pushing next
@@ -709,21 +743,22 @@ export const advancePreferenceRound = async (req, res) => {
       // 3) Move to next round if exists
       if (k < 4) {
         const next = k + 1;
-        const pNext = freshTeam.preferences.find(p => p.order === next);
+        const pNext = freshTeam.preferences.find((p) => p.order === next);
         if (pNext) {
           const doc = await BTPTopic.findById(pNext.topicDoc);
           if (doc) {
-            const already = doc.requests.some(r =>
-              r.teamid.toString() === freshTeam._id.toString() &&
-              r.topic.toString() === pNext.topicId.toString() &&
-              r.preference === next
+            const already = doc.requests.some(
+              (r) =>
+                r.teamid.toString() === freshTeam._id.toString() &&
+                r.topic.toString() === pNext.topicId.toString() &&
+                r.preference === next
             );
             if (!already) {
               doc.requests.push({
                 teamid: freshTeam._id,
                 topic: pNext.topicId,
                 isapproved: false,
-                preference: next
+                preference: next,
               });
               await doc.save();
             }
@@ -735,7 +770,9 @@ export const advancePreferenceRound = async (req, res) => {
         // Round 4 ended and not assigned — do nothing more here (could mark exhausted if you want)
       }
     }
-    return res.status(200).json({ message: "Advanced preference round successfully" });
+    return res
+      .status(200)
+      .json({ message: "Advanced preference round successfully" });
   } catch (err) {
     console.log(err);
     return res.status(err.status || 500).json({

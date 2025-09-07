@@ -7,14 +7,19 @@ import ApprovedCard from "./ApprovedCard";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import FSTeamthere from "./FSTeamshow";
 import classes from "../../../../styles/FacultySelection.module.css";
+import PreferenceOrder from "./PreferenceOrder";
 import TFTeamthereBin1 from "../TF/TFTeamthereBin1";
 
 export default function FacultySelection({ data }) {
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
   const [showRequests, setShowRequests] = useState(false);
+  const [preferences, setPreferences] = useState([null, null, null, null]);
+  const [currentPrefIndex, setCurrentPrefIndex] = useState(0);
   const submit = useSubmit();
 
   const handleShowTopics = (facultyObj) => {
+    setSelectedFaculty(facultyObj.faculty); // store faculty info
     setSelectedFacultyTopics((prevfacobj) => {
       if (prevfacobj === facultyObj.topics) {
         return null;
@@ -64,6 +69,43 @@ export default function FacultySelection({ data }) {
 
   const approvedRequest = data.outgoingRequests.find((r) => r.isapproved);
 
+  const handleAddPreference = (topic) => {
+    if (currentPrefIndex < 4) {
+      const updated = [...preferences];
+      updated[currentPrefIndex] = {
+        title: topic.topic, // ✅ correct field
+        description: topic.about, // ✅ correct field
+        facultyName: selectedFaculty?.name, // ✅ comes from selected faculty
+        topicId: topic._id, // ✅ backend id
+      };
+      setPreferences(updated);
+      setCurrentPrefIndex(currentPrefIndex + 1);
+    }
+  };
+
+  const handleDeletePreference = (index) => {
+    const updated = [...preferences];
+    updated.splice(index, 1); // remove selected
+    updated.push(null); // maintain 4 slots
+    setPreferences(updated);
+    setCurrentPrefIndex(updated.findIndex((p) => !p)); // first empty slot
+  };
+
+  const handleFinalize = async () => {
+    const payload = {
+      teamId: "T123",
+      preferences: preferences.filter((p) => p !== null),
+    };
+
+    await fetch("/student/btp/finalizepreferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    console.log("Finalized:", payload);
+  };
+
   return (
     <>
       {/* Faculty assigned */}
@@ -72,13 +114,25 @@ export default function FacultySelection({ data }) {
       ) : (
         <>
           {/* Faculty not yet assigned */}
-          <FacultyList faculties={data.topics} onShowTopics={handleShowTopics}  />
+          <FacultyList
+            faculties={data.topics}
+            onShowTopics={handleShowTopics}
+          />
+
+          <PreferenceOrder
+            preferences={preferences}
+            onDelete={handleDeletePreference}
+            onFinalize={handleFinalize}
+          />
+
           {selectedFacultyTopics && (
             <TopicCards
               topics={selectedFacultyTopics}
-              handleApply={handleApply}
+              handleAddPreference={handleAddPreference}
+              currentPrefIndex={currentPrefIndex}
               bin={data.bin}
               mode="student"
+              preferences={preferences}
             />
           )}
 

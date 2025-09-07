@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "../../../styles/Requests.module.css";
 import studentIcon from "../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";
-
+import nothing from "../../../../assets/Group 421.png";
 const data2 = {
   topics: {
     _id: "topic123",
@@ -11,58 +11,57 @@ const data2 = {
         isapproved: false,
         topicDetails: {
           _id: "t001",
-          topic: "AI in Education"
+          topic: "AI in Education",
         },
         teamid: {
           _id: "team001",
           bin1: {
             student: {
               name: "Alice",
-              rollno: "21CS001"
-            }
+              rollno: "21CS001",
+            },
           },
           bin2: {
             student: {
-              name: "Bob"
-            }
+              name: "Bob",
+            },
           },
           bin3: {
             student: {
-              name: "Charlie"
-            }
-          }
-        }
+              name: "Charlie",
+            },
+          },
+        },
       },
       {
         isapproved: true,
         topicDetails: {
           _id: "t002",
-          topic: "Quantum Computing"
+          topic: "Quantum Computing",
         },
         teamid: {
           _id: "team002",
           bin1: {
             student: {
               name: "Dave",
-              rollno: "21CS002"
-            }
+              rollno: "21CS002",
+            },
           },
           bin2: {
             student: {
-              name: "Eve"
-            }
+              name: "Eve",
+            },
           },
           bin3: {
             student: {
-              name: "Frank"
-            }
-          }
-        }
-      }
-    ]
-  }
+              name: "Frank",
+            },
+          },
+        },
+      },
+    ],
+  },
 };
-
 
 function Requests({ data }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -87,11 +86,11 @@ function Requests({ data }) {
   };
 
   const handleReject = (teamid, topicid) => {
-    const docid=data.topics._id;
+    const docid = data.topics._id;
     const payload = {
       topicid: topicid,
       teamid: teamid,
-      docid: docid
+      docid: docid,
     };
     const formData = new FormData();
     formData.append("reqData", JSON.stringify(payload));
@@ -104,156 +103,170 @@ function Requests({ data }) {
 
   // Use only unapproved requests
   const pendingRequests = data.topics.requests.filter((req) => !req.isapproved);
-  const acceptedrequests=data.topics.requests.filter((req) => req.isapproved)
+  const acceptedrequests = data.topics.requests.filter((req) => req.isapproved);
 
   return (
     <>
-    <div className={styles.container}>
-      {pendingRequests.length === 0 ? (
-        <p>No pending requests.</p>
-      ) : (
-        pendingRequests.map((req, index) => {
-          const team = req.teamid;
-          const topic = req.topicDetails;
-
-          return (
-            <div key={index} className={styles.card}>
-              <div className={styles.row}>
-                <div className={styles.bin1name}>
-                  <div className={styles.teamicon}>
-                    <img src={studentIcon} alt="student" />
-                  </div>
-                  <div className={styles.name}>{team.bin1.student.name}</div>
-                </div>
-                <div className={styles.topic}>{topic.topic}</div>
-                <button
-                  className={styles.moreInfo}
-                  onClick={() => handleToggle(index)}
-                >
-                  {expandedIndex === index ? "Less info" : "More info"}
-                </button>
-              </div>
-
-              {expandedIndex === index && (
-                <div className={styles.expanded}>
-                  <p>
-                    <strong>Roll Number:</strong> <br />
-                    {team.bin1.student.rollno}
-                  </p>
-                  <div className={styles.teamlist}>
-                    <div className={styles.team}>
-                      Team: <br />
-                    </div>
-                    <div className={styles.icons}>
-                      <div
-                        className={styles.icon}
-                        title={team.bin2.student.name}
-                      >
-                        <img src={studentIcon} alt="student" />
-                      </div>
-                      <div
-                        className={styles.icon}
-                        title={team.bin3.student.name}
-                      >
-                        <img src={studentIcon} alt="student" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.actions}>
-                    <button
-                      className={styles.reject}
-                      onClick={() => handleReject(team._id, topic._id)}
-                    >
-                      Reject
-                    </button>
-                    <button
-                      className={styles.accept}
-                      onClick={() => handleAccept(team._id, topic._id)}
-                    >
-                      Accept
-                    </button>
-                  </div>
-                </div>
-              )}
+      <div className={styles.container}>
+        {pendingRequests.length === 0 ? (
+          <div className= {styles.emptycontainer}>
+            <div>
+              <img src={nothing} alt="" />
             </div>
-          );
-        })
-      )}
-    </div>
-    {/* ikkada accepted requests ki styles */}
-    <h2>Accepted Requests</h2>
-    <div className={styles.container}>
-      {acceptedrequests.length === 0 ? (
-        <p>No pending requests.</p>
-      ) : (
-        acceptedrequests.map((req, index) => {
-          const team = req.teamid;
-          const topic = req.topicDetails;
-
-          return (
-            <div key={index} className={styles.card}>
-              <div className={styles.row}>
-                <div className={styles.bin1name}>
-                  <div className={styles.teamicon}>
-                    <img src={studentIcon} alt="student" />
-                  </div>
-                  <div className={styles.name}>{team.bin1.student.name}</div>
-                </div>
-                <div className={styles.topic}>{topic.topic}</div>
-                <button
-                  className={styles.moreInfo}
-                  onClick={() => handleToggle(index)}
-                >
-                  {expandedIndex === index ? "Less info" : "More info"}
-                </button>
-              </div>
-
-              {expandedIndex === index && (
-                <div className={styles.expanded}>
-                  <p>
-                    <strong>Roll Number:</strong> <br />
-                    {team.bin1.student.rollno}
-                  </p>
-                  <div className={styles.teamlist}>
-                    <div className={styles.team}>
-                      Team: <br />
-                    </div>
-                    <div className={styles.icons}>
-                      <div
-                        className={styles.icon}
-                        title={team.bin2.student.name}
-                      >
-                        <img src={studentIcon} alt="student" />
-                      </div>
-                      <div
-                        className={styles.icon}
-                        title={team.bin3.student.name}
-                      >
-                        <img src={studentIcon} alt="student" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.actions}>
-                    <button
-                      className={styles.reject}
-                      onClick={() => handleReject(team._id, topic._id)}
-                    >
-                      Reject
-                    </button>
-                    <button
-                      className={styles.accept}
-                      onClick={() => handleAccept(team._id, topic._id)}
-                    >
-                      Accept
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div>
+              <p className={styles.empty}>No pending requests.</p>
             </div>
-          );
-        })
-      )}
-    </div>
+          </div>
+        ) : (
+          pendingRequests.map((req, index) => {
+            const team = req.teamid;
+            const topic = req.topicDetails;
+
+            return (
+              <div key={index} className={styles.card}>
+                <div className={styles.row}>
+                  <div className={styles.bin1name}>
+                    <div className={styles.teamicon}>
+                      <img src={studentIcon} alt="student" />
+                    </div>
+                    <div className={styles.name}>{team.bin1.student.name}</div>
+                  </div>
+                  <div className={styles.topic}>{topic.topic}</div>
+                  <button
+                    className={styles.moreInfo}
+                    onClick={() => handleToggle(index)}
+                  >
+                    {expandedIndex === index ? "Less info" : "More info"}
+                  </button>
+                </div>
+
+                {expandedIndex === index && (
+                  <div className={styles.expanded}>
+                    <p>
+                      <strong>Roll Number:</strong> <br />
+                      {team.bin1.student.rollno}
+                    </p>
+                    <div className={styles.teamlist}>
+                      <div className={styles.team}>
+                        Team: <br />
+                      </div>
+                      <div className={styles.icons}>
+                        <div
+                          className={styles.icon}
+                          title={team.bin2.student.name}
+                        >
+                          <img src={studentIcon} alt="student" />
+                        </div>
+                        <div
+                          className={styles.icon}
+                          title={team.bin3.student.name}
+                        >
+                          <img src={studentIcon} alt="student" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.reject}
+                        onClick={() => handleReject(team._id, topic._id)}
+                      >
+                        Reject
+                      </button>
+                      <button
+                        className={styles.accept}
+                        onClick={() => handleAccept(team._id, topic._id)}
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+      {/* ikkada accepted requests ki styles */}
+      <h2>Accepted Requests</h2>
+      <div className={styles.container}>
+        {acceptedrequests.length === 0 ? (
+           <div className= {styles.emptycontainer}>
+            <div>
+              <img src={nothing} alt="" />
+            </div>
+            <div>
+              <p className={styles.empty}>No pending requests.</p>
+            </div>
+          </div>
+        ) : (
+          acceptedrequests.map((req, index) => {
+            const team = req.teamid;
+            const topic = req.topicDetails;
+
+            return (
+              <div key={index} className={styles.card}>
+                <div className={styles.row}>
+                  <div className={styles.bin1name}>
+                    <div className={styles.teamicon}>
+                      <img src={studentIcon} alt="student" />
+                    </div>
+                    <div className={styles.name}>{team.bin1.student.name}</div>
+                  </div>
+                  <div className={styles.topic}>{topic.topic}</div>
+                  <button
+                    className={styles.moreInfo}
+                    onClick={() => handleToggle(index)}
+                  >
+                    {expandedIndex === index ? "Less info" : "More info"}
+                  </button>
+                </div>
+
+                {expandedIndex === index && (
+                  <div className={styles.expanded}>
+                    <p>
+                      <strong>Roll Number:</strong> <br />
+                      {team.bin1.student.rollno}
+                    </p>
+                    <div className={styles.teamlist}>
+                      <div className={styles.team}>
+                        Team: <br />
+                      </div>
+                      <div className={styles.icons}>
+                        <div
+                          className={styles.icon}
+                          title={team.bin2.student.name}
+                        >
+                          <img src={studentIcon} alt="student" />
+                        </div>
+                        <div
+                          className={styles.icon}
+                          title={team.bin3.student.name}
+                        >
+                          <img src={studentIcon} alt="student" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.reject}
+                        onClick={() => handleReject(team._id, topic._id)}
+                      >
+                        Reject
+                      </button>
+                      <button
+                        className={styles.accept}
+                        onClick={() => handleAccept(team._id, topic._id)}
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </>
   );
 }
@@ -261,18 +274,21 @@ function Requests({ data }) {
 export default Requests;
 
 export async function action({ request }) {
-  const token=localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const formData = await request.formData();
-  const reqdata=formData.get("reqData");
+  const reqdata = formData.get("reqData");
 
-  const response = await fetch("http://localhost:3000/faculty/btp/approvetopicrequest", {
-    method: "post",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-    },
-    body: reqdata,
-  });
+  const response = await fetch(
+    "http://localhost:3000/faculty/btp/approvetopicrequest",
+    {
+      method: "post",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: reqdata,
+    }
+  );
 
   if (!response.ok) {
     throw new Response(
@@ -286,24 +302,27 @@ export async function action({ request }) {
   }
 
   const result = await response.json();
-  console.log(result)
+  console.log(result);
 
   return redirect("/academics/btp");
 }
 
 export async function action2({ request }) {
-  const token=localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const formData = await request.formData();
-  const reqdata=formData.get("reqData");
+  const reqdata = formData.get("reqData");
 
-  const response = await fetch("http://localhost:3000/faculty/btp/rejecttopicreq", {
-    method: "delete",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-    },
-    body: reqdata,
-  });
+  const response = await fetch(
+    "http://localhost:3000/faculty/btp/rejecttopicreq",
+    {
+      method: "delete",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: reqdata,
+    }
+  );
 
   if (!response.ok) {
     throw new Response(

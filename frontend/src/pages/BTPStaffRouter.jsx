@@ -2,7 +2,7 @@ import { useLoaderData } from "react-router";
 import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
 import TeamListPage from "../components/Academics/BTP/staff/TeamFormation/Teamlistpage";
-import FacultyManagement from "../components/Academics/BTP/staff/topicselection/FacultyManagement";
+import FacultyManagement from "../components/academics/btp/staff/topicselection/FacultyManagement";
 import Temp from "./Lemp";
 
 

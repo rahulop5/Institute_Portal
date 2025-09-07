@@ -1,0 +1,170 @@
+:root {
+  /* 🎨 Colors (replace with Figma exact values) */
+  --color-bg: #f9f9fb;
+  --color-surface: #ffffff;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6c727f;
+  --color-text-muted: #8a8f9c;
+  --color-border: #e4e6eb;
+  --color-accent: #2a72e8;
+  --color-danger: #e53935;
+
+  /* 🔠 Typography (replace with Figma fonts) */
+  --font-family: "Inter", sans-serif;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.4rem;
+
+  /* 📐 Spacing */
+  --spacing-xs: 0.3rem;
+  --spacing-sm: 0.6rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* 🔲 Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  /* 💡 Shadow */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 🔲 Wrapper */
+.wrapper {
+  margin-top: 3rem;
+  margin-left: 1rem;
+  margin-bottom: 4rem;
+  /* margin: 1rem; */
+  /* background-color: var(--color-bg); */
+  /* padding: var(--spacing-lg); */
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+}
+
+/* 🔠 Title */
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 400;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.list {
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  gap: 3rem;
+  align-items: center;
+}
+
+.slot {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  gap: 4vw;
+  min-height: 80px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  justify-content: center;
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem 16rem;
+}
+
+.emptyimage img {
+  height: 30px;
+}
+
+/* ℹ️ Info Section */
+.info {
+  display: flex;
+  flex-direction: row;
+  gap: 8vw;
+  align-items: center;
+  /* border: 1px solid var(--color-border); */
+  padding: var(--spacing-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.topic {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.faculty {
+  margin-top: 3vh;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ❌ Delete Button */
+.delete {
+  margin-top: 3vh;
+  border: 1px solid #f40000;
+  border-radius: var(--radius-pill);
+  padding: var(--spacing-xs) 3vw;
+  background: transparent;
+  color: var(--color-danger);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete:hover {
+  background: #f40000;
+  color: #fff;
+}
+
+/* Footer container for finalize button */
+.footer {
+  display: flex;
+  justify-content: flex-end; /* pushes button to right */
+  margin-top: var(--spacing-lg);
+}
+
+/* ✅ Finalize Button */
+.finalize {
+  padding: 1.6vh 5.5vw;
+  border-radius: var(--radius-pill);
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background: transparent;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.finalize:hover:not(:disabled) {
+  background-color: #d3b1ff;
+  color: #000000;
+}
+
+.finalize:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
