@@ -70,61 +70,64 @@ export const getBTPDashboard = async (req, res) => {
                   message: "Error finding team",
                 });
               }
-              if (teams.length === 0) {
-                //sending the available bin2 and bin3 guys/gals
-                const bin23total = await UGStudentBTP.find({
-                  batch: user.batch,
-                  bin: { $ne: 1 },
-                });
-                //removed the uk guys who already formed a team
-                const bin2filter = await BTPTeam.find(
-                  {
-                    "bin2.approved": true,
-                  },
-                  "bin2.student"
+
+              //precomputing ts
+              //sending the available bin2 and bin3 guys/gals
+              const bin23total = await UGStudentBTP.find({
+                batch: user.batch,
+                bin: { $ne: 1 },
+              });
+              //removed the uk guys who already formed a team
+              const bin2filter = await BTPTeam.find(
+                {
+                  "bin2.approved": true,
+                },
+                "bin2.student"
+              );
+              const formatbin2filter = bin2filter.map((stu) => {
+                return stu.bin2.student.toString();
+              });
+
+              const bin3filter = await BTPTeam.find(
+                {
+                  "bin3.approved": true,
+                },
+                "bin3.student"
+              );
+              const formatbin3filter = bin3filter.map((stu) => {
+                return stu.bin3.student.toString();
+              });
+              //here just formatting the DATA filtering aswell
+              const availablebin2bin3 = bin23total.filter((stu) => {
+                return !(
+                  formatbin2filter.includes(stu._id.toString()) ||
+                  formatbin3filter.includes(stu._id.toString())
                 );
-                const formatbin2filter = bin2filter.map((stu) => {
-                  return stu.bin2.student.toString();
+              });
+              const availablebin2 = availablebin2bin3
+                .filter((stu) => {
+                  return stu.bin === 2;
+                })
+                .map((stu) => {
+                  return {
+                    name: stu.name,
+                    rollno: stu.rollno,
+                    email: stu.email,
+                  };
+                });
+              const availablebin3 = availablebin2bin3
+                .filter((stu) => {
+                  return stu.bin === 3;
+                })
+                .map((stu) => {
+                  return {
+                    name: stu.name,
+                    rollno: stu.rollno,
+                    email: stu.email,
+                  };
                 });
 
-                const bin3filter = await BTPTeam.find(
-                  {
-                    "bin3.approved": true,
-                  },
-                  "bin3.student"
-                );
-                const formatbin3filter = bin3filter.map((stu) => {
-                  return stu.bin3.student.toString();
-                });
-                //here just formatting the DATA filtering aswell
-                const availablebin2bin3 = bin23total.filter((stu) => {
-                  return !(
-                    formatbin2filter.includes(stu._id.toString()) ||
-                    formatbin3filter.includes(stu._id.toString())
-                  );
-                });
-                const availablebin2 = availablebin2bin3
-                  .filter((stu) => {
-                    return stu.bin === 2;
-                  })
-                  .map((stu) => {
-                    return {
-                      name: stu.name,
-                      rollno: stu.rollno,
-                      email: stu.email,
-                    };
-                  });
-                const availablebin3 = availablebin2bin3
-                  .filter((stu) => {
-                    return stu.bin === 3;
-                  })
-                  .map((stu) => {
-                    return {
-                      name: stu.name,
-                      rollno: stu.rollno,
-                      email: stu.email,
-                    };
-                  });
+              if (teams.length === 0) {
                 return res.status(200).json({
                   name: user.name,
                   email: user.email,
@@ -148,6 +151,13 @@ export const getBTPDashboard = async (req, res) => {
               }
               const team = teams[0];
               const simplifiedTeam = buildSimplifiedTeam(team);
+
+              if (!team.bin2 || !team.bin2.student) {
+                simplifiedTeam.availablebin2 = availablebin2;
+              }
+              if (!team.bin3 || !team.bin3.student) {
+                simplifiedTeam.availablebin3 = availablebin3;
+              }
 
               //im gonna send team id and student email to frontend
               if (!team?.bin2?.approved || !team?.bin3?.approved) {
@@ -801,11 +811,9 @@ export const addTeamMember = async (req, res) => {
     });
     for (let t of existingTeams) {
       if (t[`bin${bin}`].approved) {
-        return res
-          .status(400)
-          .json({
-            message: `${stu.email} is already in another approved team`,
-          });
+        return res.status(400).json({
+          message: `${stu.email} is already in another approved team`,
+        });
       }
     }
     // Add to team
@@ -854,49 +862,62 @@ export const setTeamPreferences = async (req, res) => {
     for (let i = 0; i < 4; i++) {
       const p = preferences[i];
       if (!p || !p.topicDoc || !p.topicId) {
-        return res.status(400).json({ message: `Invalid preference at index ${i}` });
+        return res
+          .status(400)
+          .json({ message: `Invalid preference at index ${i}` });
       }
       const key = `${p.topicDoc}:${p.topicId}`;
       if (seen.has(key)) {
-        return res.status(400).json({ message: "Duplicate topics in preferences" });
+        return res
+          .status(400)
+          .json({ message: "Duplicate topics in preferences" });
       }
       seen.add(key);
 
       const doc = await BTPTopic.findById(p.topicDoc);
-      if (!doc) return res.status(400).json({ message: `Topic doc not found for pref ${i + 1}` });
+      if (!doc)
+        return res
+          .status(400)
+          .json({ message: `Topic doc not found for pref ${i + 1}` });
       const sub = doc.topics.id(p.topicId);
-      if (!sub) return res.status(400).json({ message: `Topic not found for pref ${i + 1}` });
+      if (!sub)
+        return res
+          .status(400)
+          .json({ message: `Topic not found for pref ${i + 1}` });
     }
 
     // Save preferences to team
     team.preferences = preferences.map((p, idx) => ({
       topicDoc: p.topicDoc,
       topicId: p.topicId,
-      order: idx + 1
+      order: idx + 1,
     }));
     team.currentPreference = 1;
     await team.save();
 
     // Send ONLY round-1 requests to corresponding topic doc
-    const pref1 = team.preferences.find(p => p.order === 1);
+    const pref1 = team.preferences.find((p) => p.order === 1);
     const doc1 = await BTPTopic.findById(pref1.topicDoc);
     // Prevent duplicates if already present
-    const exists = doc1.requests.some(r =>
-      r.teamid.toString() === team._id.toString() &&
-      r.topic.toString() === pref1.topicId.toString() &&
-      r.preference === 1
+    const exists = doc1.requests.some(
+      (r) =>
+        r.teamid.toString() === team._id.toString() &&
+        r.topic.toString() === pref1.topicId.toString() &&
+        r.preference === 1
     );
     if (!exists) {
       doc1.requests.push({
         teamid: team._id,
         topic: pref1.topicId,
         isapproved: false,
-        preference: 1
+        preference: 1,
       });
       await doc1.save();
     }
 
-    return res.status(201).json({ message: "Preferences saved and Round-1 request sent" });
+    return res
+      .status(201)
+      .json({ message: "Preferences saved and Round-1 request sent" });
   } catch (err) {
     console.log(err);
     return res.status(err.status || 500).json({

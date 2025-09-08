@@ -95,6 +95,7 @@ export default function TFTeamthereBin1({ teamData, studentIcon }) {
 
       {/* Modal */}
       <AddStudentmodal
+        studentData={teamData.team}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         missingBin={missingBin}

@@ -25,6 +25,7 @@ import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlis
 import FacultyManagement from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
 import { deleteTeamAction, updateTeamAction } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
+import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -53,6 +54,7 @@ const router=createBrowserRouter([
                 loader: btpLoader,
                 children: [
                   {path: "sendteamrequest", action: sendTRAction, element: <></>},
+                  {path: "addteammember", action: addStudentAction, element: <></>},
                   {path: "acceptteamrequest", action: acceptTRAction, element: <></>},
                   {path: "rejectteamrequest", action: rejectTRAction, element: <></>},
                   {path: "applytotopic", action: applytotopicAction, element: <></>},

@@ -1,44 +1,17 @@
 import React, { useState } from "react";
 import classes from "../../../../styles/AddStudentModal.module.css";
 import studentIcon from "../../../../../assets/studenticon.svg";
+import { useSubmit, redirect } from "react-router";
 
-const studentData = {
-  name: "Krishna Anika",
-  email: "krishna.anika19@example.com",
-  phase: "TF",
-  inteam: 0,
-  bin: 1,
-  message: "You are currently not in any full or partial team. Form a team",
-  availablebin2: [
-    {
-      name: "Ayaan Pari",
-      rollno: "S20211022",
-      email: "ayaan.pari22@example.com",
-    },
-    { name: "Dev Yash", rollno: "S20211036", email: "dev.yash36@example.com" },
-    {
-      name: "Saanvi Anaya",
-      rollno: "S20211037",
-      email: "saanvi.anaya37@example.com",
-    },
-  ],
-  availablebin3: [
-    {
-      name: "Divya Anika",
-      rollno: "S20211045",
-      email: "divya.anika45@example.com",
-    },
-    { name: "Neha Dev", rollno: "S20211046", email: "neha.dev46@example.com" },
-    {
-      name: "Anika Ira",
-      rollno: "S20211049",
-      email: "anika.ira49@example.com",
-    },
-  ],
-};
-
-export default function AddStudentModal({ isOpen, onClose, missingBin }) {
+export default function AddStudentModal({
+  isOpen,
+  onClose,
+  missingBin,
+  studentData,
+}) {
   const [selectedStudents, setSelectedStudents] = useState({});
+  console.log(selectedStudents);
+  const submit = useSubmit();
 
   if (!isOpen) return null;
 
@@ -59,8 +32,14 @@ export default function AddStudentModal({ isOpen, onClose, missingBin }) {
   };
 
   const handleSendRequest = () => {
-    console.log("Sending request with:", selectedStudents);
+    if (!selectedStudents[missingBin]) return;
+
+    const formData = new FormData();
+    formData.append("bin", missingBin);
+    formData.append("email", selectedStudents[missingBin].email);
     onClose();
+
+    submit(formData, { method: "post", action: "addteammember" });
   };
 
   return (
@@ -179,4 +158,41 @@ export default function AddStudentModal({ isOpen, onClose, missingBin }) {
       </div>
     </div>
   );
+}
+
+// inside AddStudentModal.jsx (bottom of file)
+export async function action({ request }) {
+  const formData = await request.formData();
+  const bin = formData.get("bin");
+  const email = formData.get("email");
+
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    "http://localhost:3000/student/btp/addteammember",
+    {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ bin, email }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Response(
+      JSON.stringify({
+        message: "Error adding team member",
+      }),
+      {
+        status: 500,
+      }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Add team member result:", result);
+
+  return redirect("/academics/btp/student");
 }
