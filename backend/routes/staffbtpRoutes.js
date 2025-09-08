@@ -12,6 +12,7 @@ import {
     endTeamFormationPhase,
     getStaffBTPDashboard,
     rejectFacultyFromTeam,
+    updateTeam,
     uploadCSVSheet,
     verifyPhase
 } from "../controllers/staffbtpController.js";
@@ -23,6 +24,7 @@ router.get("/", authStaffMiddleware, getStaffBTPDashboard);
 //for this phase verification is done inside the function
 router.post("/binsrelease", authStaffMiddleware, upload.single("bins"), uploadCSVSheet);
 router.post("/createteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), createTeambyStaff);
+router.post("/updateteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), updateTeam);
 router.delete("/deleteteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), deleteTeam);
 //for this phase verification is done inside the function
 router.get("/endTFphase", authStaffMiddleware, endTeamFormationPhase);

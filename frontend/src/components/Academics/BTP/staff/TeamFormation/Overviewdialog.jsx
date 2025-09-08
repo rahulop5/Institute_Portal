@@ -27,63 +27,51 @@ export default function OverviewDialog({
     (m && (m.email || (m.student && (m.student.email || m.student.roll)))) ||
     JSON.stringify(m);
 
-  // const handleUpdate = () => {
-  //   const payload = {
-  //     //do the shit here by using teamid
-  //   };
-  //   const formData = new FormData();
-  //   formData.append("reqData", JSON.stringify(payload));
-  //   submit(formData, {
-  //     method: "post",
-  //     action: "updateteam",
-  //     encType: "application/x-www-form-urlencoded",
-  //   });
-  // };
-
-  // const handleDelete = () => {
-  //   const payload = {
-  //     //do the shit here with teamid
-  //   };
-  //   const formData = new FormData();
-  //   formData.append("reqData", JSON.stringify(payload));
-  //   submit(formData, {
-  //     method: "post",
-  //     action: "deleteteam",
-  //     encType: "application/x-www-form-urlencoded",
-  //   });
-  // };
+  const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
   const handleUpdate = () => {
+    // Compare current team vs original snapshot
+
+    //do this later
+    
+    // if (deepEqual(team, originalTeam)) {
+    //   console.log("No changes detected, skipping backend call");
+    //   onClose();
+    //   return;
+    // }
+
     const payload = {
-      teamid: team.teamid, // always present in your data
-      members: team.members, // current state of the team
+      teamid: team.teamid,
+      members: team.members,
       teamName: team.teamName,
       isTeamFormed: team.isTeamFormed,
     };
 
-    console.log(payload)
+    onClose();
 
     const formData = new FormData();
     formData.append("reqData", JSON.stringify(payload));
 
     submit(formData, {
       method: "post",
-      action: "updateteam", // routes to updateTeamAction
+      action: "updateteam",
       encType: "application/x-www-form-urlencoded",
     });
   };
 
   const handleDelete = () => {
-    const payload = {
-      teamid: team.teamid,
-    };
+    if (!team.teamid) {
+      console.log("Skipping delete, no teamid (not yet saved)");
+      return;
+    }
 
+    const payload = { teamid: team.teamid };
     const formData = new FormData();
     formData.append("reqData", JSON.stringify(payload));
 
     submit(formData, {
       method: "post",
-      action: "deleteteam", // routes to deleteTeamAction
+      action: "deleteteam",
       encType: "application/x-www-form-urlencoded",
     });
   };
@@ -326,10 +314,7 @@ export default function OverviewDialog({
               ⚠ Deleting team operation is irreversible.
             </div>
             <div className={styles.footerButtons}>
-              <button
-                className={styles.submitButton}
-                onClick={handleUpdate}
-              >
+              <button className={styles.submitButton} onClick={handleUpdate}>
                 Confirm
               </button>
               <button
@@ -349,6 +334,7 @@ export default function OverviewDialog({
                     };
                   });
                   onClose();
+                  handleDelete();
                 }}
               >
                 Delete Team
@@ -394,14 +380,108 @@ export default function OverviewDialog({
   );
 }
 
-export async function updateTeamAction({request}) {
+export async function updateTeamAction({ request }) {
   const formData = await request.formData();
   const topicDataJSON = formData.get("reqData");
   const topicData = JSON.parse(topicDataJSON);
   const token = localStorage.getItem("token");
-  // console.log("topicData");
+  console.log("Incoming payload:", topicData);
 
-  return;
+  // 🔹 Build the bin structure
+  const reqData = {
+    teamid: topicData.teamid,
+    bin1: {},
+    bin2: {},
+    bin3: {},
+  };
+
+  topicData.members.forEach((member) => {
+    const { bin, isApproved, student } = member;
+    const key = `bin${bin}`;
+    if (reqData[key]) {
+      reqData[key] = {
+        email: student.email,
+        isApproved: isApproved,
+      };
+    }
+  });
+
+  console.log("Transformed request data:", reqData);
+
+  const response = await fetch(
+    "http://localhost:3000/staff/btp/updateteam?batch=2022",
+    {
+      method: "post",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(reqData), // 🔹 send transformed object
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    console.error("Backend error:", result);
+    throw new Response(
+      JSON.stringify({
+        message: "Error accepting the request",
+      }),
+      {
+        status: 500,
+      }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Backend success:", result);
+
+  return redirect("/academics/btp/staff");
 }
 
-export async function deleteTeamAction() {}
+
+export async function deleteTeamAction({ request }) {
+  const formData = await request.formData();
+  const topicDataJSON = formData.get("reqData");
+  const { teamid } = JSON.parse(topicDataJSON);
+
+  if (!teamid) {
+    throw new Response(
+      JSON.stringify({ message: "Team ID is required" }),
+      { status: 400 }
+    );
+  }
+
+  const token = localStorage.getItem("token");
+  const batch = "2022"; // or derive from loader/context if dynamic
+
+  const response = await fetch(
+    `http://localhost:3000/staff/btp/deleteteam?batch=${batch}`,
+    {
+      method: "delete",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ teamid }),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    console.error("Backend error:", result);
+    throw new Response(
+      JSON.stringify({
+        message: result.message || "Error deleting team",
+      }),
+      { status: response.status }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Deleted:", result);
+
+  // Redirect to staff dashboard so loader re-runs
+  return redirect("/academics/btp/staff");
+}
+

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import TeamCard from "./TeamCard";
 import UnallocatedStudents from "./UnallocatedStudents";
@@ -305,45 +305,18 @@ export const initialTeamsData = {
   ],
 };
 
-
 export default function TeamListPage({data}) {
   const [teamsData, setTeamsData] = useState(data.response);
   const [activeTab, setActiveTab] = useState("Formed");
+
+  useEffect(() => {
+    setTeamsData(data.response);  // refresh when loader data changes
+  }, [data]);
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
   const fullyFormedTeams = teamsData.fullyFormedTeams;
   const partiallyFormedTeams = teamsData.partiallyFormedTeams;
-
-  const handleDeleteMember = (teamName, studentId) => {
-    setTeamsData(prevData => {
-
-      const updatedTeams = prevData.teams.map(team => {
-        if (team.teamName === teamName) {
-
-          const memberToDelete = team.members.find(m => m.id === studentId);
-
-          if (!memberToDelete) return team; 
-
-    
-          return {
-            ...team,
-            members: team.members.filter(m => m.id !== studentId)
-          };
-        }
-        return team;
-      });
-
-      const deletedStudent = prevData.teams
-        .find(t => t.teamName === teamName)
-        .members.find(m => m.id === studentId);
-
-      return {
-        teams: updatedTeams,
-        unallocatedMembers: [...prevData.unallocatedMembers, deletedStudent]
-      };
-    });
-  };
 
 
   return (
@@ -363,7 +336,6 @@ export default function TeamListPage({data}) {
               team={team}
               teamsData={teamsData}
               setTeamsData={setTeamsData} 
-              onDeleteMember={handleDeleteMember}
             />
           ))}
 
@@ -374,7 +346,6 @@ export default function TeamListPage({data}) {
               team={team}
               teamsData={teamsData}
               setTeamsData={setTeamsData}
-              onDeleteMember={handleDeleteMember}
             />
           ))}
 

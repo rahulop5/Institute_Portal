@@ -43,7 +43,7 @@ export const getStaffBTPDashboard = async (req, res) => {
             .populate("bin2.student", "name email bin rollno")
             .populate("bin3.student", "name email bin rollno");
 
-          console.log(teams[0]);
+          // console.log(teams[0]);
 
           const studentIdsInTeams = new Set();
           teams.forEach((team) => {
@@ -403,12 +403,93 @@ export const deleteTeam = async (req, res) => {
   }
 };
 
+//restricting bins here
 export const updateTeam = async (req, res) => {
   try {
+    if (!req.body.teamid || !req.body.bin1 || !req.body.bin2 || !req.body.bin3) {
+      return res.status(400).json({
+        message: "Incomplete request. teamid, bin1, bin2, bin3 are required.",
+      });
+    }
+
+    const { teamid, bin1, bin2, bin3 } = req.body;
+
+    // each bin must have both fields
+    const bins = { bin1, bin2, bin3 };
+    for (const [binName, binValue] of Object.entries(bins)) {
+      if (!binValue.email || binValue.isApproved === undefined) {
+        return res.status(400).json({
+          message: `${binName} requires { email, isApproved }`,
+        });
+      }
+    }
+
+    //  2. Find team
+    const team = await BTPTeam.findById(teamid)
+      .populate("bin1.student")
+      .populate("bin2.student")
+      .populate("bin3.student");
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    //  3. Verify & process each bin
+    const processBin = async (incoming, current, binName) => {
+      const incomingEmail = incoming.email;
+      const currentEmail = current?.student?.email;
+
+      // same student → no change
+      if (incomingEmail === currentEmail) {
+        return current;
+      }
+
+      // find new student
+      const newStudent = await UGStudentBTP.findOne({ email: incomingEmail });
+      if (!newStudent) {
+        throw new Error(`Student not found with email ${incomingEmail}`);
+      }
+
+      // check student batch consistency
+      if (newStudent.batch !== team.batch) {
+        throw new Error(`Student ${incomingEmail} is not from batch ${team.batch}`);
+      }
+
+      // check if already in another formed team
+      const binStrs = ["bin1.student", "bin2.student", "bin3.student"];
+      const existingTeam = await BTPTeam.findOne({
+        _id: { $ne: teamid },
+        $or: binStrs.map((b) => ({ [b]: newStudent._id })),
+      });
+      if (existingTeam) {
+        throw new Error(`Student ${incomingEmail} already in another team`);
+      }
+
+      // replace: always reset approval to false
+      return {
+        student: newStudent._id,
+        approved: false,
+      };
+    };
+
+    team.bin1 = await processBin(bin1, team.bin1, "bin1");
+    team.bin2 = await processBin(bin2, team.bin2, "bin2");
+    team.bin3 = await processBin(bin3, team.bin3, "bin3");
+
+    // ✅ 4. Update team formed status
+    team.isteamformed = !!(team.bin1.approved && team.bin2.approved && team.bin3.approved);
+
+    // ✅ 5. Save
+    await team.save();
+
+    return res.status(200).json({
+      message: "Team updated successfully",
+      team,
+    });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).json({
-      message: "Error updating team",
+      message: err.message || "Error updating team",
     });
   }
 };

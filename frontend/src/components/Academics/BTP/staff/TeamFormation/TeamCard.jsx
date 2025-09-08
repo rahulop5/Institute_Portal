@@ -9,7 +9,6 @@ export default function TeamCard({ team, teamsData, setTeamsData }) {
 
   return (
     <div className={styles.card}>
-     
       <div className={styles.header}>
         <span className={styles.teamName}>{team.teamName}</span>
         <div className={styles.infobutton}>
@@ -39,13 +38,13 @@ export default function TeamCard({ team, teamsData, setTeamsData }) {
         ))}
       </div>
 
-     
       <Overviewdialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         team={team}
-        teamsData={teamsData}       
-        setTeamsData={setTeamsData} 
+        originalTeam={JSON.parse(JSON.stringify(team))} // snapshot
+        teamsData={teamsData}
+        setTeamsData={setTeamsData}
       />
     </div>
   );
