@@ -14,7 +14,7 @@ export default function UnallocatedStudents({
     .filter((member) => (member.bin && member.bin.id ? member.bin.id : member.bin) === selectedBin)
     .map((member) => ({
       name: member.student?.name || member.student,
-      rollno: member.student?.roll || "",
+      roll: member.student?.roll || "",
       email: member.email || member.student?.email || "",
       __raw: member, // original object - pass back on select
     }));

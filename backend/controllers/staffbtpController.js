@@ -43,7 +43,7 @@ export const getStaffBTPDashboard = async (req, res) => {
             .populate("bin2.student", "name email bin rollno")
             .populate("bin3.student", "name email bin rollno");
 
-          console.log(teams[0])
+          console.log(teams[0]);
 
           const studentIdsInTeams = new Set();
           teams.forEach((team) => {
@@ -57,7 +57,7 @@ export const getStaffBTPDashboard = async (req, res) => {
 
           const unteamedStudents = await UGStudentBTP.find({
             _id: { $nin: Array.from(studentIdsInTeams) },
-          }).select("name email bin roll");
+          }).select("name email bin rollno");
 
           // Format team into frontend shape
           const formatTeam = (team, index) => {
@@ -98,6 +98,7 @@ export const getStaffBTPDashboard = async (req, res) => {
             }
 
             return {
+              teamid: team.id,
               teamName: `Team ${index + 1}`,
               isTeamFormed: team.isteamformed,
               members,
@@ -112,9 +113,12 @@ export const getStaffBTPDashboard = async (req, res) => {
               .filter((t) => t.isteamformed === false)
               .map(formatTeam),
             unallocatedMembers: unteamedStudents.map((student) => ({
-              student: { name: student.name, roll: student.roll },
-              bin: { id: student.bin },
-              email: student.email,
+              student: { 
+                name: student.name, 
+                email: student.email,
+                roll: student.rollno 
+              },
+              bin: student.bin,
             })),
           };
 
@@ -185,6 +189,7 @@ export const getStaffBTPDashboard = async (req, res) => {
         }
 
       case "IN_PROGRESS":
+        console.log("In progress");
         break;
 
       case "COMPLETED":
@@ -394,6 +399,16 @@ export const deleteTeam = async (req, res) => {
     console.log(err);
     return res.status(500).json({
       message: "Error deleting team",
+    });
+  }
+};
+
+export const updateTeam = async (req, res) => {
+  try {
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      message: "Error updating team",
     });
   }
 };
@@ -885,5 +900,3 @@ export const assignEvaluator = async (req, res) => {
     return res.status(500).json({ message: "Error assigning evaluators." });
   }
 };
-
-

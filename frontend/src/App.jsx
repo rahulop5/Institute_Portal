@@ -24,6 +24,7 @@ import Header from "./components/Header.jsx";
 import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
 import FacultyManagement from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
+import { deleteTeamAction, updateTeamAction } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 
 // Added a comment
 const router=createBrowserRouter([
@@ -75,6 +76,10 @@ const router=createBrowserRouter([
               {
                 path: "staff", element: <BTPStaffRouter />,
                 loader: btpStaffLoader,
+                children: [
+                  { path: "updateteam", action: updateTeamAction, element: <></> },
+                  { path: "deleteteam", action: deleteTeamAction, element: <></> }
+                ]
               }
             ]
           }

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import styles from "../styles/Overviewdialog.module.css";
 import TeamMemberCard from "./TeamMemberCard";
 import UnallocatedStudents from "./UnallocatedStudents";
+import { useSubmit, redirect } from "react-router";
 
 export default function OverviewDialog({
   isOpen,
@@ -15,6 +16,7 @@ export default function OverviewDialog({
   const [selectedBin, setSelectedBin] = useState(null); // numeric bin (1 | 2 | 3)
   const [actionType, setActionType] = useState(null); // 'add' | 'replace'
   const [studentToAdd, setStudentToAdd] = useState(null);
+  const submit = useSubmit();
 
   if (!isOpen) return null;
 
@@ -24,6 +26,67 @@ export default function OverviewDialog({
   const getStudentId = (m) =>
     (m && (m.email || (m.student && (m.student.email || m.student.roll)))) ||
     JSON.stringify(m);
+
+  // const handleUpdate = () => {
+  //   const payload = {
+  //     //do the shit here by using teamid
+  //   };
+  //   const formData = new FormData();
+  //   formData.append("reqData", JSON.stringify(payload));
+  //   submit(formData, {
+  //     method: "post",
+  //     action: "updateteam",
+  //     encType: "application/x-www-form-urlencoded",
+  //   });
+  // };
+
+  // const handleDelete = () => {
+  //   const payload = {
+  //     //do the shit here with teamid
+  //   };
+  //   const formData = new FormData();
+  //   formData.append("reqData", JSON.stringify(payload));
+  //   submit(formData, {
+  //     method: "post",
+  //     action: "deleteteam",
+  //     encType: "application/x-www-form-urlencoded",
+  //   });
+  // };
+
+  const handleUpdate = () => {
+    const payload = {
+      teamid: team.teamid, // always present in your data
+      members: team.members, // current state of the team
+      teamName: team.teamName,
+      isTeamFormed: team.isTeamFormed,
+    };
+
+    console.log(payload)
+
+    const formData = new FormData();
+    formData.append("reqData", JSON.stringify(payload));
+
+    submit(formData, {
+      method: "post",
+      action: "updateteam", // routes to updateTeamAction
+      encType: "application/x-www-form-urlencoded",
+    });
+  };
+
+  const handleDelete = () => {
+    const payload = {
+      teamid: team.teamid,
+    };
+
+    const formData = new FormData();
+    formData.append("reqData", JSON.stringify(payload));
+
+    submit(formData, {
+      method: "post",
+      action: "deleteteam", // routes to deleteTeamAction
+      encType: "application/x-www-form-urlencoded",
+    });
+  };
 
   // OPEN MODALS
   const handleReplaceClick = (binNumber) => {
@@ -62,7 +125,11 @@ export default function OverviewDialog({
             }
             return true;
           });
-          return { ...t, members: newMembers, isTeamFormed: newMembers.length === 3 };
+          return {
+            ...t,
+            members: newMembers,
+            isTeamFormed: newMembers.length === 3,
+          };
         });
 
       const updatedFully = updateTeamsList(prev.fullyFormedTeams || []);
@@ -83,7 +150,10 @@ export default function OverviewDialog({
         ...prev,
         fullyFormedTeams: updatedFully,
         partiallyFormedTeams: updatedPartial,
-        unallocatedMembers: [...(prev.unallocatedMembers || []), unallocatedItem],
+        unallocatedMembers: [
+          ...(prev.unallocatedMembers || []),
+          unallocatedItem,
+        ],
       };
     });
   };
@@ -102,7 +172,9 @@ export default function OverviewDialog({
         (list || []).map((t) => {
           if (t.teamName !== team.teamName) return t;
           // if bin already occupied, do nothing
-          const exists = t.members.some((m) => normalizeBin(m.bin) === binNumber);
+          const exists = t.members.some(
+            (m) => normalizeBin(m.bin) === binNumber
+          );
           if (exists) return t;
 
           const newMember = {
@@ -112,7 +184,11 @@ export default function OverviewDialog({
           };
 
           const newMembers = [...t.members, newMember];
-          return { ...t, members: newMembers, isTeamFormed: newMembers.length === 3 };
+          return {
+            ...t,
+            members: newMembers,
+            isTeamFormed: newMembers.length === 3,
+          };
         });
 
       return {
@@ -152,11 +228,17 @@ export default function OverviewDialog({
           };
 
           const newMembers = [...membersAfterRemoval, newMember];
-          return { ...t, members: newMembers, isTeamFormed: newMembers.length === 3 };
+          return {
+            ...t,
+            members: newMembers,
+            isTeamFormed: newMembers.length === 3,
+          };
         });
 
       const updatedFully = updateTeamsAndCollectRemoved(prev.fullyFormedTeams);
-      const updatedPartial = updateTeamsAndCollectRemoved(prev.partiallyFormedTeams);
+      const updatedPartial = updateTeamsAndCollectRemoved(
+        prev.partiallyFormedTeams
+      );
 
       // build unallocated list: remove selectedUnallocated, and add removedMember (if any)
       const filteredUnallocated = (prev.unallocatedMembers || []).filter(
@@ -175,7 +257,9 @@ export default function OverviewDialog({
         ...prev,
         fullyFormedTeams: updatedFully,
         partiallyFormedTeams: updatedPartial,
-        unallocatedMembers: addedBack ? [...filteredUnallocated, addedBack] : filteredUnallocated,
+        unallocatedMembers: addedBack
+          ? [...filteredUnallocated, addedBack]
+          : filteredUnallocated,
       };
     });
   };
@@ -242,7 +326,10 @@ export default function OverviewDialog({
               ⚠ Deleting team operation is irreversible.
             </div>
             <div className={styles.footerButtons}>
-              <button className={styles.submitButton} onClick={() => { /* optional submit handler if needed */ }}>
+              <button
+                className={styles.submitButton}
+                onClick={handleUpdate}
+              >
                 Confirm
               </button>
               <button
@@ -256,7 +343,9 @@ export default function OverviewDialog({
                     return {
                       ...prev,
                       fullyFormedTeams: filterTeam(prev.fullyFormedTeams),
-                      partiallyFormedTeams: filterTeam(prev.partiallyFormedTeams),
+                      partiallyFormedTeams: filterTeam(
+                        prev.partiallyFormedTeams
+                      ),
                     };
                   });
                   onClose();
@@ -292,10 +381,7 @@ export default function OverviewDialog({
 
               <div className={styles.modalActions}>
                 <button onClick={handleCancelReplace}>Cancel</button>
-                <button
-                  onClick={handleConfirmAction}
-                  disabled={!studentToAdd}
-                >
+                <button onClick={handleConfirmAction} disabled={!studentToAdd}>
                   Confirm
                 </button>
               </div>
@@ -307,3 +393,15 @@ export default function OverviewDialog({
     document.body
   );
 }
+
+export async function updateTeamAction({request}) {
+  const formData = await request.formData();
+  const topicDataJSON = formData.get("reqData");
+  const topicData = JSON.parse(topicDataJSON);
+  const token = localStorage.getItem("token");
+  // console.log("topicData");
+
+  return;
+}
+
+export async function deleteTeamAction() {}
