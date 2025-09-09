@@ -26,8 +26,11 @@ import FacultyManagement from "./components/Academics/BTP/staff/topicselection/F
 import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
 import { deleteTeamAction, updateTeamAction } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
-
+// import Inprogress from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
+import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 // Added a comment
+
+
 const router=createBrowserRouter([
   {
     path: "/",
@@ -37,7 +40,7 @@ const router=createBrowserRouter([
     loader: tokenLoader,
     children: [
       { index: true, element: <Homepage />, loader: checkAuthLoader },
-      { path: "temp", element: <TeamListPage/> },
+      { path: "temp", element: <Inprogressstaff/> },
       { path: "academics",
         loader: checkAuthLoader,
         children: [
