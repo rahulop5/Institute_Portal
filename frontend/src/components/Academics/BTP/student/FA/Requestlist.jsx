@@ -32,20 +32,20 @@ export default function RequestList({ requests }) {
               </span>
             </div>
           </div>
-          <div class="status-container">
-            <div class="status-item">
+          <div className="status-container">
+            <div className="status-item">
               <img
                 src={pending}
                 alt="Pending"
-                class="status-icon active"
+                className="status-icon active"
               />
-              <span class="status-text active">Pending...</span>
+              <span className="status-text active">Pending...</span>
             </div>
-            <div class="status-line"></div>
-            <div class="status-item">
+            <div className="status-line"></div>
+            <div className="status-item">
               <div>
-                <img src={fadedclock} alt="Confirmed" class="status-icon tick" />
-                <span class="status-text">Confirmed</span>
+                <img src={fadedclock} alt="Confirmed" className="status-icon tick" />
+                <span className="status-text">Confirmed</span>
               </div>
             </div>
           </div>

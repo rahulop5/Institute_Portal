@@ -837,6 +837,7 @@ export const addTeamMember = async (req, res) => {
 
 export const setTeamPreferences = async (req, res) => {
   try {
+    console.log(req.body);
     const { teamId, preferences } = req.body;
     // preferences: [{ topicDoc, topicId }, ...] length must be 4
 
@@ -887,11 +888,12 @@ export const setTeamPreferences = async (req, res) => {
     }
 
     // Save preferences to team
-    team.preferences = preferences.map((p, idx) => ({
+    team.preferences = preferences.map((p) => ({
       topicDoc: p.topicDoc,
       topicId: p.topicId,
-      order: idx + 1,
+      order: p.order, 
     }));
+
     team.currentPreference = 1;
     await team.save();
 

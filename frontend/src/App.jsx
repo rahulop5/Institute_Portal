@@ -9,7 +9,7 @@ import Temp from "./pages/Lemp";
 import { action as logoutAction } from "./pages/Logout";
 import { action as sendTRAction } from "./components/academics/btp/student/TF/Teamselection_bin1";
 import BTPStudentRouter, { loader as btpLoader} from "./pages/BTPStudentRouter.jsx";
-import { action as applytotopicAction } from "./components/academics/btp/student/FA/Facultyselection";
+import { action as applytotopicAction, setPreferencesAction } from "./components/academics/btp/student/FA/Facultyselection";
 import Inprogress, { action as addUpdateAction } from "./components/academics/btp/student/IP/Inprogress";
 import TopicAddition from "./components/academics/btp/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, { loader as btpFacultyRouter } from "./pages/BTPFacultyRouter.jsx";
@@ -58,6 +58,7 @@ const router=createBrowserRouter([
                   {path: "acceptteamrequest", action: acceptTRAction, element: <></>},
                   {path: "rejectteamrequest", action: rejectTRAction, element: <></>},
                   {path: "applytotopic", action: applytotopicAction, element: <></>},
+                  {path: "setpreferences", action: setPreferencesAction, element: <></>},
                   {path: "addupdate", action: addUpdateAction, element: <></>}
                 ]
               },

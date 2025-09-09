@@ -14,12 +14,36 @@ export default function FacultySelection({ data }) {
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
   const [showRequests, setShowRequests] = useState(false);
-  const [preferences, setPreferences] = useState([null, null, null, null]);
+  const [preferences, setPreferences] = useState(() => {
+    if (data.team.preferences && data.team.preferences.length > 0) {
+      console.log("hi");
+      // Map backend prefs into frontend shape
+      const filled = data.team.preferences
+        .sort((a, b) => a.order - b.order)
+        .map((p) => {
+          const parentDoc = data.topics.find((t) => t._id === p.topicDoc);
+          const topicObj = parentDoc?.topics.find((tp) => tp._id === p.topicId);
+          return {
+            title: topicObj?.topic || "Unknown Topic",
+            description: topicObj?.about || "",
+            facultyName: parentDoc?.faculty?.name || "Unknown",
+            topicId: p.topicId,
+            docId: p.topicDoc,
+          };
+        });
+
+      // Fill empty slots up to 4
+      while (filled.length < 4) filled.push(null);
+      return filled;
+    }
+    return [null, null, null, null];
+  });
+
   const [currentPrefIndex, setCurrentPrefIndex] = useState(0);
   const submit = useSubmit();
 
   const handleShowTopics = (facultyObj) => {
-    setSelectedFaculty(facultyObj.faculty); // store faculty info
+    setSelectedFaculty(facultyObj); // store faculty info
     setSelectedFacultyTopics((prevfacobj) => {
       if (prevfacobj === facultyObj.topics) {
         return null;
@@ -32,51 +56,17 @@ export default function FacultySelection({ data }) {
     setShowRequests((prev) => (prev ? false : true));
   };
 
-  const handleApply = (topic) => {
-    const teamId = data.team._id;
-    const topicId = topic._id;
-    const parent = data.topics.find((t) =>
-      t.topics.some((tp) => tp._id === topicId)
-    );
-    const docId = parent?._id;
-    //handle this error later using router
-    if (!docId || !topicId || !teamId) {
-      console.error("Missing one of the required fields");
-      return;
-    }
-    const alreadyRequested = data.outgoingRequests.some(
-      (req) => req.requestedTopic._id === topicId
-    );
-
-    if (alreadyRequested) {
-      alert("You have already applied to this topic.");
-      return;
-    }
-
-    const payload = {
-      docId,
-      topicId,
-      teamId,
-    };
-    const formData = new FormData();
-    formData.append("topicData", JSON.stringify(payload));
-    submit(formData, {
-      method: "post",
-      action: "applytotopic",
-      encType: "application/x-www-form-urlencoded",
-    });
-  };
-
   const approvedRequest = data.outgoingRequests.find((r) => r.isapproved);
 
   const handleAddPreference = (topic) => {
     if (currentPrefIndex < 4) {
       const updated = [...preferences];
       updated[currentPrefIndex] = {
-        title: topic.topic, // ✅ correct field
-        description: topic.about, // ✅ correct field
-        facultyName: selectedFaculty?.name, // ✅ comes from selected faculty
-        topicId: topic._id, // ✅ backend id
+        title: topic.topic,
+        description: topic.about,
+        facultyName: selectedFaculty?.name,
+        topicId: topic._id,
+        topicDoc: topic.docId,
       };
       setPreferences(updated);
       setCurrentPrefIndex(currentPrefIndex + 1);
@@ -91,19 +81,28 @@ export default function FacultySelection({ data }) {
     setCurrentPrefIndex(updated.findIndex((p) => !p)); // first empty slot
   };
 
-  const handleFinalize = async () => {
-    const payload = {
-      teamId: "T123",
-      preferences: preferences.filter((p) => p !== null),
-    };
+  const handleFinalize = () => {
+    const teamId = data.team._id;
+    const cleanedPrefs = preferences
+      .filter((p) => p !== null)
+      .map((p, idx) => ({
+        topicDoc: p.topicDoc,
+        topicId: p.topicId,
+        order: idx + 1,
+      }));
 
-    await fetch("/student/btp/finalizepreferences", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+    console.log(cleanedPrefs);
+
+    const formData = new FormData();
+    formData.append(
+      "prefsData",
+      JSON.stringify({ teamId, preferences: cleanedPrefs })
+    );
+
+    submit(formData, {
+      method: "post",
+      action: "setpreferences",
     });
-
-    console.log("Finalized:", payload);
   };
 
   return (
@@ -119,16 +118,20 @@ export default function FacultySelection({ data }) {
             onShowTopics={handleShowTopics}
           />
 
-          <PreferenceOrder
-            preferences={preferences}
-            onDelete={handleDeletePreference}
-            onFinalize={handleFinalize}
-          />
+          {data.outgoingRequests.length === 0 && (
+            <PreferenceOrder
+              preferences={preferences}
+              onDelete={handleDeletePreference}
+              onFinalize={handleFinalize}
+            />
+          )}
 
           {selectedFacultyTopics && (
             <TopicCards
               topics={selectedFacultyTopics}
-              handleAddPreference={handleAddPreference}
+              handleAddPreference={(topic) =>
+                handleAddPreference({ ...topic, docId: selectedFaculty._id })
+              }
               currentPrefIndex={currentPrefIndex}
               bin={data.bin}
               mode="student"
@@ -197,6 +200,40 @@ export async function action({ request }) {
 
   const result = await response.json();
   console.log(result);
+
+  return redirect("/academics/btp/student");
+}
+
+export async function setPreferencesAction({ request }) {
+  const formData = await request.formData();
+  const prefsDataJSON = formData.get("prefsData");
+  const prefsData = JSON.parse(prefsDataJSON);
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    "http://localhost:3000/student/btp/setpreferences",
+    {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(prefsData),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    console.log(result);
+    const err = await response.json();
+    throw new Response(
+      JSON.stringify({ message: err.message || "Error setting preferences" }),
+      { status: 500 }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Preferences saved:", result);
 
   return redirect("/academics/btp/student");
 }
