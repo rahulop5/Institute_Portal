@@ -22,7 +22,7 @@ import ViewProjEvaluator, { evaluatorProjLoader } from "./components/academics/b
 import FileUploadPage from "./components/Academics/BTP/staff/NotStarted/fileUploadPage.jsx";
 import Header from "./components/Header.jsx";
 import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
-import FacultyManagement from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
+import FacultyManagement, { advancePreferenceAction } from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
 import { deleteTeamAction, updateTeamAction } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
@@ -84,7 +84,8 @@ const router=createBrowserRouter([
                 loader: btpStaffLoader,
                 children: [
                   { path: "updateteam", action: updateTeamAction, element: <></> },
-                  { path: "deleteteam", action: deleteTeamAction, element: <></> }
+                  { path: "deleteteam", action: deleteTeamAction, element: <></> },
+                  { path: "advancepreferencernd", action: advancePreferenceAction, element: <></> }
                 ]
               }
             ]

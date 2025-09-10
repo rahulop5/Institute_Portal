@@ -1,9 +1,10 @@
 import { useState } from "react";
-import FacultyList from "../../student/FA/FSlist";
 import TopicCards from "./FStopiclist";
 import classes from "../../../../styles/FacultySelection.module.css";
 import ManualtopicAllocation from "./ManualtopicAllocation";
-
+import { useSubmit, redirect } from "react-router";
+import TabsHeader from "./TabsHeader";
+import FacultyList from "./FSlist";
 
 export const data = [
   {
@@ -239,40 +240,103 @@ export const unallocatedTeams = [
   },
 ];
 
-export default function FacultyManagement({dataa}) {
+const normalizeData = (dataa) => {
+  // Faculties + topics
+  const faculties = dataa.topics.map((t) => ({
+    faculty: {
+      name: t.faculty.name,
+      email: t.faculty.email,
+      empNumber: t.faculty._id, // use _id instead of empNumber
+      topicsUploaded: t.topics.length,
+    },
+    topics: t.topics.map((topic) => {
+      // collect requests → teams
+      const teams = (t.requests || [])
+        .filter((r) => r.topic === topic._id && r.isapproved) // only approved requests
+        .map((r) => {
+          const team = r.teamid;
+          return {
+            teamName: team._id, // use teamid _id as identifier
+            members: ["bin1", "bin2", "bin3"]
+              .map((bin) =>
+                team[bin]?.student
+                  ? {
+                      name: team[bin].student.name,
+                      email: team[bin].student.email,
+                      bin: team[bin].student.bin,
+                    }
+                  : null
+              )
+              .filter(Boolean),
+          };
+        });
 
-  const [faculties, setFaculties] = useState(data);
-  const [unallocated, setUnallocated] = useState(unallocatedTeams);
+      return {
+        _id: topic._id,
+        topic: topic.topic,
+        about: topic.about,
+        teams,
+      };
+    }),
+  }));
+
+  // Unallocated teams
+  const unallocated = (dataa.unassignedTeams || []).map((team) => ({
+    teamName: team._id,
+    members: ["bin1", "bin2", "bin3"]
+      .map((bin) =>
+        team[bin]?.student
+          ? {
+              name: team[bin].student.name,
+              email: team[bin].student.email,
+              bin: team[bin].student.bin,
+            }
+          : null
+      )
+      .filter(Boolean),
+  }));
+
+  return { faculties, unallocated };
+};
+
+export default function FacultyManagement({ dataa }) {
+  const { faculties: initialFaculties, unallocated: initialUnallocated } =
+    normalizeData(dataa);
+
+  const [faculties, setFaculties] = useState(initialFaculties);
+  const [unallocated, setUnallocated] = useState(initialUnallocated);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedFacultyTopics, setSelectedFacultyTopics] = useState(null);
   const [showManualAllocation, setShowManualAllocation] = useState(false);
-
-
   const [teamForTopicAllocation, setTeamForTopicAllocation] = useState(null);
+  const [activeTab, setActiveTab] = useState("facultyTopics");
+  const submit = useSubmit();
 
   const handleShowTopics = (facultyEntry) => {
     setSelectedFaculty((prev) =>
-      prev?.faculty?.empNumber === facultyEntry.faculty.empNumber ? null : facultyEntry
+      prev?.faculty?.empNumber === facultyEntry.faculty.empNumber
+        ? null
+        : facultyEntry
     );
     setSelectedFacultyTopics((prev) =>
       prev === facultyEntry.topics ? null : facultyEntry.topics
     );
   };
 
-  const handleProceedNext = () => {
-    if (unallocated.length === 0) {
-      setShowManualAllocation(false);
-    } else {
-      setShowManualAllocation(true);
-    }
-  };
+  const handleNextPreference = () => {
+    const formData = new FormData();
+    formData.append("phase", dataa.phase); // optional, include if backend needs it
 
+    submit(formData, {
+      method: "post",
+      action: "advancepreferencernd", // backend route
+    });
+  };
 
   const handleStartAssignForTeam = (team) => {
     setTeamForTopicAllocation(team);
-    setShowManualAllocation(false); 
+    setActiveTab("facultyTopics"); // switch to topics tab to assign
   };
-
 
   const isSameTeam = (a, b) => {
     if (!a || !b) return false;
@@ -282,13 +346,11 @@ export default function FacultyManagement({dataa}) {
     return JSON.stringify(emailsA) === JSON.stringify(emailsB);
   };
 
-
   const handleAssignTopicToSelectedTeam = (topic) => {
     if (!teamForTopicAllocation || !selectedFaculty) return;
 
     const facultyId = selectedFaculty.faculty.empNumber;
     const topicId = topic._id;
-
 
     setFaculties((prev) =>
       prev.map((entry) => {
@@ -296,7 +358,6 @@ export default function FacultyManagement({dataa}) {
 
         const updatedTopics = entry.topics.map((t) => {
           if (t._id !== topicId) return t;
-
 
           const exists = (t.teams || []).some((team) =>
             isSameTeam(team, teamForTopicAllocation)
@@ -314,7 +375,6 @@ export default function FacultyManagement({dataa}) {
       })
     );
 
-
     setUnallocated((prev) => {
       const idx = prev.findIndex((t) => isSameTeam(t, teamForTopicAllocation));
       if (idx === -1) return prev;
@@ -323,10 +383,8 @@ export default function FacultyManagement({dataa}) {
       return copy;
     });
 
-
     setTeamForTopicAllocation(null);
 
-   
     if (selectedFaculty) {
       const refreshed = faculties.find(
         (f) => f.faculty.empNumber === selectedFaculty.faculty.empNumber
@@ -337,36 +395,37 @@ export default function FacultyManagement({dataa}) {
       }
     }
 
-
     setShowManualAllocation((prevShow) => {
       const stillLeft =
-        unallocated.filter((t) => !isSameTeam(t, teamForTopicAllocation)).length >
-        0;
+        unallocated.filter((t) => !isSameTeam(t, teamForTopicAllocation))
+          .length > 0;
       return stillLeft ? true : false;
     });
   };
 
   return (
-    <>
-      {!showManualAllocation ? (
+    <div>
+      <TabsHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+      {activeTab === "facultyTopics" && (
         <>
           <FacultyList faculties={faculties} onShowTopics={handleShowTopics} />
-
-      
-          {!teamForTopicAllocation && (
-            <div className={classes["request-toggle-wrapper"]}>
-              <button
-                onClick={handleProceedNext}
-                className={classes["request-toggle-btn"]}
-              >
-                Proceed to Next Phase
-              </button>
-            </div>
-          )}
+          <div className={classes["request-toggle-wrapper"]}>
+            <button
+              className={classes["request-toggle-btn"]}
+              onClick={handleNextPreference}
+            >
+              {dataa.currentPreferenceRound === 4
+                ? "Proceed to Next Phase"
+                : "Proceed to Next Preference"}
+            </button>
+          </div>
 
           {teamForTopicAllocation && (
             <div className={classes["request-toggle-wrapper"]}>
-              <div className={classes["request-toggle-btn"]} style={{ cursor: "default" }}>
+              <div
+                className={classes["request-toggle-btn"]}
+                style={{ cursor: "default" }}
+              >
                 Assigning topic to: {teamForTopicAllocation.teamName}
               </div>
             </div>
@@ -381,12 +440,58 @@ export default function FacultyManagement({dataa}) {
             />
           )}
         </>
-      ) : (
+      )}
+
+      {activeTab === "unassignedTeams" && (
         <ManualtopicAllocation
           teams={unallocated}
           onAssignTopic={handleStartAssignForTeam}
         />
       )}
-    </>
+    </div>
   );
+}
+
+export async function advancePreferenceAction({ request }) {
+  const formData = await request.formData();
+  const reqDataJSON = formData.get("reqData");
+  // const { phase } = JSON.parse(reqDataJSON);
+
+  // if (!phase) {
+  //   throw new Response(
+  //     JSON.stringify({ message: "Phase is required" }),
+  //     { status: 400 }
+  //   );
+  // }
+
+  const token = localStorage.getItem("token");
+  const batch = "2022"; // hardcoded like your deleteTeamAction
+
+  const response = await fetch(
+    `http://localhost:3000/staff/btp/advancepreferencernd?batch=${batch}`,
+    {
+      method: "post",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      // body: JSON.stringify({ phase }), // backend expects { phase } (adjust if different)
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    console.error("Backend error:", result);
+    throw new Response(
+      JSON.stringify({
+        message: result.message || "Error advancing preference round",
+      }),
+      { status: response.status }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Preference advanced:", result);
+
+  return redirect("/academics/btp/staff");
 }

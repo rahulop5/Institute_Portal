@@ -246,20 +246,6 @@ function Requests({ data }) {
                         </div>
                       </div>
                     </div>
-                    <div className={styles.actions}>
-                      <button
-                        className={styles.reject}
-                        onClick={() => handleReject(team._id, topic._id)}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        className={styles.accept}
-                        onClick={() => handleAccept(team._id, topic._id)}
-                      >
-                        Accept
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>

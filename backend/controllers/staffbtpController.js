@@ -113,10 +113,10 @@ export const getStaffBTPDashboard = async (req, res) => {
               .filter((t) => t.isteamformed === false)
               .map(formatTeam),
             unallocatedMembers: unteamedStudents.map((student) => ({
-              student: { 
-                name: student.name, 
+              student: {
+                name: student.name,
                 email: student.email,
-                roll: student.rollno 
+                roll: student.rollno,
               },
               bin: student.bin,
             })),
@@ -172,12 +172,22 @@ export const getStaffBTPDashboard = async (req, res) => {
             }
           });
 
+          const systemState = await BTPSystemState.findOne({
+            studentbatch: batch,
+          });
+          if (!systemState) {
+            return res.status(404).json({ message: "System state not found" });
+          }
+
+          const k = systemState.currentPreferenceRound;
+
           return res.status(200).json({
             email: user.email,
             phase: "FA",
             topics: topics,
             assignedTeams: assignedTeams,
             unassignedTeams: unassignedTeams,
+            currentPreferenceRound: k
           });
         } catch (err) {
           console.error(err);
@@ -406,7 +416,12 @@ export const deleteTeam = async (req, res) => {
 //restricting bins here
 export const updateTeam = async (req, res) => {
   try {
-    if (!req.body.teamid || !req.body.bin1 || !req.body.bin2 || !req.body.bin3) {
+    if (
+      !req.body.teamid ||
+      !req.body.bin1 ||
+      !req.body.bin2 ||
+      !req.body.bin3
+    ) {
       return res.status(400).json({
         message: "Incomplete request. teamid, bin1, bin2, bin3 are required.",
       });
@@ -452,7 +467,9 @@ export const updateTeam = async (req, res) => {
 
       // check student batch consistency
       if (newStudent.batch !== team.batch) {
-        throw new Error(`Student ${incomingEmail} is not from batch ${team.batch}`);
+        throw new Error(
+          `Student ${incomingEmail} is not from batch ${team.batch}`
+        );
       }
 
       // check if already in another formed team
@@ -477,7 +494,11 @@ export const updateTeam = async (req, res) => {
     team.bin3 = await processBin(bin3, team.bin3, "bin3");
 
     // ✅ 4. Update team formed status
-    team.isteamformed = !!(team.bin1.approved && team.bin2.approved && team.bin3.approved);
+    team.isteamformed = !!(
+      team.bin1.approved &&
+      team.bin2.approved &&
+      team.bin3.approved
+    );
 
     // ✅ 5. Save
     await team.save();
@@ -806,23 +827,29 @@ export const rejectFacultyFromTeam = async (req, res) => {
   }
 };
 
-// Advance from round k -> k+1 for all teams (or single team if teamId provided)
 export const advancePreferenceRound = async (req, res) => {
   try {
-    const query = {
-      facultyAssigned: false,
-      currentPreference: { $gte: 1, $lte: 4 },
-    };
-    const teams = await BTPTeam.find(query);
+    const { batch } = req.query;
+
+    const systemState = await BTPSystemState.findOne({ studentbatch: batch });
+    if (!systemState) {
+      return res.status(404).json({ message: "System state not found" });
+    }
+
+    const k = systemState.currentPreferenceRound;
+    if (k < 1 || k > 4) {
+      return res.status(200).json({ message: "No active round to advance" });
+    }
+
+    // All teams of this batch not yet assigned
+    const teams = await BTPTeam.find({ batch, facultyAssigned: false });
     if (teams.length === 0) {
       return res.status(200).json({ message: "No teams to advance" });
     }
 
+    // Process each team for current round k
     for (const team of teams) {
-      const k = team.currentPreference;
-      if (k < 1 || k > 4) continue;
-
-      // 1) Delete unapproved requests for round k across ALL BTPTopic docs
+      // 1) Remove unapproved requests for round k
       await BTPTopic.updateMany(
         { "requests.teamid": team._id, "requests.preference": k },
         {
@@ -832,26 +859,22 @@ export const advancePreferenceRound = async (req, res) => {
         }
       );
 
-      // 2) If already assigned in the meantime, skip pushing next
-      const freshTeam = await BTPTeam.findById(team._id);
-      if (freshTeam.facultyAssigned) continue;
-
-      // 3) Move to next round if exists
+      // 2) Push request for round k+1 if exists
       if (k < 4) {
         const next = k + 1;
-        const pNext = freshTeam.preferences.find((p) => p.order === next);
+        const pNext = team.preferences.find((p) => p.order === next);
         if (pNext) {
           const doc = await BTPTopic.findById(pNext.topicDoc);
           if (doc) {
             const already = doc.requests.some(
               (r) =>
-                r.teamid.toString() === freshTeam._id.toString() &&
+                r.teamid.toString() === team._id.toString() &&
                 r.topic.toString() === pNext.topicId.toString() &&
                 r.preference === next
             );
             if (!already) {
               doc.requests.push({
-                teamid: freshTeam._id,
+                teamid: team._id,
                 topic: pNext.topicId,
                 isapproved: false,
                 preference: next,
@@ -859,23 +882,59 @@ export const advancePreferenceRound = async (req, res) => {
               await doc.save();
             }
           }
-          freshTeam.currentPreference = next;
-          await freshTeam.save();
         }
-      } else {
-        // Round 4 ended and not assigned — do nothing more here (could mark exhausted if you want)
+
+        // update team’s own currentPreference
+        team.currentPreference = next;
+        await team.save();
       }
     }
-    return res
-      .status(200)
-      .json({ message: "Advanced preference round successfully" });
+
+    // 3) Advance global round
+    if (k < 4) {
+      systemState.currentPreferenceRound = k + 1;
+      await systemState.save();
+    } else {
+      // Round 4 finished → check if all teams are assigned
+      const unassignedTeams = await BTPTeam.countDocuments({
+        batch,
+        facultyAssigned: false,
+      });
+
+      if (unassignedTeams === 0) {
+        //  All assigned → move system to next phase
+        systemState.currentPhase = "IN_PROGRESS"; // or whatever the next phase is
+        await systemState.save();
+
+        // also update all teams
+        await BTPTeam.updateMany(
+          { batch },
+          { $set: { currentPreference: 4 } }
+        );
+
+        return res.status(200).json({
+          message: "All teams assigned. Moved system to IN_PROGRESS phase.",
+        });
+      } else {
+        return res.status(200).json({
+          message:
+            "Round 4 ended but some teams remain unassigned. System stays in FACULTY_ASSIGNMENT.",
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: "Advanced centralized preference round successfully",
+      newRound: systemState.currentPreferenceRound,
+    });
   } catch (err) {
     console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error advancing preference round",
+    return res.status(500).json({
+      message: err.message || "Error advancing centralized preference round",
     });
   }
 };
+
 
 export const endFacultyAssignmentPhase = async (req, res) => {
   try {
