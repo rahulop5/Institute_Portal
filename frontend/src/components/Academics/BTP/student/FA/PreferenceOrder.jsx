@@ -3,7 +3,7 @@ import classes from "../../../../styles/PreferenceOrder.module.css";
 import nothing from "../../../../../assets/Group 421.png";
 
 const PreferenceOrder = ({ preferences, onDelete, onFinalize }) => {
-  const allFilled = preferences.every((p) => p); 
+  const allFilled = preferences.every((p) => p);
 
   return (
     <div className={classes.wrapper}>
@@ -27,7 +27,7 @@ const PreferenceOrder = ({ preferences, onDelete, onFinalize }) => {
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className={classes.deletewrapper}>
                   <button
                     className={classes.delete}
                     onClick={() => onDelete(index)}
@@ -38,14 +38,16 @@ const PreferenceOrder = ({ preferences, onDelete, onFinalize }) => {
               </>
             ) : (
               <>
-                <div>
-                  <h1>{index + 1}</h1>
-                </div>
-                <div className={classes.empty}>
-                  <div className={classes.emptyimage}>
-                    <img src={nothing} alt="" />
+                <div className={classes.emptycard}>
+                  <div>
+                    <h1>{index + 1}</h1>
                   </div>
-                  <div className={classes.emptytext}>No topic selected</div>
+                  <div className={classes.empty}>
+                    <div className={classes.emptyimage}>
+                      <img src={nothing} alt="" />
+                    </div>
+                    <div className={classes.emptytext}>No topic selected</div>
+                  </div>
                 </div>
               </>
             )}
@@ -53,11 +55,10 @@ const PreferenceOrder = ({ preferences, onDelete, onFinalize }) => {
         ))}
       </div>
 
-    
       <div className={classes.footer}>
         <button
           className={classes.finalize}
-          disabled={!allFilled} 
+          disabled={!allFilled}
           onClick={onFinalize}
         >
           Finalise Order

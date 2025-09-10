@@ -40,7 +40,7 @@ const router=createBrowserRouter([
     loader: tokenLoader,
     children: [
       { index: true, element: <Homepage />, loader: checkAuthLoader },
-      { path: "temp", element: <Inprogressstaff/> },
+      { path: "temp", element: <FacultyManagement/> },
       { path: "academics",
         loader: checkAuthLoader,
         children: [

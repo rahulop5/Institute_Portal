@@ -17,7 +17,7 @@ export default function BTPStaffRouter(){
             return <TeamListPage data={data} />
 
         case "FA": 
-            return <FacultyManagement data={data} />
+            return <FacultyManagement dataa={data} />
             
         case "IP":
             return <Temp />

@@ -4,9 +4,9 @@ import studenticon from "../../../../../assets/studenticon.svg";
 export default function ManualtopicAllocation({ teams, onAssignTopic }) {
   return (
     <div className={styles.manualContainer}>
-      <div className={styles.mainheading}>
+      {/* <div className={styles.mainheading}>
         <h1>Manual Topic Allocation</h1>
-      </div>
+      </div> */}
       <div className={styles.mainheading}>
         <h2>Unassigned Teams</h2>
       </div>
