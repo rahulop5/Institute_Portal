@@ -6,6 +6,7 @@ import { useSubmit, redirect } from "react-router";
 import TabsHeader from "./TabsHeader";
 import FacultyList from "./FSlist";
 
+//dummy data
 export const data = [
   {
     faculty: {
@@ -347,61 +348,28 @@ export default function FacultyManagement({ dataa }) {
   };
 
   const handleAssignTopicToSelectedTeam = (topic) => {
-    if (!teamForTopicAllocation || !selectedFaculty) return;
+  if (!teamForTopicAllocation || !selectedFaculty) return;
 
-    const facultyId = selectedFaculty.faculty.empNumber;
-    const topicId = topic._id;
+  const formData = new FormData();
 
-    setFaculties((prev) =>
-      prev.map((entry) => {
-        if (entry.faculty.empNumber !== facultyId) return entry;
+  // Fix 1: use teamName instead of _id (or set _id properly in normalizeData)
+  formData.append("teamid", teamForTopicAllocation.teamName);
 
-        const updatedTopics = entry.topics.map((t) => {
-          if (t._id !== topicId) return t;
+  // Fix 2: use empNumber instead of _id
+  formData.append("facultyId", selectedFaculty.faculty.empNumber);
 
-          const exists = (t.teams || []).some((team) =>
-            isSameTeam(team, teamForTopicAllocation)
-          );
+  formData.append("topicid", topic._id);
 
-          return {
-            ...t,
-            teams: exists
-              ? t.teams
-              : [...(t.teams || []), { ...teamForTopicAllocation }],
-          };
-        });
+  submit(formData, {
+    method: "post",
+    action: "assignGuide",
+  });
 
-        return { ...entry, topics: updatedTopics };
-      })
-    );
+  setTeamForTopicAllocation(null);
+  setShowManualAllocation(false);
+};
 
-    setUnallocated((prev) => {
-      const idx = prev.findIndex((t) => isSameTeam(t, teamForTopicAllocation));
-      if (idx === -1) return prev;
-      const copy = [...prev];
-      copy.splice(idx, 1);
-      return copy;
-    });
 
-    setTeamForTopicAllocation(null);
-
-    if (selectedFaculty) {
-      const refreshed = faculties.find(
-        (f) => f.faculty.empNumber === selectedFaculty.faculty.empNumber
-      );
-      if (refreshed) {
-        setSelectedFaculty(refreshed);
-        setSelectedFacultyTopics(refreshed.topics);
-      }
-    }
-
-    setShowManualAllocation((prevShow) => {
-      const stillLeft =
-        unallocated.filter((t) => !isSameTeam(t, teamForTopicAllocation))
-          .length > 0;
-      return stillLeft ? true : false;
-    });
-  };
 
   return (
     <div>
@@ -495,3 +463,49 @@ export async function advancePreferenceAction({ request }) {
 
   return redirect("/academics/btp/staff");
 }
+
+export async function assignGuideAction({ request }) {
+  const formData = await request.formData();
+  const teamid = formData.get("teamid");
+  const facultyId = formData.get("facultyId");
+  const topicid = formData.get("topicid");
+
+  if (!teamid || !facultyId || !topicid) {
+    throw new Response(
+      JSON.stringify({ message: "Missing required fields" }),
+      { status: 400 }
+    );
+  }
+
+  const token = localStorage.getItem("token");
+  // const batch = "2022"; // adjust if dynamic
+
+  const response = await fetch(
+    `http://localhost:3000/staff/btp/allocatefaculty`,
+    {
+      method: "post",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ teamid, facultyId, topicid }),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    console.log(result)
+    throw new Response(
+      JSON.stringify({
+        message: result.message || "Error assigning guide",
+      }),
+      { status: response.status }
+    );
+  }
+
+  const result = await response.json();
+  console.log("Guide assigned:", result);
+
+  return redirect("/academics/btp/staff");
+}
+

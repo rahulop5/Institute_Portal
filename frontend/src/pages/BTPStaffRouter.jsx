@@ -4,6 +4,28 @@ import ErrorPage from "./Error";
 import TeamListPage from "../components/Academics/BTP/staff/TeamFormation/Teamlistpage";
 import FacultyManagement from "../components/academics/btp/staff/topicselection/FacultyManagement";
 import Temp from "./Lemp";
+import Inprogressstaff from "../components/Academics/BTP/staff/inprogress/Inprogress";
+import ProjectList from "../components/academics/btp/staff/inprogress/ProjectList";
+
+const normalizeBackendData = (backend) => {
+  const { project, ...rest } = backend;
+
+  return {
+    ...rest,
+    project: {
+      ...project,
+      latestUpdates: project.latestUpdates.map((u) => ({
+        title: "Update", // or slice first 20 chars of u.update
+        description: u.update,
+        timestamp: u.time,
+      })),
+      updates: project.latestUpdates.map((u) => ({
+        time: u.time,
+        update: u.update,
+      })),
+    },
+  };
+};
 
 
 export default function BTPStaffRouter(){
@@ -20,7 +42,8 @@ export default function BTPStaffRouter(){
             return <FacultyManagement dataa={data} />
             
         case "IP":
-            return <Temp />
+            // return <Inprogressstaff dataa={normalizeBackendData(data)}  />
+            return <ProjectList dataa={data} />
 
         default:
             return <ErrorPage />

@@ -5,6 +5,7 @@ import {
     allocateFacultytoTeam,
     approveFacultyToTeam,
     assignEvaluator,
+    assignGuideToTeam,
     createTeambyStaff,
     deallocateFacultyforTeam,
     deleteTeam,
@@ -14,7 +15,8 @@ import {
     rejectFacultyFromTeam,
     updateTeam,
     uploadCSVSheet,
-    verifyPhase
+    verifyPhase,
+    viewProjectStaff
 } from "../controllers/staffbtpController.js";
 import upload from "../config/multer.js";
 
@@ -28,9 +30,12 @@ router.post("/updateteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMAT
 router.delete("/deleteteam", authStaffMiddleware, verifyPhase({phase: "TEAM_FORMATION"}), deleteTeam);
 //for this phase verification is done inside the function
 router.get("/endTFphase", authStaffMiddleware, endTeamFormationPhase);
-router.post("/allocatefaculty", authStaffMiddleware, allocateFacultytoTeam);
+router.post("/allocatefaculty", authStaffMiddleware, assignGuideToTeam);
 router.delete("/deallocatefaculty", authStaffMiddleware, deallocateFacultyforTeam);
 router.get("/endFAphase", authStaffMiddleware, endFacultyAssignmentPhase);
+
+router.get("/viewproject", authStaffMiddleware, viewProjectStaff);
+
 router.post("/assignevaluator", authStaffMiddleware, assignEvaluator);
 router.post("/advancepreferencernd", authStaffMiddleware, advancePreferenceRound);
 router.post("/approvefacultytoteam", authStaffMiddleware, approveFacultyToTeam);

@@ -22,12 +22,13 @@ import ViewProjEvaluator, { evaluatorProjLoader } from "./components/academics/b
 import FileUploadPage from "./components/Academics/BTP/staff/NotStarted/fileUploadPage.jsx";
 import Header from "./components/Header.jsx";
 import TeamListPage from "./components/Academics/BTP/staff/TeamFormation/Teamlistpage.jsx";
-import FacultyManagement, { advancePreferenceAction } from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
+import FacultyManagement, { advancePreferenceAction, assignGuideAction } from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, { loader as btpStaffLoader } from "./pages/BTPStaffRouter.jsx";
 import { deleteTeamAction, updateTeamAction } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
 // import Inprogress from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
+import { loader } from "./components/academics/btp/staff/inprogress/ProjectList.jsx";
 // Added a comment
 
 
@@ -83,9 +84,11 @@ const router=createBrowserRouter([
                 path: "staff", element: <BTPStaffRouter />,
                 loader: btpStaffLoader,
                 children: [
+                  {path: ":projid", loader: loader, element: <Inprogressstaff /> },
                   { path: "updateteam", action: updateTeamAction, element: <></> },
                   { path: "deleteteam", action: deleteTeamAction, element: <></> },
-                  { path: "advancepreferencernd", action: advancePreferenceAction, element: <></> }
+                  { path: "advancepreferencernd", action: advancePreferenceAction, element: <></> },
+                  { path: "assignGuide", action: assignGuideAction, element: <></> }
                 ]
               }
             ]

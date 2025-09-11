@@ -7,6 +7,7 @@ import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import Faculty from "../models/Faculty.js";
 import Staff from "../models/Staff.js";
+import BTPEvaluation from "../models/BTPEvaluation.js";
 
 //have to send the additional details to frontend
 export const getStaffBTPDashboard = async (req, res) => {
@@ -187,7 +188,7 @@ export const getStaffBTPDashboard = async (req, res) => {
             topics: topics,
             assignedTeams: assignedTeams,
             unassignedTeams: unassignedTeams,
-            currentPreferenceRound: k
+            currentPreferenceRound: k,
           });
         } catch (err) {
           console.error(err);
@@ -199,8 +200,39 @@ export const getStaffBTPDashboard = async (req, res) => {
         }
 
       case "IN_PROGRESS":
-        console.log("In progress");
-        break;
+        try {
+          // Fetch all projects
+          const projects = await BTP.find()
+            .populate("students.student", "name email")
+            .populate("guide", "name email");
+
+          if (!projects || projects.length === 0) {
+            return res.status(200).json({
+              phase: "IP",
+              email: req.user.email, // staff email from auth
+              projects: [],
+            });
+          }
+
+          // Format response for frontend
+          const formattedProjects = projects.map((p) => ({
+            _id: p._id,
+            topic: p.name,
+            projid: p._id, // or custom project ID if you have one
+            team: p.students.map((s) => s.student?.name),
+          }));
+
+          return res.status(200).json({
+            phase: "IP",
+            email: req.user.email,
+            projects: formattedProjects,
+          });
+        } catch (err) {
+          console.error("Error fetching staff projects:", err);
+          return res.status(500).json({
+            message: "Error loading staff projects dashboard",
+          });
+        }
 
       case "COMPLETED":
         break;
@@ -215,6 +247,105 @@ export const getStaffBTPDashboard = async (req, res) => {
     return res.status(500).json({
       message: "Error loading the dashboard",
     });
+  }
+};
+
+export const viewProjectStaff = async (req, res) => {
+  try {
+    if (!req.query.projid) {
+      return res.status(400).json({ message: "Invalid Request" });
+    }
+
+    const project = await BTP.findOne({ _id: req.query.projid })
+      .populate("students.student")
+      .populate("guide")
+      .populate("evaluators.evaluator");
+
+    if (!project) {
+      return res.status(404).json({ message: "Cant Find Project" });
+    }
+
+    const evaluations = await BTPEvaluation.find({
+      projectRef: project._id,
+    }).sort({ time: 1 });
+
+    const updates = project.updates.sort(
+      (a, b) => new Date(a.time) - new Date(b.time)
+    );
+
+    const formattedEvaluations = [];
+    let remainingUpdates = [...updates];
+
+    for (let i = 0; i < evaluations.length; i++) {
+      const currEval = evaluations[i];
+      const nextEvalTime = evaluations[i + 1]?.time || null;
+
+      const evalUpdates = remainingUpdates.filter((u) => {
+        return u.time < (nextEvalTime || new Date(8640000000000000));
+      });
+
+      remainingUpdates = remainingUpdates.filter(
+        (u) => !evalUpdates.includes(u)
+      );
+
+      formattedEvaluations.push({
+        _id: currEval._id,
+        time: currEval.time,
+        remark: currEval.remark,
+        resources: currEval.resources,
+        updates: evalUpdates,
+        canstudentsee: currEval.canstudentsee,
+        marksgiven: currEval.marksgiven,
+        panelEvaluations: currEval.panelEvaluations,
+      });
+    }
+
+    return res.status(200).json({
+      phase: "IP",
+      message: "Student Progress Dashboard",
+      // these you might later compute dynamically
+      nextEvalDate: {
+        month: "March",
+        day: 15,
+      },
+      currentScore: {
+        value: 48,
+        outOf: 50,
+      },
+      project: {
+        id: project._id,
+        name: project.name,
+        about: project.about,
+        studentbatch: project.studentbatch,
+        guide: {
+          name: project.guide.name,
+          email: project.guide.email,
+        },
+        evaluators: project.evaluators.map((e) => ({
+          name: e.evaluator.name,
+          email: e.evaluator.email,
+        })),
+        team: project.students.map((s) => ({
+          _id: s.student._id,
+          name: s.student.name,
+          email: s.student.email,
+          rollno: s.student.rollno,
+          bin: s.student.bin,
+        })),
+        evaluations: formattedEvaluations,
+        updates: project.updates,
+        latestUpdates: project.updates.slice(-3).map((u, idx) => ({
+          title: `Update ${idx + 1}`,
+          description: u.update,
+          timestamp: u.time,
+        })),
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Error loading the BTP dashboard in Progress phase" });
   }
 };
 
@@ -544,6 +675,7 @@ export const endTeamFormationPhase = async (req, res) => {
   }
 };
 
+//old shit
 export const allocateFacultytoTeam = async (req, res) => {
   try {
     if (!req.body.docid || !req.body.topicid || !req.body.teamid) {
@@ -782,6 +914,107 @@ export const approveFacultyToTeam = async (req, res) => {
   }
 };
 
+export const assignGuideToTeam = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { teamid, facultyId, topicid } = req.body;
+
+    if (!teamid || !facultyId || !topicid) {
+      return res.status(400).json({
+        message: "Team ID, Faculty ID, and Topic ID are required",
+      });
+    }
+
+    // 1) find team
+    const team = await BTPTeam.findById(teamid);
+    if (!team) return res.status(404).json({ message: "Team not found" });
+    if (!team.isteamformed) {
+      return res.status(400).json({ message: "Team is not fully formed yet" });
+    }
+    if (team.facultyAssigned) {
+      return res.status(400).json({ message: "Team already assigned" });
+    }
+
+    // 2) verify faculty
+    const fac = await Faculty.findById(facultyId);
+    if (!fac) return res.status(404).json({ message: "Faculty not found" });
+
+    // 3) find the topicDoc and topic inside that faculty
+    const factopicdoc = await BTPTopic.findOne({
+      faculty: facultyId,
+      "topics._id": topicid,
+    });
+    if (!factopicdoc) {
+      return res
+        .status(400)
+        .json({
+          message: "No topics found under this faculty / invalid topic id",
+        });
+    }
+
+    const topicSub = factopicdoc.topics.id(topicid);
+    if (!topicSub)
+      return res
+        .status(400)
+        .json({ message: "Invalid topic id for this faculty" });
+
+    // 4) assign guide to team
+    team.facultyAssigned = true;
+    team.assigned = {
+      faculty: fac._id,
+      topicDoc: factopicdoc._id,
+      topicId: topicid,
+    };
+    await team.save();
+
+    // 5) record this as an "approved" request in faculty doc (optional but consistent)
+    const alreadyReq = factopicdoc.requests.some(
+      (r) =>
+        r.teamid.toString() === teamid &&
+        r.topic.toString() === topicid &&
+        r.isapproved
+    );
+    if (!alreadyReq) {
+      factopicdoc.requests.push({
+        teamid,
+        topic: topicid,
+        isapproved: true,
+        preference: team.currentPreference || 0,
+      });
+      await factopicdoc.save();
+    }
+
+    // 6) create BTP project
+    const studentIds = [
+      team.bin1?.student,
+      team.bin2?.student,
+      team.bin3?.student,
+    ].filter(Boolean);
+
+    const formattedStudents = studentIds.map((id) => ({ student: id }));
+
+    const newbtpproj = new BTP({
+      name: topicSub.topic,
+      about: topicSub.about,
+      studentbatch: team.batch,
+      students: formattedStudents,
+      guide: fac._id,
+    });
+
+    await newbtpproj.save();
+
+    return res.status(201).json({
+      message: "Successfully assigned guide and topic to team",
+      team,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(err.status || 500)
+      .json({ message: err.message || "Error assigning guide to team" });
+  }
+};
+
 export const rejectFacultyFromTeam = async (req, res) => {
   try {
     const { topicDocId, teamId, topicId } = req.body;
@@ -843,9 +1076,9 @@ export const advancePreferenceRound = async (req, res) => {
 
     // All teams of this batch not yet assigned
     const teams = await BTPTeam.find({ batch, facultyAssigned: false });
-    if (teams.length === 0) {
-      return res.status(200).json({ message: "No teams to advance" });
-    }
+    // if (teams.length === 0) {
+    //   return res.status(200).json({ message: "No teams to advance" });
+    // }
 
     // Process each team for current round k
     for (const team of teams) {
@@ -907,10 +1140,7 @@ export const advancePreferenceRound = async (req, res) => {
         await systemState.save();
 
         // also update all teams
-        await BTPTeam.updateMany(
-          { batch },
-          { $set: { currentPreference: 4 } }
-        );
+        await BTPTeam.updateMany({ batch }, { $set: { currentPreference: 4 } });
 
         return res.status(200).json({
           message: "All teams assigned. Moved system to IN_PROGRESS phase.",
@@ -934,7 +1164,6 @@ export const advancePreferenceRound = async (req, res) => {
     });
   }
 };
-
 
 export const endFacultyAssignmentPhase = async (req, res) => {
   try {
