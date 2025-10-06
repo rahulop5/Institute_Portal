@@ -7,6 +7,9 @@ import ugstudentbtpRoutes from "./routes/ugstudentbtpRoutes.js";
 import staffbtpRoutes from "./routes/staffbtpRoutes.js";
 import facultybtpRoutes from "./routes/facultybtpRoutes.js";
 import ugstudenthonorsroutes from "./routes/ugstudenthonorsRoutes.js"
+import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
+import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
+import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
 
 const app=express();
 app.use(cors({
@@ -18,10 +21,20 @@ env.config();
 connectDB();
 
 app.use("/auth", authRoutes);
+
+//BTP
 app.use("/student/btp", ugstudentbtpRoutes);
 app.use("/staff/btp", staffbtpRoutes);
 app.use("/faculty/btp", facultybtpRoutes);
+
+//Honors
 app.use("/student/honors", ugstudenthonorsroutes);
+
+//Feedback
+app.use("/student/feedback", feedbackstudentRoutes);
+app.use("/faculty/feedback", feedbackfacultyRoutes);
+app.use("/puser/feedback", feedbackadminRoutes);
+
 
 app.get("/test", (req, res)=>{
     res.json({

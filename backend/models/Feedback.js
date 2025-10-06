@@ -19,6 +19,7 @@ const feedbackSchema = new mongoose.Schema(
     semester: { type: String, required: true }, // e.g. "Fall-2025"
     feedbacks: [facultyFeedbackSchema], // one per faculty chosen
     currentPage: { type: Number, default: 0 }, // track progress across faculty pages
+    submitted: { type: Boolean, default: false, required: true }
   },
   { timestamps: true }
 );
