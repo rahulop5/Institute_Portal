@@ -1,9 +1,10 @@
-import Feedback from "../../models/Feedback.js";
-import Enrollment from "../../models/Enrollment.js";
-import Course from "../../models/Course.js";
-import Student from "../../models/Student.js";
+import Feedback from "../../models/feedback/Feedback.js";
+import Enrollment from "../../models/feedback/Enrollment.js";
+import Course from "../../models/feedback/Course.js";
+import Student from "../../models/feedback/Student.js";
 import Faculty from "../../models/Faculty.js";
-import Question from "../../models/Question.js";
+import Analytics from "../../models/feedback/Analytics.js";
+import Question from "../../models/feedback/Question.js";
 
 export const feedbackStudentDashboard = async (req, res) => {
   try {
@@ -1637,7 +1638,7 @@ export const updateFeedback = async (req, res) => {
 //   ]
 // }
 
-export const submitFeedback = async (req, res) => {
+export const submitFeedback = async (req, res) => { 
   try {
     const { feedbacks } = req.body;
 
@@ -1655,7 +1656,7 @@ export const submitFeedback = async (req, res) => {
       return res.status(400).json({ message: "Feedback already submitted" });
     }
 
-    // 🔁 Same strict update validation logic as updateFeedback
+    // Same strict update validation logic as updateFeedback
     for (const page of feedbacks) {
       const { courseId, facultyId, answers } = page;
 
@@ -1714,7 +1715,7 @@ export const submitFeedback = async (req, res) => {
       existingEntry.completed = everyAnswered;
     }
 
-    // 🚫 Reject if any page incomplete
+    // Reject if any page incomplete
     const incomplete = feedback.feedbacks.filter((f) => !f.completed);
     if (incomplete.length > 0) {
       return res.status(400).json({
@@ -1723,18 +1724,77 @@ export const submitFeedback = async (req, res) => {
       });
     }
 
-    // ✅ Finalize submission
+    // Finalize submission
     feedback.submitted = true;
     feedback.currentPage = feedback.feedbacks.length;
     await feedback.save();
 
+    for (const f of feedback.feedbacks) {
+      const facultyId = f.faculty;
+      const courseId = f.course;
+
+      let analytics = await Analytics.findOne({ faculty: facultyId });
+      if (!analytics) {
+        return res.status(500).json({
+          message: "Course not assigned to this faculty"
+        });
+      }
+
+      let courseEntry = analytics.courses.find(
+        (c) => c.course.toString() === courseId.toString()
+      );
+      
+      if (!courseEntry) {
+        return res.status(500).json({
+          message: "Course not found"
+        });
+      }
+
+      for (const ans of f.answers) {
+        const question = await Question.findById(ans.question).select("type");
+        let qEntry = courseEntry.questions.find(
+          (q) => q.question.toString() === ans.question.toString()
+        );
+
+        if (!qEntry) {
+          return res.status(500).json({
+            message: "Question not found",
+          });
+        }
+
+        if (question.type === "rating") {
+          const val = Number(ans.response);
+          const totalResponses = courseEntry.totalResponses + 1;
+
+          // Recalculate new average, min, max
+          qEntry.average =
+            (qEntry.average * courseEntry.totalResponses + val) / totalResponses;
+          qEntry.min =
+            courseEntry.totalResponses === 0
+              ? val
+              : Math.min(qEntry.min, val);
+          qEntry.max =
+            courseEntry.totalResponses === 0
+              ? val
+              : Math.max(qEntry.max, val);
+        } else if (question.type === "text") {
+          qEntry.textResponses.push(ans.response);
+        }
+      }
+
+      courseEntry.totalResponses += 1;
+      courseEntry.lastUpdated = new Date();
+      await analytics.save();
+    }
+
     return res.status(200).json({
-      message: "✅ Feedback successfully submitted!",
+      message: "Feedback successfully submitted and analytics updated!",
     });
   } catch (err) {
-    console.error("❌ Error submitting feedback:", err);
+    console.error("Error submitting feedback:", err);
     return res.status(500).json({
       message: "Error submitting feedback",
     });
   }
 };
+// update the statistics of faculty with each submission
