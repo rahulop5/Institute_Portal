@@ -582,7 +582,7 @@ export const resetCourse = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { courseId } = req.body;
+    const { courseId } = req.query;
 
     if (!courseId) {
       return res.status(400).json({ message: "courseId is required" });
