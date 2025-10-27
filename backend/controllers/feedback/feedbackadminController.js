@@ -179,6 +179,7 @@ export const viewCourse = async (req, res) => {
       return res.status(400).json({ message: "courseId is required" });
     }
 
+    // Fetch course with faculty details
     const course = await Course.findById(courseId)
       .populate("faculty", "name email dept role")
       .lean();
@@ -187,11 +188,18 @@ export const viewCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
+    // Get enrolled students
     const enrollments = await Enrollment.find({ course: courseId })
       .populate("student", "name email rollNumber")
       .lean();
 
     const students = enrollments.map((e) => e.student);
+
+    // If course is reset, fetch all faculties for assignment
+    let allFaculties = [];
+    if (course.isreset) {
+      allFaculties = await Faculty.find({}, "name email dept").lean();
+    }
 
     return res.status(200).json({
       message: "Course details fetched successfully",
@@ -200,12 +208,14 @@ export const viewCourse = async (req, res) => {
       totalStudents: students.length,
       totalFaculties: course.faculty.length,
       isreset: course.isreset,
+      ...(course.isreset && { allFaculties }), // only include when true
     });
   } catch (err) {
     console.error("Error in viewCourse:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {
