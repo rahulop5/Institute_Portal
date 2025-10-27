@@ -216,8 +216,203 @@ export const viewCourse = async (req, res) => {
   }
 };
 
-//view faculty
+//view individual faculty
+export const viewFaculty = async (req, res) => {
+  try {
+    const { facultyId } = req.query;
+
+    if (!facultyId) {
+      return res.status(400).json({ message: "facultyId is required" });
+    }
+
+    // Find faculty
+    const faculty = await Faculty.findById(facultyId).lean();
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    // Fetch analytics for this faculty
+    const analytics = await Analytics.findOne({ faculty: facultyId })
+      .populate({
+        path: "courses.course",
+        select: "name code",
+      })
+      .lean();
+
+    if (!analytics || analytics.courses.length === 0) {
+      return res.status(200).json({
+        message: "No analytics found for this faculty",
+        faculty: {
+          name: faculty.name,
+          email: faculty.email,
+          dept: faculty.dept,
+          avgscore: 0,
+          totalImpressions: 0,
+          coursesTaught: 0,
+          courses: [],
+        },
+      });
+    }
+
+    let totalAvg = 0;
+    let totalCourses = 0;
+    let totalImpressions = 0;
+
+    const courses = analytics.courses.map((c) => {
+      if (!c.course) return null;
+
+      const validAverages = c.questions
+        .map((q) => q.average)
+        .filter((a) => typeof a === "number");
+
+      const avgscore =
+        validAverages.length > 0
+          ? validAverages.reduce((a, b) => a + b, 0) / validAverages.length
+          : 0;
+
+      totalCourses++;
+      totalAvg += avgscore;
+      totalImpressions += c.totalResponses || 0;
+
+      return {
+        courseId: c.course._id,
+        name: c.course.name,
+        code: c.course.code,
+        avgscore: parseFloat(avgscore.toFixed(2)),
+      };
+    }).filter(Boolean);
+
+    const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
+
+    // Send response
+    return res.status(200).json({
+      message: "Faculty details fetched successfully",
+      faculty: {
+        name: faculty.name,
+        email: faculty.email,
+        dept: faculty.dept,
+        avgscore: parseFloat(overallAvg.toFixed(2)),
+        totalImpressions,
+        coursesTaught: totalCourses,
+        courses: courses,
+      },
+    });
+  } catch (err) {
+    console.error("Error in viewFaculty:", err);
+    return res.status(500).json({
+      message: "Error fetching faculty details",
+      error: err.message,
+    });
+  }
+};
+
+
 //view faculty course statistics
+export const viewFacultyCourseStatistics = async (req, res) => {
+  try {
+    const { facultyId, courseId } = req.query;
+
+    if (!facultyId || !courseId) {
+      return res.status(400).json({ message: "facultyId and courseId are required" });
+    }
+
+    // Get analytics record for this faculty and course
+    const analytics = await Analytics.findOne({ faculty: facultyId })
+      .populate({
+        path: "courses.course",
+        select: "name code",
+      })
+      .populate({
+        path: "courses.questions.question",
+        select: "text order",
+      });
+
+    if (!analytics) {
+      return res.status(404).json({ message: "No analytics found for this faculty" });
+    }
+
+    const courseData = analytics.courses.find(
+      (c) => c.course && c.course._id.toString() === courseId.toString()
+    );
+
+    if (!courseData) {
+      return res.status(404).json({ message: "Course analytics not found" });
+    }
+
+    // Calculate overall average
+    const avgscore =
+      courseData.questions.length > 0
+        ? courseData.questions.reduce((sum, q) => sum + q.average, 0) /
+          courseData.questions.length
+        : 0;
+
+    const totalResponses = courseData.totalResponses || 0;
+    const totalEnrolled = await Enrollment.countDocuments({ course: courseId });
+    const yetToSubmit = Math.max(totalEnrolled - totalResponses, 0);
+
+    const questions = courseData.questions.map((q, idx) => ({
+      qno: q.question?.order ?? idx + 1,
+      avgscore: parseFloat(q.average.toFixed(2)),
+    }));
+
+    const ratingQuestions = courseData.questions.filter(
+      (q) => typeof q.average === "number"
+    );
+
+    const minQ = ratingQuestions.reduce(
+      (min, q) => (q.average < min.average ? q : min),
+      ratingQuestions[0]
+    );
+    const maxQ = ratingQuestions.reduce(
+      (max, q) => (q.average > max.average ? q : max),
+      ratingQuestions[0]
+    );
+
+    const facultyFeedbackQ = courseData.questions.find(
+      (q) => q.question?.order === 16
+    );
+    const courseFeedbackQ = courseData.questions.find(
+      (q) => q.question?.order === 17
+    );
+
+    const feedback = {
+      faculty: (facultyFeedbackQ?.textResponses || []).map((text) => ({
+        date: courseData.lastUpdated,
+        text,
+        score: null,
+      })),
+      course: (courseFeedbackQ?.textResponses || []).map((text) => ({
+        date: courseData.lastUpdated,
+        text,
+        score: null,
+      })),
+    };
+
+    return res.status(200).json({
+      name: courseData.course.name,
+      coursecode: courseData.course.code,
+      avgscore: parseFloat(avgscore.toFixed(2)),
+      responses: {
+        submitted: totalResponses,
+        yettosubmit: yetToSubmit,
+      },
+      questions,
+      min: {
+        score: parseFloat(minQ?.average?.toFixed(2)) || 0,
+        question: minQ?.question?.text || "N/A",
+      },
+      max: {
+        score: parseFloat(maxQ?.average?.toFixed(2)) || 0,
+        question: maxQ?.question?.text || "N/A",
+      },
+      feedback,
+    });
+  } catch (err) {
+    console.error("Error in viewFacultyCourseStatistics:", err);
+    return res.status(500).json({ message: "Error fetching course statistics", error: err.message });
+  }
+};
+
 
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {
@@ -618,6 +813,47 @@ export const resetCourse = async (req, res) => {
   }
 };
 
+//isnt it obvious
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.query;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "courseId is required" });
+    }
+
+    // Check if the course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Delete the course itself
+    await Course.findByIdAndDelete(courseId);
+
+    // Delete all enrollments of that course
+    await Enrollment.deleteMany({ course: courseId });
+
+    // Remove this course from all faculty analytics
+    await Analytics.updateMany(
+      { "courses.course": courseId },
+      { $pull: { courses: { course: courseId } } }
+    );
+
+    return res.status(200).json({
+      message: "Course and related data deleted successfully",
+      deletedCourseId: courseId,
+    });
+  } catch (err) {
+    console.error("Error deleting course:", err);
+    return res.status(500).json({
+      message: "Error deleting course",
+      error: err.message,
+    });
+  }
+};
+
+//add faculty and students to a reset course
 export const addFacultyStudentstoCourse = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
