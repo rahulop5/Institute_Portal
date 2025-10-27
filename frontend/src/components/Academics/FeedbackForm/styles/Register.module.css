@@ -1,0 +1,139 @@
+.registerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  margin-top: 5rem;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+  
+  /* NEW */
+  width: 95%;
+  height: 60vh; /* makes it occupy full viewport height */
+}
+
+.registerLeft,
+.registerRight {
+  height: 100%; 
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Left panel */
+.registerLeft {
+  background: #e6e6e6;
+  width: 60%;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  padding: 35px 40px;
+
+}
+
+/* Right panel */
+.registerRight {
+  background: #fff;
+  width: 40%;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  padding: 35px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.registerTitle {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  margin-top: 5px;
+}
+
+/* ...keep rest of your CSS as is */
+
+
+.inputLabel {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.inputField {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  outline: none;
+}
+
+.inputField::placeholder {
+  color: #999;
+  font-size: 13px;
+}
+
+.btnContinue {
+  background-color: #000;
+    width: 100%;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 6px;
+  transition: 0.2s ease;
+}
+
+.btnContinue:hover {
+  background-color: #222;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0 10px 0;
+}
+
+.line {
+  height: 1px;
+  background: #aaa;
+  flex: 1;
+  margin: 0 10px;
+}
+
+.orText {
+  font-size: 13px;
+  color: #666;
+}
+
+.alreadyText {
+  font-size: 13px;
+  color: #666;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.btnLogin {
+  background: #cfcfcf;
+
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btnLogin:hover {
+  background: #bdbdbd;
+}
+
+
+.error {
+  color: #d9534f;
+  font-size: 12px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}

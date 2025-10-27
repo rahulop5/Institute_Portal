@@ -1,0 +1,452 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
+.facultyselectionpage {
+  background-color: #f7f5ff;
+  min-height: 100vh;
+  padding: 3rem 2rem;
+  font-family: "Inter", sans-serif;
+  color: #1a1a1a;
+}
+
+.heading {
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+}
+
+.facultyselectioncontainer {
+  background: transparent;
+}
+
+.subheading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+/* ================== Course Grid ================== */
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.5rem;
+}
+
+.courseCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* align-items: center; */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.courseCard:hover {
+  /* transform: translateY(-3px); */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.courseInfo {
+  display: flex;
+
+}
+
+.courseImage {
+  padding-right: 1rem;
+}
+.courseImage img {
+  /* width: 60px; */
+  height: 50px;
+  /* margin-right: 1.2rem; */
+  border-radius: 8px;
+  object-fit: cover;
+}
+.courseInfo h3 {
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  /* padding: 1rem; */
+}
+
+.noFaculty {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.selectedFaculty {
+  font-size: 0.9rem;
+  color: #1e88e5;
+  font-weight: 500;
+}
+
+/* ================== Buttons ================== */
+.selectButton {
+  border: 1.8px solid #6092FF;
+  background: transparent;
+  color: #6092FF;
+  padding: 0.6rem 2.5rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton:hover {
+  background: #6092FF;
+  color: white;
+  /* padding: 0.65rem 2.55rem; */
+  box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
+  border: 1.8px solid #ffffff;
+  
+}
+
+.facultyButton {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end
+}
+
+/* ================== Footer ================== */
+.footer {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.warning {
+  color: black;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  border: 2px solid #FFB400;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.proceedButton {
+  background: white;
+  color: black;
+  padding: 1rem 6rem;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.proceedButton:hover  {
+  background: #6092FF;
+  color: white;
+  box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
+}
+
+.disabled {
+  background: #ddd;
+  color: #888;
+  cursor: not-allowed;
+  padding: 1rem 6rem;
+}
+
+.disabled:hover {
+  background: #ddd;
+  color: #888;
+  box-shadow: none;
+}
+
+.selectedList {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+}
+
+.selectedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafc;
+  border: 1px solid #e4e6ef;
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.selectedItem:hover {
+  background: #eef3ff;
+  border-color: #cbd5f0;
+}
+
+.facultyName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.removeBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+.removeBtn img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.removeBtn:hover img {
+  opacity: 1;
+  transform: scale(1.1);
+}
+/* ================== Modal ================== */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  width: 680px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modalHeader h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.closeBtn:hover {
+  color: #111;
+}
+
+/* ================== Search ================== */
+.searchInput {
+  background: #f3f3f9;
+  border: none;
+  border-radius: 25px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  margin-bottom: 1rem;
+}
+
+/* =============== Modal Backdrop & Container =============== */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 750px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  padding: 1.8rem 2rem;
+  position: relative;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============== Modal Header =============== */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+
+.modalHeader h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin: 0;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.closeBtn:hover {
+  color: #000;
+}
+
+/* =============== Search Input =============== */
+.searchInput {
+  width: 250px;
+  background: #fafafa;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 0.45rem 1rem 0.45rem 2.4rem;
+  font-size: 0.95rem;
+  color: #444;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23888' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  background-size: 18px;
+  margin-left: auto;
+  display: block;
+  margin-bottom: 1.3rem;
+}
+
+/* =============== Faculty Table =============== */
+.facultyTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #eee;
+}
+
+.facultyTable th {
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5b5b5b;
+  background: #f9fafb;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.facultyTable td {
+  padding: 1rem 1.2rem;
+  font-size: 0.93rem;
+  color: #1f1f1f;
+  border-bottom: 1px solid #f2f2f2;
+  vertical-align: middle;
+}
+
+.facultyTable tr:last-child td {
+  border-bottom: none;
+}
+
+.facultyTable tr:hover {
+  background: #f9f9ff;
+  transition: background 0.2s ease;
+}
+
+/* =============== Select / Selected Button =============== */
+.selectBtnSmall {
+  border: 1.8px solid #f59e0b;
+  background: transparent;
+  color: #f59e0b;
+  padding: 0.4rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 88px;
+  text-align: center;
+}
+
+.selectBtnSmall:hover {
+  background: #f59e0b;
+  color: white;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+}
+
+.selectedBtn {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+  box-shadow: inset 0 0 0 1px #f59e0b;
+}
+
+/* =============== Confirm Button =============== */
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.6rem;
+}
+
+.confirmBtn {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.9rem;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+  transition: all 0.25s ease;
+}
+
+.confirmBtn:hover {
+  background: linear-gradient(90deg, #16a34a, #15803d);
+  transform: translateY(-1px);
+}
+
+/* =============== Avatar Column (Optional) =============== */
+.facultyTable td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+

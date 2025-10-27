@@ -1,0 +1,356 @@
+.container {
+  padding: 30px;
+  background-color: #f7f5ff;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+.heading {
+  font-size: 2rem;
+  font-weight: 200;
+  margin-bottom: 25px;
+  color: #1f1f1f;
+}
+
+.topSection {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  /* align-items: flex-start; */
+  margin-bottom: 30px;
+  /* flex-wrap: wrap; */
+  gap: 20px;
+}
+
+.courseBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border-radius: 15px;
+  /* padding: 20px 25px; */
+  /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); */
+  width: 60%;
+}
+
+.courseTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2f2f2f;
+}
+
+.courseCode {
+  color: #777;
+  font-size: 15px;
+}
+
+.courseInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+  width: 80%;
+  border-radius: 10px;
+  background-color: white;
+  padding: 2.4rem 2rem;
+  padding-top: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.courseType {
+  font-size: 12px;
+  background: #f3f2ff;
+  color: #4e5dfc;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.infoBoxes {
+  display: flex;
+  gap: 25px;
+  /* margin-top: 10px; */
+}
+
+.infoCard {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 13px 15px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.scoreTop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  /* gap: 6px; */
+}
+
+.scoreTop h2 {
+  font-size: 42px;
+  font-weight: 400;
+  color: #1f1f1f;
+  line-height: 1;
+}
+
+.slash {
+  font-size: 50px;
+  color: #1f1f1f;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.total {
+  font-size: 18px;
+  color: #1f1f1f;
+  margin-bottom: 6px;
+}
+
+.number {
+  font-size: 45px;
+  font-weight: 400;
+  color: #1f1f1f;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.label {
+  font-size: 15px;
+  color: #555;
+  margin-top: 8px;
+}
+
+.subHeading {
+  font-size: 24px;
+  font-weight: 400;
+  margin: 25px 0 15px;
+}
+
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 25px;
+  margin-bottom: 3rem;
+}
+
+.chartBox {
+  background: white;
+  border-radius: 15px;
+  padding: 20px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.responseBoxContainer {
+  background: white;
+  border-radius: 15px;
+  padding: 20px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  height: 55%;
+}
+
+.responseBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.responseStats {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 50%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  /* margin-top: auto; */
+  font-size: 14px;
+  color: #444;
+}
+
+.responseCountBoxsub {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border-left: 5px solid #5B63FF;
+}
+
+.responseCountBoxnot{
+    display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border-left: 5px solid #AFB3FF;
+
+}
+
+.statsSummary {
+  display: flex;
+  gap: 25px;
+  margin-top: 15px;
+}
+
+.statCard {
+  background: white;
+  flex: 1;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.statCard span {
+  font-size: 13px;
+  color: #888;
+}
+
+.statCard h4 {
+  font-size: 42px;
+  font-weight: 600;
+  color: #AFB3FF;
+}
+
+.feedbackTabs {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: white;
+  padding: 10px 15px;
+  border-radius: 25px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  gap: 8px;
+  width: fit-content;
+  margin-top: 30px;
+}
+
+.tabBtn {
+  padding: 4px 1px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: #444;
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+  height: 40px;
+  width: 260px;
+}
+
+.tabBtn:not(.active):hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.active {
+  background-color: #ffffff;
+  z-index: 2;
+  color: #000;
+  position: relative;
+  box-shadow:
+    0px 0px 8px rgba(0, 0, 0, 0.2),
+    0px 0px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+.feedbackTable {
+  max-height: 45vh;
+  margin-top: 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 5fr 1fr;
+  background: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 18px 20px;
+  color: #000000;
+  text-align: center;
+  border-bottom: 1px solid #33323254;
+}
+
+.feedbackRow {
+  display: grid;
+  grid-template-columns: 1fr 5fr 1fr;
+  padding: 22px 20px;
+  border-bottom: 1px solid #ffffff;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.feedbackRow:last-child {
+  border-bottom: none;
+}
+
+.feedbackText {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+}
+
+.scoreBadge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  width: 55%;
+  padding: 10px 0px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-left: 2.5rem;
+  /* text-align: center; */
+}
+
+.high {
+  background: #eafbea;
+  color: #4AB446;
+}
+
+.medium {
+  background: #fff8e1;
+  color: #F7B217;
+}
+
+.low {
+  background: #ffebee;
+  color: #E51C22;
+}
+
+.doughnutContainer {
+  height: 200px;
+  /* margin-top: 2rem; */
+  display: flex;
+  justify-content: flex-start; /* align left */
+  align-items: center; /* vertically center */
+}
+
+.doughnutContainer canvas {
+  width: 160px !important; /* shrink the canvas width */
+}
+
+.responseCount {
+  font-size: 38px;
+  font-weight: 600;
+  color: #1f1f1f;
+  align-items: center;
+}

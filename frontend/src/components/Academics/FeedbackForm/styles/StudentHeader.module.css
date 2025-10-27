@@ -1,0 +1,95 @@
+.container {
+  background-color: #f8f5ff;
+  padding: 25px 30px;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #1f1f1f;
+  margin-bottom: 10px;
+}
+
+.tableWrapper {
+  background: #fff;
+  border-radius: 12px;
+  overflow-y: auto;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  max-height: 360px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  padding: 12px 18px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #eaeaea;
+}
+
+td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.index {
+  width: 50px;
+  text-align: center;
+  color: #777;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  font-size: 28px;
+  color: #888;
+}
+
+.avatar img { 
+  width: 35px;
+
+  border-radius: 50%;
+}
+
+.name {
+  font-weight: 500;
+  color: #1e1e1e;
+}
+
+.email {
+  font-size: 13px;
+  color: #888;
+}
+
+.exportRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.exportBtn {
+  background: linear-gradient(90deg, #a174ff, #8e63f7);
+  border: none;
+  color: #fff;
+  padding: 10px 26px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.exportBtn:hover {
+  opacity: 0.9;
+}

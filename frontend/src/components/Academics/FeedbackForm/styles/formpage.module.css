@@ -1,0 +1,472 @@
+.maincontainer {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+.maincontainer h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+}
+
+.coursedetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.coursedetails {
+  /* width: 70%; */
+}
+
+.coursedetails p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.coursecontainer {
+  width: 100%;
+  display: flex;
+  /* align-items: baseline; */
+  flex-direction: column;
+  gap: 0.8rem;
+  /* margin-bottom: 2rem; */
+  background-color: white;
+  padding: 1.6rem;
+  border-radius: 10px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.course {
+  display: flex;
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.courseimg img {
+  width: 40px;
+}
+
+.coursename {
+  width: 70%;
+}
+
+.extrainfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.facultyname {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.facultyimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.facultyimg img {
+  width: 40px;
+  /* border-radius: 50%; */
+}
+
+.coursenumber {
+  display: flex;
+  align-items: end;
+}
+.coursenumber p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #b3b3b3;
+}
+
+.facultyinfo p {
+  margin-top: -3px;
+}
+
+.formcontainer {
+  margin-top: 4rem;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+}
+
+.questionBlock {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 2rem;
+  gap: 3rem;
+  /* justify-content: space-around; */
+  /* align-items: center; */
+  /* justify-content: center; */
+  width: 100%;
+}
+
+.questionNumber {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #767676;
+  margin-right: 10px;
+  /* margin-top: 5px; */
+}
+
+.questionText {
+  color: black;
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin-bottom: 1.2rem;
+  text-align: left;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn1 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ce202a;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #ce202a;
+  background: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn1:hover {
+  color: white;
+  background-color: #ce202a;
+}
+
+.btn1Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #ce202a;
+  background: #ce202a;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e51c22;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #e51c22;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn2:hover {
+  color: white;
+  background-color: #e51c22;
+}
+
+.btn2Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #e51c22;
+  background: #e51c22;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e33922;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #e33922;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn3:hover {
+  color: white;
+  background-color: #e33922;
+}
+
+.btn3Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #e33922;
+  background: #e33922;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn4 {
+  font-weight: 600;
+  font-size: 15px;
+  color: #f37721;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f37721;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn4:hover {
+  color: white;
+  background-color: #f37721;
+}
+
+.btn4Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f37721;
+  background: #f37721;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn5 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f7b217;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f7b217;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn5:hover {
+  color: white;
+  background-color: #f7b217;
+}
+
+.btn5Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f7b217;
+  background: #f7b217;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn6 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f9dc05;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f9dc05;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn6:hover {
+  color: white;
+  background-color: #f9dc05;
+}
+
+.btn6Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #f9dc05;
+  background: #f9dc05;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn7 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #c8db2a;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #c8db2a;
+  background-color: transparent;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn7:hover {
+  color: white;
+  background-color: #c8db2a;
+}
+
+.btn7Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #c8db2a;
+  background: #c8db2a;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn8 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #8dc73f;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #8dc73f;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn8:hover {
+  color: white;
+  background-color: #8dc73f;
+}
+
+.btn8Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #8dc73f;
+  background: #8dc73f;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn9 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #4ab446;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #4ab446;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+
+}
+
+.btn9:hover {
+  color: white;
+  background-color: #4ab446;
+}
+
+.btn9Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #4ab446;
+  background: #4ab446;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn10 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #11a449;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #11a449;
+  background-color: transparent;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn10:hover {
+  color: white;
+  background-color: #11a449;
+}
+
+.btn10Selected {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 2px solid #11a449;
+  background: #11a449;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+}
+
+.suggestionsBox {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* margin-top: 4rem; */
+}
+
+.suggestionsBox textarea {
+  font-size: 1rem;
+  border: none;
+  margin-top: 1rem;
+  height: 5rem;
+  width: 95%;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: inset 0px 2px 8px rgba(0, 0, 0, 0.3);
+  resize: none; 
+}
+
+.suggestionsBox textarea:focus {
+  outline: none;
+}
+
+
+
+.suggestionsBox h4{
+    margin-bottom: 0rem;
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
+
+.unanswered {
+  background-color: #FFE2E2;
+  width: 100%;
+  padding: 1rem;
+  padding-left: 1rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.proceedButton{
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  font-size: 1.2rem;
+  font-weight: 400;
+  padding: 0.8rem 3rem;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
