@@ -18,7 +18,7 @@ import {
     verifyPhase,
     viewProjectStaff
 } from "../controllers/staffbtpController.js";
-import { upload } from "../config/multer.js";
+import upload from "../config/multer.js";
 
 const router=express.Router();
 

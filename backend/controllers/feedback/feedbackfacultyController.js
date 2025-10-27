@@ -4,13 +4,13 @@ import Analytics from "../../models/feedback/Analytics.js";
 
 export const facultyDashboard = async (req, res) => {
   try {
-    // 1️⃣ Get the faculty document
+    // Get the faculty document
     const faculty = await Faculty.findOne({ email: req.user.email });
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
     }
 
-    // 2️⃣ Find analytics for that faculty
+    // Find analytics for that faculty
     const analytics = await Analytics.findOne({ faculty: faculty._id })
       .populate({
         path: "courses.course",
@@ -28,7 +28,7 @@ export const facultyDashboard = async (req, res) => {
       });
     }
 
-    // 3️⃣ Calculate per-course and overall stats
+    // Calculate per-course and overall stats
     let totalAvg = 0;
     let totalCourses = 0;
     let totalImpressions = 0;
@@ -56,7 +56,7 @@ export const facultyDashboard = async (req, res) => {
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
 
-    // 4️⃣ Send response
+    // Send response
     return res.status(200).json({
       name: faculty.name,
       department: faculty.dept,
@@ -74,7 +74,6 @@ export const facultyDashboard = async (req, res) => {
 export const viewCourseStatistics = async (req, res) => {
   try {
     const { courseId } = req.query;
-    // console.log(req.params)
     console.log(courseId)
     const faculty = await Faculty.findOne({ email: req.user.email });
     if (!faculty) {
