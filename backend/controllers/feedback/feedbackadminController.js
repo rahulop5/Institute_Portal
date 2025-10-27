@@ -137,7 +137,7 @@ export const adminDashboardCourse = async (req, res) => {
       return res.status(200).json({ message: "No courses found", courses: [] });
     }
 
-    // For each course, compute faculty count & enrollment strength
+    // Compute faculty count & enrollment strength for each course
     const courseData = await Promise.all(
       courses.map(async (course) => {
         const strength = await Enrollment.countDocuments({ course: course._id });
@@ -147,14 +147,19 @@ export const adminDashboardCourse = async (req, res) => {
           coursetype: course.coursetype,
           facultycount: course.faculty ? course.faculty.length : 0,
           strength,
+          isreset: course.isreset, // 🟩 Added: include isreset status in response
         };
       })
     );
 
-    // Send final data
+    // Added: separate based on isreset
+    const activeCourses = courseData.filter((c) => !c.isreset);
+    const resetCourses = courseData.filter((c) => c.isreset);
+
     return res.status(200).json({
       totalCourses: courses.length,
-      courses: courseData,
+      activeCourses,
+      resetCourses,
     });
   } catch (err) {
     console.error("Error fetching admin course dashboard:", err);
@@ -164,7 +169,6 @@ export const adminDashboardCourse = async (req, res) => {
     });
   }
 };
-
 
 //view individual course
 export const viewCourse = async (req, res) => {
@@ -192,10 +196,10 @@ export const viewCourse = async (req, res) => {
     return res.status(200).json({
       message: "Course details fetched successfully",
       course,
-      // faculties: course.faculty,
       students,
       totalStudents: students.length,
       totalFaculties: course.faculty.length,
+      isreset: course.isreset,
     });
   } catch (err) {
     console.error("Error in viewCourse:", err);
@@ -203,15 +207,16 @@ export const viewCourse = async (req, res) => {
   }
 };
 
-
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  try {
-    const { name, code, facultyEmails } = req.body;
 
-    if (!name || !code || !facultyEmails) {
+  try {
+    const { name, code, facultyEmails, abbreviation, credits, coursetype } = req.body;
+
+    // Validate required fields
+    if (!name || !code || !facultyEmails || !abbreviation || !credits || !coursetype) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -219,6 +224,7 @@ export const addCourse = async (req, res) => {
       return res.status(400).json({ message: "CSV file is required" });
     }
 
+    // Parse facultyEmails safely
     let facultyEmailsJSON;
     if (typeof facultyEmails === "string") {
       try {
@@ -232,7 +238,7 @@ export const addCourse = async (req, res) => {
       facultyEmailsJSON = facultyEmails;
     }
 
-    //  Find faculties
+    // Find faculties
     const facultyDocs = await Faculty.find({
       email: { $in: facultyEmailsJSON },
     }).session(session);
@@ -246,19 +252,23 @@ export const addCourse = async (req, res) => {
       });
     }
 
-    //  Check existing course
+    // Check for duplicate course code
     const existingCourse = await Course.findOne({ code }).session(session);
     if (existingCourse) {
       return res.status(400).json({ message: "Course code already exists" });
     }
 
-    //  Create course
+    // Create new course with new fields
     const course = await Course.create(
       [
         {
           name,
+          abbreviation,
+          credits,
+          coursetype,
           code,
           faculty: facultyDocs.map((f) => f._id),
+          isreset: false,
         },
       ],
       { session }
@@ -266,7 +276,7 @@ export const addCourse = async (req, res) => {
 
     const courseId = course[0]._id;
 
-    //  Parse CSV → get student emails
+    // Parse CSV → get student emails
     const filePath = req.file.path;
     const studentEmails = [];
 
@@ -287,7 +297,7 @@ export const addCourse = async (req, res) => {
       return res.status(400).json({ message: "No valid student emails found in CSV" });
     }
 
-    //  Find students
+    // Find students
     const students = await Student.find({
       email: { $in: studentEmails },
     }).session(session);
@@ -302,14 +312,14 @@ export const addCourse = async (req, res) => {
       });
     }
 
-    //  Enroll students
+    // Enroll students in this course
     const enrollments = students.map((s) => ({
       student: s._id,
       course: courseId,
     }));
     await Enrollment.insertMany(enrollments, { session });
 
-    //  Create analytics entries for each faculty
+    // Create analytics entries for each faculty
     const allQuestions = await Question.find().session(session);
     const questionAnalytics = allQuestions.map((q) => ({
       question: q._id,
@@ -323,7 +333,6 @@ export const addCourse = async (req, res) => {
       let analytics = await Analytics.findOne({ faculty: faculty._id }).session(session);
 
       if (!analytics) {
-        // New faculty analytics doc
         analytics = new Analytics({
           faculty: faculty._id,
           courses: [
@@ -335,7 +344,6 @@ export const addCourse = async (req, res) => {
           ],
         });
       } else {
-        // If course already exists under same faculty, prevent duplication
         const alreadyHas = analytics.courses.some(
           (c) => c.course.toString() === courseId.toString()
         );
@@ -351,7 +359,7 @@ export const addCourse = async (req, res) => {
       await analytics.save({ session });
     }
 
-    //  Commit transaction
+    // Commit transaction
     await session.commitTransaction();
     session.endSession();
 
@@ -577,6 +585,8 @@ export const resetCourse = async (req, res) => {
 
     // Remove all faculty assignments
     course.faculty = [];
+    course.isreset = true;
+
     await course.save({ session });
 
     // Delete all enrollments for this course
@@ -642,15 +652,16 @@ export const addFacultyStudentstoCourse = async (req, res) => {
       });
     }
 
-    // Avoid duplicates
     const facultyIds = facultyDocs.map((f) => f._id);
     const currentIds = course.faculty.map((f) => f.toString());
     const newFacultyIds = facultyIds.filter((id) => !currentIds.includes(id.toString()));
 
     course.faculty.push(...newFacultyIds);
+    course.isreset = false;
+
     await course.save({ session });
 
-    // Students (from CSV) 
+    // Students (CSV)
     const filePath = req.file.path;
     const studentEmails = [];
 
@@ -701,6 +712,7 @@ export const addFacultyStudentstoCourse = async (req, res) => {
       message: "Faculty and students successfully added to the course",
       totalFacultiesAdded: newFacultyIds.length,
       totalStudentsAdded: students.length,
+      isreset: false,
     });
   } catch (err) {
     console.error("Error in addFacultyStudentstoCourse:", err);
