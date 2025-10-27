@@ -22,7 +22,7 @@ export const facultyDashboard = async (req, res) => {
         name: faculty.name,
         department: faculty.dept,
         avgscore: 0,
-        impress: 0,
+        impressions: 0,
         coursestaught: 0,
         courses: [],
       });
@@ -46,8 +46,8 @@ export const facultyDashboard = async (req, res) => {
       totalCourses++;
       totalAvg += courseAvg;
       totalImpressions += c.totalResponses;
-
       coursesData.push({
+        courseId: c.course._id,
         name: c.course.name,
         coursecode: c.course.code,
         avgscore: parseFloat(courseAvg.toFixed(2)),
@@ -61,7 +61,7 @@ export const facultyDashboard = async (req, res) => {
       name: faculty.name,
       department: faculty.dept,
       avgscore: parseFloat(overallAvg.toFixed(2)),
-      impress: totalImpressions,
+      impressions: totalImpressions,
       coursestaught: totalCourses,
       courses: coursesData,
     });
@@ -91,12 +91,14 @@ export const viewCourseStatistics = async (req, res) => {
         select: "text order",
       });
 
+      console.log(analytics.courses)
+
     if (!analytics) {
       return res.status(404).json({ message: "No analytics found for this faculty" });
     }
 
     const courseData = analytics.courses.find(
-      (c) => c.course && c.course._id.toString() === courseId
+      (c) => c.course && c.course._id.toString() === courseId.toString()
     );
 
     if (!courseData) {

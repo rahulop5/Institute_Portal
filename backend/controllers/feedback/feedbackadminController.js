@@ -216,6 +216,8 @@ export const viewCourse = async (req, res) => {
   }
 };
 
+//view faculty
+//view faculty course statistics
 
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {

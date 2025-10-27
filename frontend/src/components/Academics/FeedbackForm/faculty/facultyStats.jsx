@@ -3,73 +3,83 @@ import styles from "../styles/facultyStats.module.css";
 import DoughnutChartBox from "./DoughnutChartBox";
 import LineChartBox from "./LineChartBox";
 import FeedbackSection from "./FeedbackSection";
+import { useLoaderData } from "react-router";
 
-const data = {
-  name: "Theory of Computation",
-  coursecode: "CS2018",
-  coursetype: "Institute Core Course",
-  avgscore: 7.8,
-  responses: {
-    submitted: 73,
-    yettosubmit: 18,
-  },
-  questions: [
-    { qno: 1, avgscore: 7.6 },
-    { qno: 2, avgscore: 6.8 },
-    { qno: 3, avgscore: 8.1 },
-    { qno: 4, avgscore: 7.2 },
-    { qno: 5, avgscore: 6.9 },
-    { qno: 6, avgscore: 8.3 },
-    { qno: 7, avgscore: 4.6 },
-    { qno: 8, avgscore: 8.5 },
-    { qno: 9, avgscore: 8.9 },
-    { qno: 10, avgscore: 7.7 },
-    { qno: 11, avgscore: 7.1 },
-    { qno: 12, avgscore: 6.4 },
-    { qno: 13, avgscore: 7.9 },
-    { qno: 14, avgscore: 8.2 },
-    { qno: 15, avgscore: 7.0 },
-  ],
-  min: { score: 4.6, question: 7 },
-  max: { score: 8.9, question: 9 },
-  feedback: {
-    course: [
-      {
-        date: "13/02/24",
-        text: "The course content was well-structured and easy to follow. Real-world examples helped me grasp the concepts better.",
-        score: 9.2,
-      },
-      {
-        date: "13/02/24",
-        text: "Some topics were a bit rushed toward the end. More time for theorems and proofs would be helpful.",
-        score: 6.8,
-      },
-    ],
-    faculty: [
-      {
-        date: "13/02/24",
-        text: "The faculty explained each topic clearly and handled queries patiently.",
-        score: 9.1,
-      },
-      {
-        date: "13/02/24",
-        text: "Lectures were sometimes too fast-paced, especially during the later chapters.",
-        score: 5.9,
-      },
-    ],
-  },
-};
+// const data = {
+//   name: "Theory of Computation",
+//   coursecode: "CS2018",
+//   coursetype: "Institute Core Course",
+//   avgscore: 7.8,
+//   responses: {
+//     submitted: 73,
+//     yettosubmit: 18,
+//   },
+//   questions: [
+//     { qno: 1, avgscore: 7.6 },
+//     { qno: 2, avgscore: 6.8 },
+//     { qno: 3, avgscore: 8.1 },
+//     { qno: 4, avgscore: 7.2 },
+//     { qno: 5, avgscore: 6.9 },
+//     { qno: 6, avgscore: 8.3 },
+//     { qno: 7, avgscore: 4.6 },
+//     { qno: 8, avgscore: 8.5 },
+//     { qno: 9, avgscore: 8.9 },
+//     { qno: 10, avgscore: 7.7 },
+//     { qno: 11, avgscore: 7.1 },
+//     { qno: 12, avgscore: 6.4 },
+//     { qno: 13, avgscore: 7.9 },
+//     { qno: 14, avgscore: 8.2 },
+//     { qno: 15, avgscore: 7.0 },
+//   ],
+//   min: { score: 4.6, question: 7 },
+//   max: { score: 8.9, question: 9 },
+//   feedback: {
+//     course: [
+//       {
+//         date: "13/02/24",
+//         text: "The course content was well-structured and easy to follow. Real-world examples helped me grasp the concepts better.",
+//         score: 9.2,
+//       },
+//       {
+//         date: "13/02/24",
+//         text: "Some topics were a bit rushed toward the end. More time for theorems and proofs would be helpful.",
+//         score: 6.8,
+//       },
+//     ],
+//     faculty: [
+//       {
+//         date: "13/02/24",
+//         text: "The faculty explained each topic clearly and handled queries patiently.",
+//         score: 9.1,
+//       },
+//       {
+//         date: "13/02/24",
+//         text: "Lectures were sometimes too fast-paced, especially during the later chapters.",
+//         score: 5.9,
+//       },
+//     ],
+//   },
+// };
 
 export default function FacultyStatistics() {
+  const data=useLoaderData();
+  console.log(data)
   const [activeTab, setActiveTab] = useState("course");
-  const { name, coursecode, avgscore, responses, questions, min, max, feedback } =
-    data;
+  const {
+    name,
+    coursecode,
+    avgscore,
+    responses,
+    questions,
+    min,
+    max,
+    feedback,
+  } = data;
 
   return (
     <div className={styles.container}>
       <h2 className={styles.heading}>Feedback Form Overview</h2>
 
-      
       <div className={styles.topSection}>
         <div className={styles.courseBox}>
           <div className={styles.courseInfo}>
@@ -109,4 +119,49 @@ export default function FacultyStatistics() {
       />
     </div>
   );
+}
+
+export async function loader({ params }) {
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+  switch (role) {
+    case "Faculty":
+      //add custom logic for batch later using URL
+      const response = await fetch(
+        `http://localhost:3000/faculty/feedback/course?courseId=${params.courseId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const result = await response.json();
+        console.log(result);
+        throw new Response(
+          JSON.stringify({
+            message: "Error adding the topic",
+          }),
+          {
+            status: 500,
+          }
+        );
+      }
+
+      const result = await response.json();
+      return result;
+    //handle other users later
+    default:
+      throw new Response(
+        JSON.stringify({
+          message: "Error loading BTP dashboard",
+        }),
+        {
+          status: 500,
+        }
+      );
+  }
 }

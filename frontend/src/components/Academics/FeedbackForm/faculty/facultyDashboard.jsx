@@ -1,24 +1,29 @@
 import styles from "../styles/facultyDashboard.module.css";
 import profile from "../../../../assets/studenticon.svg";
 import courseImg from "../../../../assets/math1.png";
+import { redirect, useLoaderData, useNavigate } from "react-router";
 
 export default function FacultyDashboard({ facultyData, onBack }) {
   // Dummy fallback data (used if no prop is passed)
-  const dummyData = {
-    name: "Dr. Kavya Sharma",
-    avgscore: 4.6,
-    impressions: "270",
-    coursestaught: 3,
-    department: "CSE",
-    courses: [
-      { name: "Database Management Systems", coursecode: "DBMS101", avgscore: 4.7 },
-      { name: "Computer Networks", coursecode: "CN103", avgscore: 4.4 },
-      { name: "Operating Systems", coursecode: "OS102", avgscore: 4.6 },
-    ],
+  // const dummyData = {
+  //   name: "Dr. Kavya Sharma",
+  //   avgscore: 4.6,
+  //   impressions: "270",
+  //   coursestaught: 3,
+  //   department: "CSE",
+  //   courses: [
+  //     { name: "Database Management Systems", coursecode: "DBMS101", avgscore: 4.7 },
+  //     { name: "Computer Networks", coursecode: "CN103", avgscore: 4.4 },
+  //     { name: "Operating Systems", coursecode: "OS102", avgscore: 4.6 },
+  //   ],
+  // };
+  const navigate = useNavigate();
+  const handleClickStatistics = (courseId) => {
+    navigate(`/academics/feedback/faculty/${courseId}`);
   };
 
   // Use prop data if available, else use dummy
-  const data = facultyData || dummyData;
+  const data = facultyData || useLoaderData();
 
   return (
     <div className={styles.container}>
@@ -79,7 +84,12 @@ export default function FacultyDashboard({ facultyData, onBack }) {
                   <div className={styles.avgLabel}>Average Score</div>
                   <div className={styles.avgValue}>{course.avgscore}</div>
                 </div>
-                <button className={styles.viewBtn}>View Statistics</button>
+                <button
+                  onClick={() => handleClickStatistics(course.courseId)}
+                  className={styles.viewBtn}
+                >
+                  View Statistics
+                </button>
               </div>
             </li>
           ))}
@@ -88,3 +98,48 @@ export default function FacultyDashboard({ facultyData, onBack }) {
     </div>
   );
 }
+
+export async function loader() {
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+  switch (role) {
+    case "Faculty":
+      //add custom logic for batch later using URL
+      const response = await fetch(
+        "http://localhost:3000/faculty/feedback/dashboard",
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      //add custom messages for 403 and 404
+      if (!response.ok) {
+        const resData = await response.json();
+
+        throw new Response(
+          JSON.stringify({
+            message: "Error loading Feedback dashboard",
+          }),
+          {
+            status: 500,
+          }
+        );
+      }
+      const resData = await response.json();
+      // console.log(resData)
+      return resData;
+
+    //handle other users later
+    default:
+      throw new Response(
+        JSON.stringify({
+          message: "Error loading BTP dashboard",
+        }),
+        {
+          status: 500,
+        }
+      );
+  }
+}
+

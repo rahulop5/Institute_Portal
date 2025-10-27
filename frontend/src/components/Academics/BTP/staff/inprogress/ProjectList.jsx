@@ -78,6 +78,5 @@ export async function loader({ params }) {
     throw new Response("Failed to load project", { status: response.status });
   }
   const data = await response.json();
-  console.log(data);
   return data;
 }
