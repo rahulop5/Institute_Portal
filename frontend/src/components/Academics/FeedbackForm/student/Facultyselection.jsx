@@ -2,45 +2,48 @@ import { useState } from "react";
 import styles from "../styles/FacultySelection.module.css";
 import courseImg from "../../../../assets/math1.png";
 import cross from "../../../../assets/cross.png";
+import { redirect, useSubmit } from "react-router";
 
-export default function FacultySelection() {
-  const data = {
-    email: "ananya.g25@iiits.in",
-    started: false,
-    courses: [
-      {
-        courseId: "68db5b79d78fcafe6bb12607",
-        courseName: "Database Management Systems",
-        courseCode: "DBMS101",
-        faculty: [
-          { facultyId: "68db66d77e93b1b3d114a14e", name: "Dr. Ramesh", email: "ramesh@iiits.in", dept: "CSE" },
-          { facultyId: "68db66d77e93b1b3d114a150", name: "Dr. Priya", email: "priya@iiits.in", dept: "CSE" },
-        ],
-      },
-      {
-        courseId: "68db5b79d78fcafe6bb12609",
-        courseName: "Computer Networks",
-        courseCode: "CN103",
-        faculty: [
-          { facultyId: "68db66d77e93b1b3d114a156", name: "Dr. Anil", email: "anil@iiits.in", dept: "ECE" },
-          { facultyId: "68db66d77e93b1b3d114a158", name: "Dr. Sneha", email: "sneha@iiits.in", dept: "ECE" },
-          { facultyId: "68db66d77e93b1b3d114a14e", name: "Dr. Ramesh", email: "ramesh@iiits.in", dept: "CSE" },
-        ],
-      },
-      {
-        courseId: "68db5b79d78fcafe6bb1260a",
-        courseName: "Machine Learning",
-        courseCode: "ML104",
-        faculty: [
-          { facultyId: "68db66d77e93b1b3d114a156", name: "Dr. Anil", email: "anil@iiits.in", dept: "ECE" },
-          { facultyId: "68db66d77e93b1b3d114a15c", name: "Dr. Kavya", email: "kavya@iiits.in", dept: "MDS" },
-        ],
-      },
-    ],
-  };
+export default function FacultySelection({data}) {
+  // const data = {
+  //   email: "ananya.g25@iiits.in",
+  //   started: false,
+  //   courses: [
+  //     {
+  //       courseId: "68db5b79d78fcafe6bb12607",
+  //       courseName: "Database Management Systems",
+  //       courseCode: "DBMS101",
+  //       faculty: [
+  //         { facultyId: "68db66d77e93b1b3d114a14e", name: "Dr. Ramesh", email: "ramesh@iiits.in", dept: "CSE" },
+  //         { facultyId: "68db66d77e93b1b3d114a150", name: "Dr. Priya", email: "priya@iiits.in", dept: "CSE" },
+  //       ],
+  //     },
+  //     {
+  //       courseId: "68db5b79d78fcafe6bb12609",
+  //       courseName: "Computer Networks",
+  //       courseCode: "CN103",
+  //       faculty: [
+  //         { facultyId: "68db66d77e93b1b3d114a156", name: "Dr. Anil", email: "anil@iiits.in", dept: "ECE" },
+  //         { facultyId: "68db66d77e93b1b3d114a158", name: "Dr. Sneha", email: "sneha@iiits.in", dept: "ECE" },
+  //         { facultyId: "68db66d77e93b1b3d114a14e", name: "Dr. Ramesh", email: "ramesh@iiits.in", dept: "CSE" },
+  //       ],
+  //     },
+  //     {
+  //       courseId: "68db5b79d78fcafe6bb1260a",
+  //       courseName: "Machine Learning",
+  //       courseCode: "ML104",
+  //       faculty: [
+  //         { facultyId: "68db66d77e93b1b3d114a156", name: "Dr. Anil", email: "anil@iiits.in", dept: "ECE" },
+  //         { facultyId: "68db66d77e93b1b3d114a15c", name: "Dr. Kavya", email: "kavya@iiits.in", dept: "MDS" },
+  //       ],
+  //     },
+  //   ],
+  // };
 
+  
   const [selectedFaculties, setSelectedFaculties] = useState({});
   const [openModal, setOpenModal] = useState(null);
+  const submit=useSubmit();
 
   const handleSelectFaculty = (courseId, faculty) => {
     setSelectedFaculties((prev) => {
@@ -59,8 +62,45 @@ export default function FacultySelection() {
 
   const handleConfirm = () => setOpenModal(null);
 
-  const allSelected =
-    data.courses.every((c) => selectedFaculties[c.courseId]?.length > 0);
+   const allSelected = data.courses.every(
+    (c) => selectedFaculties[c.courseId]?.length > 0
+  );
+
+  const formattedSelections = Object.entries(selectedFaculties).map(
+    ([courseId, faculties]) => ({
+      courseId,
+      facultyIds: faculties.map((f) => f.facultyId),
+    })
+  );
+
+  function handleProceed() {
+    if (!allSelected) return;
+
+    const payload = { selections: formattedSelections };
+    // useSubmit automatically calls the matching `action()`
+
+    const formData = new FormData();
+    formData.append("reqData", JSON.stringify(payload));
+
+    submit(formData, {
+      method: "post",
+      action: "selectfaculty",
+      encType: "application/x-www-form-urlencoded",
+    });
+  }
+    //format for sending data
+  // {
+  //   "selections": [
+  //     {
+  //       "courseId": "68db5b79d78fcafe6bb12607",
+  //       "facultyIds": ["68db66d77e93b1b3d114a14e"]
+  //     },
+  //     {
+  //       "courseId": "68db5b79d78fcafe6bb12608",
+  //       "facultyIds": ["68db66d77e93b1b3d114a152", "68db66d77e93b1b3d114a154"]
+  //     }
+  //   ]
+  // }
 
   return (
     <div className={styles.facultyselectionpage}>
@@ -121,6 +161,7 @@ export default function FacultySelection() {
           )}
           <button
             className={`${styles.proceedButton} ${!allSelected ? styles.disabled : ""}`}
+            onClick={handleProceed}
           >
             Proceed
           </button>
@@ -194,4 +235,38 @@ export default function FacultySelection() {
       )}
     </div>
   );
+}
+
+export async function action({ request }) {
+  const token = localStorage.getItem("token");
+  const formData = await request.formData();
+  const selectionDataJSON = formData.get("reqData");
+  const data = JSON.parse(selectionDataJSON);
+  // console.log(data);
+
+  const response = await fetch(
+    "http://localhost:3000/student/feedback/selectfaculty",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Response(
+      JSON.stringify({
+        message: err.message || "Failed to submit faculty selection",
+      }),
+      { status: response.status || 500 }
+    );
+  }
+  const res=await response.json();
+  // console.log(res);
+
+  return redirect("/academics/feedback/student"); // adjust as needed
 }

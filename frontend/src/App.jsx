@@ -26,13 +26,14 @@ import { action as addStudentAction } from "./components/academics/btp/student/T
 // import Inprogress from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 // Added a comment
-import FeedbackDashboardStudent from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
+import FeedbackDashboardStudent, { loader as studentFeedbackDashboardLoader } from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {loader as projectListLoader} from "./components/Academics/BTP/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
 import FacultyDashboard, { loader as facultyFeedbackLoader } from "./components/Academics/FeedbackForm/faculty/facultyDashboard.jsx";
 import FacultyStatistics, { loader as facultyViewStatsLoader } from "./components/academics/FeedbackForm/faculty/facultyStats.jsx";
 import AcademicsLayout from "./pages/AcademicsLayout.jsx";
+import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
 
 const router=createBrowserRouter([
   {
@@ -105,7 +106,16 @@ const router=createBrowserRouter([
                 loader: feedbackRouter,
                 element: <></>
               },
-              {path: "student", element: <FeedbackDashboardStudent />},
+              { path: "student",
+                 children: [
+                  {
+                    index: true,
+                    loader: studentFeedbackDashboardLoader,
+                    element: <FeedbackDashboardStudent />,
+                  },
+                  { path: "selectfaculty", action: selectFacultyAction, element: <></> },
+                ]
+              },
               {path: "admin", element: <AdminDashboard />},
               {path: "faculty",
                 children: [

@@ -385,7 +385,7 @@ export async function updateTeamAction({ request }) {
   const topicDataJSON = formData.get("reqData");
   const topicData = JSON.parse(topicDataJSON);
   const token = localStorage.getItem("token");
-  console.log("Incoming payload:", topicData);
+  // console.log("Incoming payload:", topicData);
 
   // 🔹 Build the bin structure
   const reqData = {

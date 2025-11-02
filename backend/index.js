@@ -44,4 +44,5 @@ app.get("/test", (req, res)=>{
 
 //add the page not found thing
 
+//add to env later
 app.listen(3000);
