@@ -26,7 +26,6 @@ import { action as addStudentAction } from "./components/academics/btp/student/T
 // import Inprogress from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 // Added a comment
-import FeedbackDashboardStudent, { loader as studentFeedbackDashboardLoader } from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {loader as projectListLoader} from "./components/Academics/BTP/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
@@ -34,7 +33,8 @@ import FacultyDashboard, { loader as facultyFeedbackLoader } from "./components/
 import FacultyStatistics, { loader as facultyViewStatsLoader } from "./components/academics/FeedbackForm/faculty/facultyStats.jsx";
 import AcademicsLayout from "./pages/AcademicsLayout.jsx";
 import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
-
+import FormPage from "./components/Academics/FeedbackForm/student/formpage.jsx";
+import FeedbackDashboardStudent, {loader as studentFeedbackDashboardLoader} from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
 const router=createBrowserRouter([
   {
     path: "/",

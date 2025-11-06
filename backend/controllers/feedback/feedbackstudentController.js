@@ -35,9 +35,6 @@ export const feedbackStudentDashboard = async (req, res) => {
         select: "text type order isActive",
       });
 
-      console.log("logging here ", feedbackInstance)
-            console.log("logging here sub",feedbackInstance.submitted)
-
 
     if (feedbackInstance) {
       // Already started / submitted
