@@ -102,44 +102,27 @@ export default function FacultyDashboard({ facultyData, onBack }) {
 export async function loader() {
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
-  switch (role) {
-    case "Faculty":
-      //add custom logic for batch later using URL
-      const response = await fetch(
-        "http://localhost:3000/faculty/feedback/dashboard",
-        {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
-        }
-      );
-      //add custom messages for 403 and 404
-      if (!response.ok) {
-        const resData = await response.json();
 
-        throw new Response(
-          JSON.stringify({
-            message: "Error loading Feedback dashboard",
-          }),
-          {
-            status: 500,
-          }
-        );
-      }
-      const resData = await response.json();
-      // console.log(resData)
-      return resData;
-
-    //handle other users later
-    default:
-      throw new Response(
-        JSON.stringify({
-          message: "Error loading BTP dashboard",
-        }),
-        {
-          status: 500,
-        }
-      );
+  if (role !== "Student") {
+    throw new Response(JSON.stringify({ message: "Access denied" }), { status: 403 });
   }
-}
 
+  const response = await fetch("http://localhost:3000/feedback/student", {
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  });
+
+  const resData = await response.json();
+
+  if (!response.ok) {
+    throw new Response(
+      JSON.stringify({
+        message: resData.message || "Error loading Feedback dashboard",
+      }),
+      { status: response.status }
+    );
+  }
+
+  return resData;
+}

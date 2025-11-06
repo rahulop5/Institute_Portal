@@ -44,7 +44,7 @@ const router=createBrowserRouter([
     loader: tokenLoader,
     children: [
       { index: true, element: <Homepage />, loader: checkAuthLoader },
-      { path: "temp", element: <AdminDashboard/> },
+      { path: "temp", element: <FormPage/> },
       { path: "academics",
         element: <AcademicsLayout />,
         loader: checkAuthLoader,
