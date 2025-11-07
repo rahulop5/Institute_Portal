@@ -3,8 +3,11 @@ import profile from "../../../../assets/studenticon.svg";
 import courseImg from "../../../../assets/math1.png";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 
-export default function FacultyDashboard({ facultyData, onBack }) {
-  // Dummy fallback data (used if no prop is passed)
+export default function FacultyDashboard({
+  facultyData,
+  onBack,
+  onCourseClick,
+}) {
   // const dummyData = {
   //   name: "Dr. Kavya Sharma",
   //   avgscore: 4.6,
@@ -18,11 +21,11 @@ export default function FacultyDashboard({ facultyData, onBack }) {
   //   ],
   // };
   const navigate = useNavigate();
-  const handleClickStatistics = (courseId) => {
+  const defaultHandleClick = (courseId) => {
     navigate(`/academics/feedback/faculty/${courseId}`);
   };
+  const handleClickStatistics = onCourseClick || defaultHandleClick;
 
-  // Use prop data if available, else use dummy
   const data = facultyData || useLoaderData();
 
   return (
@@ -50,7 +53,7 @@ export default function FacultyDashboard({ facultyData, onBack }) {
 
         <div className={styles.impressions}>
           <div className={styles.scoreheading}>Impressions</div>
-          <div>{data.impressions}</div>
+          <div>{data.impress}</div>
         </div>
 
         <div className={styles.coursestaught}>
@@ -103,11 +106,11 @@ export async function loader() {
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
 
-  if (role !== "Student") {
+  if (role !== "Faculty") {
     throw new Response(JSON.stringify({ message: "Access denied" }), { status: 403 });
   }
 
-  const response = await fetch("http://localhost:3000/feedback/student", {
+  const response = await fetch("http://localhost:3000/faculty/feedback/dashboard", {
     headers: {
       Authorization: "Bearer " + token,
     },
@@ -116,6 +119,7 @@ export async function loader() {
   const resData = await response.json();
 
   if (!response.ok) {
+    const resData = await response.json();
     throw new Response(
       JSON.stringify({
         message: resData.message || "Error loading Feedback dashboard",

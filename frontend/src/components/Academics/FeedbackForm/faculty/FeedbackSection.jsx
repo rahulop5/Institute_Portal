@@ -4,6 +4,7 @@ import styles from "../styles/facultyStats.module.css";
 export default function FeedbackSection({ feedback, activeTab, setActiveTab }) {
   const currentFeedback =
     activeTab === "course" ? feedback.course : feedback.faculty;
+  console.log(currentFeedback)
 
   return (
     <>

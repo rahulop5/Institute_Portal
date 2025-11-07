@@ -15,12 +15,13 @@ export default function FeedbackDashboardStudent() {
   // };
   // const data = useLoaderData();
 
-  console.log("📦 Loader data in component:", data);
+  console.log(data);
 
   return (
     <div>
       {!data.started && !data.submitted && (
-        <FacultySelection courses={data.courses} />
+        <FacultySelection data={data} />
+        // <FacultySelection courses={data.courses} />
       )}
 
       {data.started && !data.submitted && (
@@ -59,7 +60,6 @@ export async function loader() {
         );
       }
       const resData = await response.json();
-      console.log(resData)
       return resData;
 
     //handle other users later

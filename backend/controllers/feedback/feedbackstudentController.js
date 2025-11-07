@@ -923,7 +923,6 @@ export const selectFaculty = async (req, res) => {
   }
 };
 
-
 //format for updatefeedback
 // {
 //   "currentPage": 1,
@@ -953,9 +952,11 @@ export const selectFaculty = async (req, res) => {
 //     }
 //   ]
 // }
+
 export const updateFeedback = async (req, res) => {
   try {
     const { feedbacks, currentPage } = req.body;
+    // console.log(feedbacks[0].answers);
 
     //  Identify the student
     const student = await Student.findOne({ email: req.user.email });
@@ -972,7 +973,7 @@ export const updateFeedback = async (req, res) => {
     if (feedback.submitted) {
       return res.status(400).json({ message: "Feedback already submitted" });
     }
-    console.log(feedback.feedbacks)
+    // console.log(feedback.feedbacks)
 
     //  Update each page strictly
     for (const page of feedbacks) {
@@ -983,7 +984,7 @@ export const updateFeedback = async (req, res) => {
           f.course.toString() === courseId &&
           f.faculty.toString() === facultyId
       );
-      console.log(existingEntry)
+      // console.log(existingEntry)
 
       if (!existingEntry) {
         return res.status(400).json({
@@ -992,6 +993,10 @@ export const updateFeedback = async (req, res) => {
       }
 
       for (const ans of answers) {
+        if(ans.response===null){
+          continue;
+        }
+
         const existingAns = existingEntry.answers.find(
           (a) => a.question.toString() === ans.question
         );
@@ -1051,12 +1056,12 @@ export const updateFeedback = async (req, res) => {
       .lean();
 
     return res.status(200).json({
-      message: "✅ Feedback progress updated successfully",
+      message: "Feedback progress updated successfully",
       currentPage: feedback.currentPage,
       feedback: updatedFeedback,
     });
   } catch (err) {
-    console.error("❌ Error updating feedback:", err);
+    console.error("Error updating feedback:", err);
     return res.status(500).json({
       message: "Error saving feedback progress",
     });
@@ -1746,6 +1751,8 @@ export const submitFeedback = async (req, res) => {
       );
       
       if (!courseEntry) {
+        console.log(courseId)
+        console.log(facultyId)
         return res.status(500).json({
           message: "Course not found"
         });

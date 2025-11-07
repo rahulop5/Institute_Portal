@@ -1,73 +1,73 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import courseImg from "../../../../assets/math1.png";
 import facultyImg from "../../../../assets/studenticon.svg";
 import styles from "../styles/formpage.module.css";
+import { useSubmit, redirect } from "react-router";
 
-const questionBank = [
-  { id: 1, text: "The faculty explained concepts clearly." },
-  { id: 2, text: "The faculty was approachable for doubts." },
-  { id: 3, text: "The pace of teaching was appropriate." },
-  { id: 4, text: "The faculty encouraged student participation." },
-  { id: 5, text: "The faculty used examples and case studies effectively." },
-  { id: 6, text: "The evaluation methods (assignments/tests) were fair." },
-  { id: 7, text: "The faculty provided constructive feedback." },
-  { id: 8, text: "The lectures were well-structured and organized." },
-  { id: 9, text: "The faculty motivated students to learn." },
-  { id: 10, text: "The faculty demonstrated good subject knowledge." },
-  { id: 11, text: "The faculty encouraged critical thinking." },
-  { id: 12, text: "The use of teaching aids (slides/board) was effective." },
-  { id: 13, text: "The faculty managed the class time effectively." },
-  { id: 14, text: "The faculty connected theory with practical applications." },
-  { id: 15, text: "Overall, I am satisfied with the teaching." },
-];
-
-const feedbackData = {
-  studentId: "STU123",
-  courses: [
-    {
-      courseId: "CSE101",
-      courseName: "Data Structures and Algorithms",
-      faculties: [
-        { facultyId: "FAC123", facultyName: "Dr. Anjali Sharma" },
-        { facultyId: "FAC124", facultyName: "Prof. Rajesh Kumar" },
-      ],
-    },
-    {
-      courseId: "MAT201",
-      courseName: "Linear Algebra",
-      faculties: [{ facultyId: "FAC201", facultyName: "Dr. Priya Menon" }],
-    },
-  ],
-};
-
-export default function FormPage({data}) {
-
-  console.log("Incoming data", data)
-  const [currentCourseIndex, setCurrentCourseIndex] = useState(0);
-  const [currentFacultyIndex, setCurrentFacultyIndex] = useState(0);
-
-  const [responses, setResponses] = useState({});
-  const [facultyFeedback, setFacultyFeedback] = useState("");
-  const [courseFeedback, setCourseFeedback] = useState("");
+export default function FormPage({ feedback }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const submit = useSubmit();
   const [submitted, setSubmitted] = useState(false);
 
-  const currentCourse = feedbackData.courses[currentCourseIndex];
-  const currentFaculty = currentCourse.faculties[currentFacultyIndex];
+  // Store responses as an ARRAY of pages instead of object
+  const [responses, setResponses] = useState(() =>
+    feedback.feedbacks.map((fb) => ({
+      courseId: fb.course._id,
+      facultyId: fb.faculty._id,
+      answers: fb.answers.reduce((acc, ans) => {
+        acc[ans.question._id] = ans.response ?? null;
+        return acc;
+      }, {}),
+    }))
+  );
 
-  const handleClick = (qId, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [qId]: value,
-    }));
+  const currentPage = responses[currentIndex];
+  const currentFeedback = feedback.feedbacks[currentIndex];
+  const course = currentFeedback.course;
+  const faculty = currentFeedback.faculty;
+  const questions = currentFeedback.answers.map((a) => a.question);
+
+  const handleRatingClick = (qId, value) => {
+    setResponses((prev) =>
+      prev.map((page, i) =>
+        i === currentIndex
+          ? { ...page, answers: { ...page.answers, [qId]: value } }
+          : page
+      )
+    );
   };
 
-  const handleNext = async () => {
+  const handleTextChange = (qId, value) => {
+    setResponses((prev) =>
+      prev.map((page, i) =>
+        i === currentIndex
+          ? { ...page, answers: { ...page.answers, [qId]: value } }
+          : page
+      )
+    );
+  };
+
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      alert("You are already at the first faculty.");
+    }
+  };
+
+  const handleNext = () => {
     setSubmitted(true);
 
-    const unanswered = questionBank.filter((q) => !responses[q.id]);
+    const currentResponses = currentPage.answers;
+    const unanswered = questions.filter(
+      (q) => !currentResponses[q._id] && q.type === "rating"
+    );
+
+    // Scroll to first unanswered rating
     if (unanswered.length > 0) {
       const firstUnanswered = document.getElementById(
-        `question-${unanswered[0].id}`
+        `question-${unanswered[0]._id}`
       );
       if (firstUnanswered) {
         firstUnanswered.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -75,46 +75,75 @@ export default function FormPage({data}) {
       return;
     }
 
-   
-    const payload = {
-      studentId: feedbackData.studentId,
-      courseId: currentCourse.courseId,
-      facultyId: currentFaculty.facultyId,
-      responses,
-      facultyFeedback,
-      courseFeedback,
-    };
-
-    console.log("Submitting payload to backend:", payload);
-
-    // TODO: Implement actual backend POST request here
-    setResponses({});
-    setFacultyFeedback("");
-    setCourseFeedback("");
-    setSubmitted(false);
-
-    
-    if (currentFacultyIndex + 1 < currentCourse.faculties.length) {
-      setCurrentFacultyIndex(currentFacultyIndex + 1);
-    } else if (currentCourseIndex + 1 < feedbackData.courses.length) {
-      setCurrentCourseIndex(currentCourseIndex + 1);
-      setCurrentFacultyIndex(0);
+    // Just move to next page (no backend call)
+    if (currentIndex + 1 < feedback.feedbacks.length) {
+      setCurrentIndex((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      alert("All feedback completed! Thank you.");
+      alert("All feedback completed! You can now save your progress.");
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSubmitted(false);
   };
+
+  const handleSaveProgress = async () => {
+    const payload = {
+      currentPage: currentIndex + 1,
+      feedbacks: responses.map((page) => ({
+        courseId: page.courseId,
+        facultyId: page.facultyId,
+        answers: Object.entries(page.answers).map(([question, response]) => ({
+          question,
+          response,
+        })),
+      })),
+    };
+
+    const formData = new FormData();
+    formData.append("reqData", JSON.stringify(payload));
+
+    submit(formData, {
+      method: "post",
+      action: "updatefeedback",
+      encType: "application/x-www-form-urlencoded",
+    });
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      currentPage: currentIndex + 1,
+      feedbacks: responses.map((page) => ({
+        courseId: page.courseId,
+        facultyId: page.facultyId,
+        answers: Object.entries(page.answers).map(([question, response]) => ({
+          question,
+          response,
+        })),
+      })),
+    };
+
+    const formData = new FormData();
+    formData.append("reqData", JSON.stringify(payload));
+
+    submit(formData, {
+      method: "post",
+      action: "submitfeedback",
+      encType: "application/x-www-form-urlencoded",
+    });
+  };
+
+  const currentResponses = currentPage.answers;
 
   return (
     <div className={styles.maincontainer}>
       <h1>Feedback Form</h1>
 
+      {/* --- Course + Faculty Info --- */}
       <div className={styles.coursedetails}>
         <div className={styles.description}>
           <p>
-            Please answer sincerely. Honest feedback ensures that we can make
-            the right changes where needed.
+            Please answer sincerely. Honest feedback helps improve teaching
+            quality and learning experience.
           </p>
         </div>
 
@@ -124,91 +153,192 @@ export default function FormPage({data}) {
               <img src={courseImg} alt="Course" />
             </div>
             <div className={styles.coursename}>
-              <h2>{currentCourse.courseName}</h2>
+              <h2>{course.name}</h2>
             </div>
           </div>
 
           <div className={styles.extrainfo}>
             <div className={styles.coursenumber}>
-              <p>{currentCourse.courseId}</p>
+              <p>{course.code}</p>
             </div>
 
             <div className={styles.facultyname}>
               <div className={styles.facultyimg}>
-                <img src={facultyImg} alt="" />
+                <img src={facultyImg} alt="Faculty" />
               </div>
               <div className={styles.facultyinfo}>
                 <p>Faculty:</p>
-                <p>{currentFaculty.facultyName}</p>
+                <p>{faculty.name}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* --- Feedback Questions --- */}
       <div className={styles.formcontainer}>
-        {questionBank.map((question) => (
+        {questions.map((q) => (
           <div
-            key={question.id}
-            id={`question-${question.id}`}
+            key={q._id}
+            id={`question-${q._id}`}
             className={`${styles.questionBlock} ${
-              submitted && !responses[question.id] ? styles.unanswered : ""
+              submitted && !currentResponses[q._id] && q.type === "rating"
+                ? styles.unanswered
+                : ""
             }`}
           >
             <div>
-              <p className={styles.questionNumber}>{question.id}</p>
+              <p className={styles.questionNumber}>{q.order}</p>
             </div>
+
             <div>
-              <p className={styles.questionText}>{question.text}</p>
-              <div className={styles.buttonRow}>
-                {[...Array(10)].map((_, i) => {
-                  const value = i + 1;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      className={
-                        responses[question.id] === value
-                          ? styles[`btn${value}Selected`]
-                          : styles[`btn${value}`]
-                      }
-                      onClick={() => handleClick(question.id, value)}
-                    >
-                      {value}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className={styles.questionText}>{q.text}</p>
+
+              {q.type === "rating" ? (
+                <div className={styles.buttonRow}>
+                  {[...Array(10)].map((_, i) => {
+                    const value = i + 1;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        className={
+                          currentResponses[q._id] === value
+                            ? styles[`btn${value}Selected`]
+                            : styles[`btn${value}`]
+                        }
+                        onClick={() => handleRatingClick(q._id, value)}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <textarea
+                  value={currentResponses[q._id] || ""}
+                  onChange={(e) => handleTextChange(q._id, e.target.value)}
+                  placeholder="Write your feedback here..."
+                />
+              )}
             </div>
           </div>
         ))}
-
-        <div className={styles.suggestionsBox}>
-          <h4>Feedback & Suggestions on the Faculty:</h4>
-          <textarea
-            value={facultyFeedback}
-            onChange={(e) => setFacultyFeedback(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.suggestionsBox}>
-          <h4>Feedback & Suggestions on the Course:</h4>
-          <textarea
-            value={courseFeedback}
-            onChange={(e) => setCourseFeedback(e.target.value)}
-          />
-        </div>
       </div>
 
+      {/* --- Next/Save Buttons --- */}
       <div className={styles.submitContainer}>
+        <button
+          type="button"
+          className={styles.proceedButton}
+          onClick={handleBack}
+          disabled={currentIndex === 0}
+          style={{
+            opacity: currentIndex === 0 ? 0.5 : 1,
+            cursor: currentIndex === 0 ? "not-allowed" : "pointer",
+          }}
+        >
+          Back
+        </button>
+
         <button
           type="button"
           className={styles.proceedButton}
           onClick={handleNext}
         >
-          Next
+          {currentIndex + 1 < feedback.feedbacks.length
+            ? "Next Faculty"
+            : "Done Reviewing"}
+        </button>
+
+        <button
+          type="button"
+          className={styles.proceedButton}
+          onClick={handleSaveProgress}
+        >
+          Save Progress
+        </button>
+
+        <button
+          type="button"
+          className={styles.proceedButton}
+          onClick={handleSubmit}
+        >
+          Submit
         </button>
       </div>
     </div>
   );
+}
+
+export async function nextAction({ request }) {
+  const token = localStorage.getItem("token");
+  const formData = await request.formData();
+  const pageDataJSON = formData.get("reqData");
+  const data = JSON.parse(pageDataJSON);
+  // console.log(data);
+
+  const response = await fetch(
+    "http://localhost:3000/student/feedback/updatefeedback",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json();
+    console.log(err);
+
+    throw new Response(
+      JSON.stringify({
+        message: err.message || "Failed to submit faculty selection",
+      }),
+      { status: response.status || 500 }
+    );
+  }
+  const res = await response.json();
+  console.log(res);
+
+  return redirect("/academics/feedback/student"); // adjust as needed
+}
+
+export async function submitAction({ request }) {
+  const token = localStorage.getItem("token");
+  const formData = await request.formData();
+  const pageDataJSON = formData.get("reqData");
+  const data = JSON.parse(pageDataJSON);
+  // console.log(data);
+
+  const response = await fetch(
+    "http://localhost:3000/student/feedback/submitfeedback",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json();
+    console.log(err);
+
+    throw new Response(
+      JSON.stringify({
+        message: err.message || "Failed to submit faculty selection",
+      }),
+      { status: response.status || 500 }
+    );
+  }
+  const res = await response.json();
+  console.log(res);
+
+  return redirect("/academics/feedback/student"); // adjust as needed
 }

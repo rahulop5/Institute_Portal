@@ -169,11 +169,11 @@ export const viewCourseStatistics = async (req, res) => {
       questions,
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
-        question: minQ?.question?.text || "N/A",
+        question: minQ?.question?.order || "N/A",
       },
       max: {
         score: parseFloat(maxQ?.average?.toFixed(2)) || 0,
-        question: maxQ?.question?.text || "N/A",
+        question: maxQ?.question?.order || "N/A",
       },
       feedback,
     });

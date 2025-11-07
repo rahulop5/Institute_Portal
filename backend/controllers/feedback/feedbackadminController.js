@@ -71,6 +71,7 @@ export const adminDashboardFaculty = async (req, res) => {
 
       if (!analytics || analytics.courses.length === 0) {
         result.push({
+          id: faculty._id,
           name: faculty.name,
           email: faculty.email,
           department: faculty.dept,
@@ -104,6 +105,7 @@ export const adminDashboardFaculty = async (req, res) => {
       const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
 
       result.push({
+        id: faculty._id,
         name: faculty.name,
         email: faculty.email,
         department: faculty.dept,
@@ -127,7 +129,7 @@ export const adminDashboardFaculty = async (req, res) => {
   }
 };
 
-//upadte this with the new isreset thingy
+//update this with the new isreset thingy
 export const adminDashboardCourse = async (req, res) => {
   try {
     // Fetch all courses
@@ -136,6 +138,15 @@ export const adminDashboardCourse = async (req, res) => {
     if (!courses || courses.length === 0) {
       return res.status(200).json({ message: "No courses found", courses: [] });
     }
+
+    const faculties = await Faculty.find().lean();
+    if (!faculties || faculties.length === 0) {
+      return res.status(500).json({ message: "No faculties found", faculties: [] });
+    }
+
+    const facultyEmails=faculties.map((fac)=>{
+      return fac.email;
+    });
 
     // Compute faculty count & enrollment strength for each course
     const courseData = await Promise.all(
@@ -147,7 +158,7 @@ export const adminDashboardCourse = async (req, res) => {
           coursetype: course.coursetype,
           facultycount: course.faculty ? course.faculty.length : 0,
           strength,
-          isreset: course.isreset, // 🟩 Added: include isreset status in response
+          isreset: course.isreset, // Added: include isreset status in response
         };
       })
     );
@@ -160,6 +171,7 @@ export const adminDashboardCourse = async (req, res) => {
       totalCourses: courses.length,
       activeCourses,
       resetCourses,
+      availableFaculty: facultyEmails
     });
   } catch (err) {
     console.error("Error fetching admin course dashboard:", err);
@@ -286,7 +298,6 @@ export const viewFaculty = async (req, res) => {
 
     // Send response
     return res.status(200).json({
-      message: "Faculty details fetched successfully",
       faculty: {
         name: faculty.name,
         email: faculty.email,
@@ -305,7 +316,6 @@ export const viewFaculty = async (req, res) => {
     });
   }
 };
-
 
 //view faculty course statistics
 export const viewFacultyCourseStatistics = async (req, res) => {
@@ -412,7 +422,6 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     return res.status(500).json({ message: "Error fetching course statistics", error: err.message });
   }
 };
-
 
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {

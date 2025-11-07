@@ -33,7 +33,7 @@ import FacultyDashboard, { loader as facultyFeedbackLoader } from "./components/
 import FacultyStatistics, { loader as facultyViewStatsLoader } from "./components/academics/FeedbackForm/faculty/facultyStats.jsx";
 import AcademicsLayout from "./pages/AcademicsLayout.jsx";
 import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
-import FormPage from "./components/Academics/FeedbackForm/student/formpage.jsx";
+import FormPage, { nextAction, submitAction } from "./components/Academics/FeedbackForm/student/formpage.jsx";
 import FeedbackDashboardStudent, {loader as studentFeedbackDashboardLoader} from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
 const router=createBrowserRouter([
   {
@@ -114,6 +114,8 @@ const router=createBrowserRouter([
                     element: <FeedbackDashboardStudent />,
                   },
                   { path: "selectfaculty", action: selectFacultyAction, element: <></> },
+                  { path: "updatefeedback", action: nextAction, element: <></> },
+                  { path: "submitfeedback", action: submitAction, element: <></> },
                 ]
               },
               {path: "admin", element: <AdminDashboard />},
