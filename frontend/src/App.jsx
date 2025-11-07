@@ -29,8 +29,8 @@ import BTPFacultyRouter, {
 } from "./pages/BTPFacultyRouter.jsx";
 import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import {
-  action2 as deleteTopicAction,
   action as addTopicAction,
+  action2 as deleteTopicAction,
 } from "./components/academics/btp/faculty/Topicslist.jsx";
 import {
   action as acceptReqAction,
@@ -58,16 +58,13 @@ import {
   updateTeamAction,
 } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
-// import Inprogress from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
-// Added a comment
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {
   adminDashboardFacultyLoader,
   adminDashboardStudentsLoader,
   adminDashboardCoursesLoader,
 } from "./components/Academics/FeedbackForm/admin/adminLoaders.jsx";
-
 import { loader as projectListLoader } from "./components/Academics/BTP/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
 import FacultyDashboard, {
@@ -78,9 +75,10 @@ import FacultyStatistics, {
 } from "./components/academics/FeedbackForm/faculty/facultyStats.jsx";
 import AcademicsLayout from "./pages/AcademicsLayout.jsx";
 import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
-import FormPage, { nextAction, submitAction } from "./components/Academics/FeedbackForm/student/formpage.jsx";
-import FeedbackDashboardStudent, {loader as studentFeedbackDashboardLoader} from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
-import FormPage from "./components/Academics/FeedbackForm/student/formpage.jsx";
+import FormPage, {
+  nextAction,
+  submitAction,
+} from "./components/Academics/FeedbackForm/student/formpage.jsx";
 import FeedbackDashboardStudent, {
   loader as studentFeedbackDashboardLoader,
 } from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
@@ -130,13 +128,41 @@ const router = createBrowserRouter([
                 element: <BTPStudentRouter />,
                 loader: btpLoader,
                 children: [
-                  { path: "sendteamrequest", action: sendTRAction, element: <></> },
-                  { path: "addteammember", action: addStudentAction, element: <></> },
-                  { path: "acceptteamrequest", action: acceptTRAction, element: <></> },
-                  { path: "rejectteamrequest", action: rejectTRAction, element: <></> },
-                  { path: "applytotopic", action: applytotopicAction, element: <></> },
-                  { path: "setpreferences", action: setPreferencesAction, element: <></> },
-                  { path: "addupdate", action: addUpdateAction, element: <></> },
+                  {
+                    path: "sendteamrequest",
+                    action: sendTRAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "addteammember",
+                    action: addStudentAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "acceptteamrequest",
+                    action: acceptTRAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "rejectteamrequest",
+                    action: rejectTRAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "applytotopic",
+                    action: applytotopicAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "setpreferences",
+                    action: setPreferencesAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "addupdate",
+                    action: addUpdateAction,
+                    element: <></>,
+                  },
                 ],
               },
               {
@@ -144,14 +170,42 @@ const router = createBrowserRouter([
                 element: <BTPFacultyRouter />,
                 loader: btpFacultyRouter,
                 children: [
-                  { path: ":projid", loader: projectLoader, element: <StudentInProgress /> },
-                  { path: "evaluator/:projid", loader: evaluatorProjLoader, element: <ViewProjEvaluator /> },
+                  {
+                    path: ":projid",
+                    loader: projectLoader,
+                    element: <StudentInProgress />,
+                  },
+                  {
+                    path: "evaluator/:projid",
+                    loader: evaluatorProjLoader,
+                    element: <ViewProjEvaluator />,
+                  },
                   { path: "addtopic", action: addTopicAction, element: <></> },
-                  { path: "deletetopic", action: deleteTopicAction, element: <></> },
-                  { path: "accepttopicrequest", action: acceptReqAction, element: <></> },
-                  { path: "rejecttopicrequest", action: rejectReqAction, element: <></> },
-                  { path: "evaluateguide", action: evaluateGuideAction, element: <></> },
-                  { path: "evaluateevaluator", action: evaluateEvaluatorAction, element: <></> },
+                  {
+                    path: "deletetopic",
+                    action: deleteTopicAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "accepttopicrequest",
+                    action: acceptReqAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "rejecttopicrequest",
+                    action: rejectReqAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "evaluateguide",
+                    action: evaluateGuideAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "evaluateevaluator",
+                    action: evaluateEvaluatorAction,
+                    element: <></>,
+                  },
                 ],
               },
               {
@@ -159,11 +213,31 @@ const router = createBrowserRouter([
                 element: <BTPStaffRouter />,
                 loader: btpStaffLoader,
                 children: [
-                  { path: ":projid", loader: projectListLoader, element: <Inprogressstaff /> },
-                  { path: "updateteam", action: updateTeamAction, element: <></> },
-                  { path: "deleteteam", action: deleteTeamAction, element: <></> },
-                  { path: "advancepreferencernd", action: advancePreferenceAction, element: <></> },
-                  { path: "assignGuide", action: assignGuideAction, element: <></> },
+                  {
+                    path: ":projid",
+                    loader: projectListLoader,
+                    element: <Inprogressstaff />,
+                  },
+                  {
+                    path: "updateteam",
+                    action: updateTeamAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "deleteteam",
+                    action: deleteTeamAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "advancepreferencernd",
+                    action: advancePreferenceAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "assignGuide",
+                    action: assignGuideAction,
+                    element: <></>,
+                  },
                 ],
               },
             ],
@@ -184,9 +258,21 @@ const router = createBrowserRouter([
                     loader: studentFeedbackDashboardLoader,
                     element: <FeedbackDashboardStudent />,
                   },
-                  { path: "selectfaculty", action: selectFacultyAction, element: <></> },
-                  { path: "updatefeedback", action: nextAction, element: <></> },
-                  { path: "submitfeedback", action: submitAction, element: <></> },
+                  {
+                    path: "selectfaculty",
+                    action: selectFacultyAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "updatefeedback",
+                    action: nextAction,
+                    element: <></>,
+                  },
+                  {
+                    path: "submitfeedback",
+                    action: submitAction,
+                    element: <></>,
+                  },
                 ],
               },
               {

@@ -34,7 +34,7 @@ export default function FacultyHeader({ facultyList }) {
               </div>
               <div className={styles.statBoximpressions}>
                 <span className={styles.statLabelimpress}>Impressions</span>
-                <span className={styles.statValue}>{faculty.impressions}</span>
+                <span className={styles.statValue}>{faculty.impress}</span>
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Courses Taught</span>

@@ -257,9 +257,9 @@ export const viewFaculty = async (req, res) => {
         faculty: {
           name: faculty.name,
           email: faculty.email,
-          dept: faculty.dept,
+          department: faculty.dept,
           avgscore: 0,
-          totalImpressions: 0,
+          impress: 0,
           coursesTaught: 0,
           courses: [],
         },
@@ -301,10 +301,10 @@ export const viewFaculty = async (req, res) => {
       faculty: {
         name: faculty.name,
         email: faculty.email,
-        dept: faculty.dept,
+        department: faculty.dept,
         avgscore: parseFloat(overallAvg.toFixed(2)),
-        totalImpressions,
-        coursesTaught: totalCourses,
+        impress: totalImpressions,
+        coursestaught: totalCourses,
         courses: courses,
       },
     });
@@ -409,11 +409,11 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       questions,
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
-        question: minQ?.question?.text || "N/A",
+        question: minQ?.question?.order || "N/A",
       },
       max: {
         score: parseFloat(maxQ?.average?.toFixed(2)) || 0,
-        question: maxQ?.question?.text || "N/A",
+        question: maxQ?.question?.order || "N/A",
       },
       feedback,
     });

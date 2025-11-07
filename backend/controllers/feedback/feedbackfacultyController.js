@@ -22,7 +22,7 @@ export const facultyDashboard = async (req, res) => {
         name: faculty.name,
         department: faculty.dept,
         avgscore: 0,
-        impressions: 0,
+        impress: 0,
         coursestaught: 0,
         courses: [],
       });
@@ -61,7 +61,7 @@ export const facultyDashboard = async (req, res) => {
       name: faculty.name,
       department: faculty.dept,
       avgscore: parseFloat(overallAvg.toFixed(2)),
-      impressions: totalImpressions,
+      impress: totalImpressions,
       coursestaught: totalCourses,
       courses: coursesData,
     });
