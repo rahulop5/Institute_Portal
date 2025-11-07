@@ -80,7 +80,6 @@ import AcademicsLayout from "./pages/AcademicsLayout.jsx";
 import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
 import FormPage, { nextAction, submitAction } from "./components/Academics/FeedbackForm/student/formpage.jsx";
 import FeedbackDashboardStudent, {loader as studentFeedbackDashboardLoader} from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
-const router=createBrowserRouter([
 import FormPage from "./components/Academics/FeedbackForm/student/formpage.jsx";
 import FeedbackDashboardStudent, {
   loader as studentFeedbackDashboardLoader,
@@ -103,8 +102,15 @@ const router = createBrowserRouter([
     id: "root",
     loader: tokenLoader,
     children: [
-      { index: true, element: <Homepage />, loader: checkAuthLoader },
-      { path: "temp", element: <AdminDashboard /> },
+      {
+        index: true,
+        element: <Homepage />,
+        loader: checkAuthLoader,
+      },
+      {
+        path: "temp",
+        element: <AdminDashboard />,
+      },
       {
         path: "academics",
         element: <AcademicsLayout />,
@@ -124,41 +130,13 @@ const router = createBrowserRouter([
                 element: <BTPStudentRouter />,
                 loader: btpLoader,
                 children: [
-                  {
-                    path: "sendteamrequest",
-                    action: sendTRAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "addteammember",
-                    action: addStudentAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "acceptteamrequest",
-                    action: acceptTRAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "rejectteamrequest",
-                    action: rejectTRAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "applytotopic",
-                    action: applytotopicAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "setpreferences",
-                    action: setPreferencesAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "addupdate",
-                    action: addUpdateAction,
-                    element: <></>,
-                  },
+                  { path: "sendteamrequest", action: sendTRAction, element: <></> },
+                  { path: "addteammember", action: addStudentAction, element: <></> },
+                  { path: "acceptteamrequest", action: acceptTRAction, element: <></> },
+                  { path: "rejectteamrequest", action: rejectTRAction, element: <></> },
+                  { path: "applytotopic", action: applytotopicAction, element: <></> },
+                  { path: "setpreferences", action: setPreferencesAction, element: <></> },
+                  { path: "addupdate", action: addUpdateAction, element: <></> },
                 ],
               },
               {
@@ -166,42 +144,14 @@ const router = createBrowserRouter([
                 element: <BTPFacultyRouter />,
                 loader: btpFacultyRouter,
                 children: [
-                  {
-                    path: ":projid",
-                    loader: projectLoader,
-                    element: <StudentInProgress />,
-                  },
-                  {
-                    path: "evaluator/:projid",
-                    loader: evaluatorProjLoader,
-                    element: <ViewProjEvaluator />,
-                  },
+                  { path: ":projid", loader: projectLoader, element: <StudentInProgress /> },
+                  { path: "evaluator/:projid", loader: evaluatorProjLoader, element: <ViewProjEvaluator /> },
                   { path: "addtopic", action: addTopicAction, element: <></> },
-                  {
-                    path: "deletetopic",
-                    action: deleteTopicAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "accepttopicrequest",
-                    action: acceptReqAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "rejecttopicrequest",
-                    action: rejectReqAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "evaluateguide",
-                    action: evaluateGuideAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "evaluateevaluator",
-                    action: evaluateEvaluatorAction,
-                    element: <></>,
-                  },
+                  { path: "deletetopic", action: deleteTopicAction, element: <></> },
+                  { path: "accepttopicrequest", action: acceptReqAction, element: <></> },
+                  { path: "rejecttopicrequest", action: rejectReqAction, element: <></> },
+                  { path: "evaluateguide", action: evaluateGuideAction, element: <></> },
+                  { path: "evaluateevaluator", action: evaluateEvaluatorAction, element: <></> },
                 ],
               },
               {
@@ -209,31 +159,11 @@ const router = createBrowserRouter([
                 element: <BTPStaffRouter />,
                 loader: btpStaffLoader,
                 children: [
-                  {
-                    path: ":projid",
-                    loader: projectListLoader,
-                    element: <Inprogressstaff />,
-                  },
-                  {
-                    path: "updateteam",
-                    action: updateTeamAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "deleteteam",
-                    action: deleteTeamAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "advancepreferencernd",
-                    action: advancePreferenceAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "assignGuide",
-                    action: assignGuideAction,
-                    element: <></>,
-                  },
+                  { path: ":projid", loader: projectListLoader, element: <Inprogressstaff /> },
+                  { path: "updateteam", action: updateTeamAction, element: <></> },
+                  { path: "deleteteam", action: deleteTeamAction, element: <></> },
+                  { path: "advancepreferencernd", action: advancePreferenceAction, element: <></> },
+                  { path: "assignGuide", action: assignGuideAction, element: <></> },
                 ],
               },
             ],
@@ -254,30 +184,22 @@ const router = createBrowserRouter([
                     loader: studentFeedbackDashboardLoader,
                     element: <FeedbackDashboardStudent />,
                   },
-                  {
-                    path: "selectfaculty",
-                    action: selectFacultyAction,
-                    element: <></>,
-                  },
-                ],
                   { path: "selectfaculty", action: selectFacultyAction, element: <></> },
                   { path: "updatefeedback", action: nextAction, element: <></> },
                   { path: "submitfeedback", action: submitAction, element: <></> },
-                ]
+                ],
               },
-
               {
                 path: "admin",
                 element: <AdminDashboard />,
                 children: [
                   {
                     index: true,
-                    element: <> </>,
+                    element: <></>,
                     loader: () => redirect("faculty"),
                   },
                   {
                     path: "faculty",
-
                     element: <FacultyTab />,
                     loader: adminDashboardFacultyLoader,
                   },
@@ -298,8 +220,8 @@ const router = createBrowserRouter([
                   },
                   {
                     path: "faculty/:facultyId/:courseId",
-                    element: <AdminFacultyStatistics />, // <-- Use the new component
-                    loader: adminCourseStatisticsLoader, // <-- Use the new loader
+                    element: <AdminFacultyStatistics />,
+                    loader: adminCourseStatisticsLoader,
                   },
                 ],
               },
@@ -327,14 +249,20 @@ const router = createBrowserRouter([
         loader: checkAuthLoader,
         children: [{ path: ":smth", element: <Temp /> }],
       },
-      { path: "settings", element: <Temp />, loader: checkAuthLoader },
+      {
+        path: "settings",
+        element: <Temp />,
+        loader: checkAuthLoader,
+      },
       {
         path: "auth",
         element: <Authentication />,
         action: authAction,
       },
-
-      { path: "logout", action: logoutAction },
+      {
+        path: "logout",
+        action: logoutAction,
+      },
     ],
   },
 ]);

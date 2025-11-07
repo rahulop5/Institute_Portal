@@ -1,0 +1,235 @@
+/* --- 1. From AddFacultyModal --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  font-family: "Inter", sans-serif;
+}
+
+.modalContainer {
+  background-color: #ffffff;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 50vw; /* You can adjust this */
+  min-width: 600px;
+  max-width: 800px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0D7000; /* From your FileUpload styles */
+  margin: 0;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #6b6b6b;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* --- 2. From FileUpload (Adapted) --- */
+
+.modalBody p {
+  font-size: 14px;
+  color: #6b6b6b;
+  margin: 0 0 24px 0;
+  line-height: 1.4;
+}
+
+.fileUploadWrapper {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.fileUploadContainer {
+  flex: 1;
+  height: 35vh; /* Adjusted height for modal */
+  border: 2px dashed #d0d5dd;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.fileUploadWrapper.dragActive .fileUploadContainer {
+  border-color: #0D7000;
+  background-color: #f0fff4;
+}
+
+.fileUploadContainer img {
+  width: 56px;
+  margin-bottom: 12px;
+}
+
+.fileUploadContainer p {
+  font-size: 14px;
+  line-height: 8px;
+  color: #00732A;
+  margin: 2px 0;
+}
+
+.fileUploadContainer button {
+  margin-top: 8px;
+  padding: 8px 35px;
+  border: 2px solid #00732A;
+  background-color: transparent;
+  color: #00732A;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fileUploadContainer button:hover {
+  background-color: #00732A;
+  color: white;
+  box-shadow: inset 0 4px 4px rgba(255, 255, 255, 0.6);
+}
+
+.fileInformation {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 35vh; /* Match height */
+  justify-content: space-between;
+}
+
+.fileInformation > div > p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+}
+
+.uploadedFile {
+  display: flex;
+  flex-direction: column;
+}
+
+.noFile {
+  font-size: 14px;
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+.previewWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.warningWrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background-color: #ffffff;
+  border: 1px solid #FFB400;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.warningWrapper img {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.warningWrapper p {
+  font-size: 12px;
+  color: #000000;
+  line-height: 1.2;
+  font-weight: 400;
+  margin: 0;
+}
+
+.previewButtonWrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.previewButton {
+  padding: 10px 70px;
+  font-size: 16px;
+  border: 2px solid #C1C1C1;
+  border-radius: 999px;
+  background-color: transparent;
+  color: #C1C1C1;
+  cursor: not-allowed;
+  transition: all 0.3s ease;
+}
+
+.previewButton.active {
+  color: #5F92FF;
+  border-color: #5F92FF;
+  cursor: pointer;
+}
+
+.previewButton.active:hover {
+  background-color: #5F92FF;
+  color: white;
+}
+
+.previewButton.disabled {
+  opacity: 0.6;
+}
+
+.fileCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileCard img {
+  width: 28px;
+  height: 28px;
+}
+
+.fileName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1a1a1a;
+  word-break: break-all;
+  padding-bottom: 1vh;
+  border-bottom: 2px solid #0D7000;
+}
+
+.removeButton {
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.removeButton img {
+  width: 100%;
+  height: 100%;
+}

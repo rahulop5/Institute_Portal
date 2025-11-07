@@ -1,0 +1,129 @@
+/* --- Modal Overlay & Container --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); /* Slightly darker for focus */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Higher than the file modal */
+  font-family: "Inter", sans-serif;
+}
+
+.modalContainer {
+  background-color: #ffffff;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 70vw; /* Wider to show table data */
+  max-width: 1000px;
+  height: 80vh; /* Taller for the table */
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Modal Header --- */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.modalHeader h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.modalHeader button { /* Close button '✕' */
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #6b6b6b;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* --- Table Container --- */
+.tableContainer {
+  flex: 1; /* This makes the table body fill the available space */
+  overflow-y: auto; /* Adds a scrollbar if the data is too long */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.tableContainer table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tableContainer th,
+.tableContainer td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tableContainer th {
+  background-color: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  position: sticky; /* Keeps headers visible on scroll */
+  top: 0;
+}
+
+.tableContainer tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.tableContainer tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* --- Modal Footer --- */
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.modalFooter button {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn {
+  background-color: #f0f0f0;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.cancelBtn:hover {
+  background-color: #e0e0e0;
+}
+
+.confirmBtn {
+  background-color: #00732A; /* Your theme's green color */
+  color: white;
+}
+
+.confirmBtn:hover {
+  background-color: #005a22; /* A slightly darker green */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
