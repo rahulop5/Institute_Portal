@@ -17,6 +17,8 @@ export const facultyDashboard = async (req, res) => {
         select: "name code",
       });
 
+    console.log(analytics)
+
     if (!analytics || analytics.courses.length === 0) {
       return res.status(200).json({
         name: faculty.name,
@@ -37,6 +39,7 @@ export const facultyDashboard = async (req, res) => {
     for (const c of analytics.courses) {
       if (!c.course) continue;
       const qAverages = c.questions.map((q) => q.average);
+      
       const validAverages = qAverages.filter((a) => typeof a === "number");
       const courseAvg =
         validAverages.length > 0
@@ -55,6 +58,7 @@ export const facultyDashboard = async (req, res) => {
     }
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
+    console.log(totalCourses)
 
     // Send response
     return res.status(200).json({
@@ -141,7 +145,7 @@ export const viewCourseStatistics = async (req, res) => {
       );
     }
 
-    // Extract faculty & course feedbacks from text responses (orders 16 & 17)
+    // Extract faculty & course feedbacks (orders 16 & 17)
     const facultyFeedbackQ = courseData.questions.find(
       (q) => q.question?.order === 16
     );
@@ -150,15 +154,15 @@ export const viewCourseStatistics = async (req, res) => {
     );
 
     const feedback = {
-      faculty: (facultyFeedbackQ?.textResponses || []).map((text) => ({
+      faculty: (facultyFeedbackQ?.textResponses || []).map((resp) => ({
+        text: resp.text,
+        score: resp.score ?? null,
         date: courseData.lastUpdated,
-        text,
-        score: null,
       })),
-      course: (courseFeedbackQ?.textResponses || []).map((text) => ({
+      course: (courseFeedbackQ?.textResponses || []).map((resp) => ({
+        text: resp.text,
+        score: resp.score ?? null,
         date: courseData.lastUpdated,
-        text,
-        score: null,
       })),
     };
 
@@ -171,7 +175,7 @@ export const viewCourseStatistics = async (req, res) => {
         submitted: totalResponses,
         yettosubmit: yetToSubmit,
       },
-      questions, // <- only rating questions (no 16/17)
+      questions, // only rating questions (no 16/17)
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
         question: minQ?.question?.order || "N/A",

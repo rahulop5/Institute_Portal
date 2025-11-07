@@ -51,12 +51,10 @@ export const adminDashboardStudent = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching admin student dashboard:", err);
-    return res
-      .status(500)
-      .json({
-        message: "Error fetching student dashboard",
-        error: err.message,
-      });
+    return res.status(500).json({
+      message: "Error fetching student dashboard",
+      error: err.message,
+    });
   }
 };
 
@@ -160,7 +158,11 @@ export const adminDashboardCourse = async (req, res) => {
     }
 
     const facultyEmails = faculties.map((fac) => {
-      return fac.email;
+      return {
+        id: fac._id,
+        email: fac.email,
+        name: fac.name,
+      };
     });
 
     // Compute faculty count & enrollment strength for each course
@@ -413,7 +415,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       );
     }
 
-    // Extract faculty & course feedbacks from text responses (orders 16 & 17)
+    // Extract faculty & course feedbacks (orders 16 & 17)
     const facultyFeedbackQ = courseData.questions.find(
       (q) => q.question?.order === 16
     );
@@ -422,15 +424,15 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     );
 
     const feedback = {
-      faculty: (facultyFeedbackQ?.textResponses || []).map((text) => ({
+      faculty: (facultyFeedbackQ?.textResponses || []).map((resp) => ({
+        text: resp.text,
+        score: resp.score ?? null,
         date: courseData.lastUpdated,
-        text,
-        score: null,
       })),
-      course: (courseFeedbackQ?.textResponses || []).map((text) => ({
+      course: (courseFeedbackQ?.textResponses || []).map((resp) => ({
+        text: resp.text,
+        score: resp.score ?? null,
         date: courseData.lastUpdated,
-        text,
-        score: null,
       })),
     };
 
@@ -443,7 +445,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
         submitted: totalResponses,
         yettosubmit: yetToSubmit,
       },
-      questions, // <- only rating questions (no 16/17)
+      questions, // only rating questions (no 16/17)
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
         question: minQ?.question?.order || "N/A",
@@ -493,11 +495,9 @@ export const addCourse = async (req, res) => {
       try {
         facultyEmailsJSON = JSON.parse(facultyEmails);
       } catch {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid facultyEmails format. Must be a JSON array.",
-          });
+        return res.status(400).json({
+          message: "Invalid facultyEmails format. Must be a JSON array.",
+        });
       }
     } else {
       facultyEmailsJSON = facultyEmails;
@@ -956,11 +956,9 @@ export const addFacultyStudentstoCourse = async (req, res) => {
       try {
         facultyEmailsJSON = JSON.parse(facultyEmails);
       } catch {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid facultyEmails format. Must be a JSON array.",
-          });
+        return res.status(400).json({
+          message: "Invalid facultyEmails format. Must be a JSON array.",
+        });
       }
     } else {
       facultyEmailsJSON = facultyEmails;

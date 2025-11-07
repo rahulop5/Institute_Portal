@@ -1644,7 +1644,7 @@ export const updateFeedback = async (req, res) => {
 //   ]
 // }
 
-export const submitFeedback = async (req, res) => { 
+export const submitFeedback = async (req, res) => {
   try {
     const { feedbacks } = req.body;
 
@@ -1662,7 +1662,7 @@ export const submitFeedback = async (req, res) => {
       return res.status(400).json({ message: "Feedback already submitted" });
     }
 
-    // Same strict update validation logic as updateFeedback
+    // --- Validation and population of responses ---
     for (const page of feedbacks) {
       const { courseId, facultyId, answers } = page;
 
@@ -1714,7 +1714,7 @@ export const submitFeedback = async (req, res) => {
         }
       }
 
-      // Mark as completed
+      // Mark as completed if all answered
       const everyAnswered = existingEntry.answers.every(
         (a) => a.response !== null && a.response !== ""
       );
@@ -1730,11 +1730,12 @@ export const submitFeedback = async (req, res) => {
       });
     }
 
-    // Finalize submission
+    // --- Finalize submission ---
     feedback.submitted = true;
     feedback.currentPage = feedback.feedbacks.length;
     await feedback.save();
 
+    // --- Update Analytics ---
     for (const f of feedback.feedbacks) {
       const facultyId = f.faculty;
       const courseId = f.course;
@@ -1742,31 +1743,44 @@ export const submitFeedback = async (req, res) => {
       let analytics = await Analytics.findOne({ faculty: facultyId });
       if (!analytics) {
         return res.status(500).json({
-          message: "Course not assigned to this faculty"
+          message: "Analytics not found for faculty",
         });
       }
 
       let courseEntry = analytics.courses.find(
         (c) => c.course.toString() === courseId.toString()
       );
-      
+
       if (!courseEntry) {
-        console.log(courseId)
-        console.log(facultyId)
         return res.status(500).json({
-          message: "Course not found"
+          message: "Course analytics not found for faculty",
         });
       }
 
+      // --- Compute this student's average rating for the page ---
+      const ratingAnswers = f.answers.filter(
+        (a) => typeof a.response === "number"
+      );
+      const avgScore =
+        ratingAnswers.length > 0
+          ? ratingAnswers.reduce((sum, a) => sum + a.response, 0) /
+            ratingAnswers.length
+          : 0;
+
+      // --- Update question analytics ---
       for (const ans of f.answers) {
-        const question = await Question.findById(ans.question).select("type");
+        const question = await Question.findById(ans.question).select(
+          "type order"
+        );
+        if (!question) continue;
+
         let qEntry = courseEntry.questions.find(
           (q) => q.question.toString() === ans.question.toString()
         );
 
         if (!qEntry) {
           return res.status(500).json({
-            message: "Question not found",
+            message: `Question ${ans.question} not found in analytics`,
           });
         }
 
@@ -1774,9 +1788,10 @@ export const submitFeedback = async (req, res) => {
           const val = Number(ans.response);
           const totalResponses = courseEntry.totalResponses + 1;
 
-          // Recalculate new average, min, max
+          // Update average, min, max
           qEntry.average =
-            (qEntry.average * courseEntry.totalResponses + val) / totalResponses;
+            (qEntry.average * courseEntry.totalResponses + val) /
+            totalResponses;
           qEntry.min =
             courseEntry.totalResponses === 0
               ? val
@@ -1786,10 +1801,17 @@ export const submitFeedback = async (req, res) => {
               ? val
               : Math.max(qEntry.max, val);
         } else if (question.type === "text") {
-          qEntry.textResponses.push(ans.response);
+          // Now store as object with text + student's avg rating
+          if (ans.response && ans.response.trim() !== "") {
+            qEntry.textResponses.push({
+              text: ans.response.trim(),
+              score: parseFloat(avgScore.toFixed(2)),
+            });
+          }
         }
       }
 
+      // Increment response count and save
       courseEntry.totalResponses += 1;
       courseEntry.lastUpdated = new Date();
       await analytics.save();
@@ -1802,6 +1824,7 @@ export const submitFeedback = async (req, res) => {
     console.error("Error submitting feedback:", err);
     return res.status(500).json({
       message: "Error submitting feedback",
+      error: err.message,
     });
   }
 };

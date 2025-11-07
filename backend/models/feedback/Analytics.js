@@ -1,18 +1,23 @@
 // models/Analytics.js
 import mongoose from "mongoose";
 
+const textResponseSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  score: { type: Number, required: true }, // student's average rating on that feedback page
+});
+
 const questionAnalyticsSchema = new mongoose.Schema({
   question: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
-  average: { type: Number, default: 0 }, // easier to handle in JS (no need for Decimal128)
+  average: { type: Number, default: 0 },
   min: { type: Number, default: 0 },
   max: { type: Number, default: 0 },
-  textResponses: [{ type: String }], // store all text feedbacks for this question
+  textResponses: [textResponseSchema], // <-- Now holds objects with text + score
 });
 
 const courseAnalyticsSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
   questions: [questionAnalyticsSchema],
-  totalResponses: { type: Number, default: 0 }, // how many students submitted feedback for this course
+  totalResponses: { type: Number, default: 0 },
   lastUpdated: { type: Date, default: Date.now },
 });
 
