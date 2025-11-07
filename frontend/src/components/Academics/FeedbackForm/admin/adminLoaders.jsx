@@ -1,8 +1,6 @@
 import { redirect } from "react-router-dom";
 
-async function loadData(type) {
- 
-  console.log("Loader running for type:", type);
+async function loadData(type) { 
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   
@@ -18,13 +16,13 @@ async function loadData(type) {
     }
   );
 
-  if (!response.ok) {
- 
+  if (!response.ok) { 
     console.error("Failed to fetch. Status:", response.status);
     throw new Response("Failed to fetch", { status: 500 });
   }
-  
-  return await response.json();
+  const resData=await response.json();
+
+  return resData;
 }
 
 export async function adminDashboardFacultyLoader() {

@@ -15,13 +15,19 @@ import Feedback from "../../models/feedback/Feedback.js";
 export const adminDashboardStudent = async (req, res) => {
   try {
     // Fetch all students
-    const allStudents = await Student.find().select("name email rollNumber batch").lean();
+    const allStudents = await Student.find()
+      .select("name email rollNumber batch")
+      .lean();
 
     // Fetch all submitted feedbacks
-    const submittedFeedbacks = await Feedback.find({ submitted: true }).select("student").lean();
+    const submittedFeedbacks = await Feedback.find({ submitted: true })
+      .select("student")
+      .lean();
 
     // Extract submitted student IDs
-    const submittedIds = new Set(submittedFeedbacks.map((f) => f.student.toString()));
+    const submittedIds = new Set(
+      submittedFeedbacks.map((f) => f.student.toString())
+    );
 
     // Split into submitted / unsubmitted
     const submittedStudents = [];
@@ -45,7 +51,12 @@ export const adminDashboardStudent = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching admin student dashboard:", err);
-    return res.status(500).json({ message: "Error fetching student dashboard", error: err.message });
+    return res
+      .status(500)
+      .json({
+        message: "Error fetching student dashboard",
+        error: err.message,
+      });
   }
 };
 
@@ -55,7 +66,9 @@ export const adminDashboardFaculty = async (req, res) => {
     const faculties = await Faculty.find().lean();
 
     if (!faculties || faculties.length === 0) {
-      return res.status(200).json({ message: "No faculties found", faculties: [] });
+      return res
+        .status(200)
+        .json({ message: "No faculties found", faculties: [] });
     }
 
     const result = [];
@@ -141,18 +154,23 @@ export const adminDashboardCourse = async (req, res) => {
 
     const faculties = await Faculty.find().lean();
     if (!faculties || faculties.length === 0) {
-      return res.status(500).json({ message: "No faculties found", faculties: [] });
+      return res
+        .status(500)
+        .json({ message: "No faculties found", faculties: [] });
     }
 
-    const facultyEmails=faculties.map((fac)=>{
+    const facultyEmails = faculties.map((fac) => {
       return fac.email;
     });
 
     // Compute faculty count & enrollment strength for each course
     const courseData = await Promise.all(
       courses.map(async (course) => {
-        const strength = await Enrollment.countDocuments({ course: course._id });
+        const strength = await Enrollment.countDocuments({
+          course: course._id,
+        });
         return {
+          id: course._id,
           name: course.name,
           code: course.code,
           coursetype: course.coursetype,
@@ -171,7 +189,7 @@ export const adminDashboardCourse = async (req, res) => {
       totalCourses: courses.length,
       activeCourses,
       resetCourses,
-      availableFaculty: facultyEmails
+      availableFaculty: facultyEmails,
     });
   } catch (err) {
     console.error("Error fetching admin course dashboard:", err);
@@ -224,7 +242,9 @@ export const viewCourse = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in viewCourse:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
@@ -270,29 +290,31 @@ export const viewFaculty = async (req, res) => {
     let totalCourses = 0;
     let totalImpressions = 0;
 
-    const courses = analytics.courses.map((c) => {
-      if (!c.course) return null;
+    const courses = analytics.courses
+      .map((c) => {
+        if (!c.course) return null;
 
-      const validAverages = c.questions
-        .map((q) => q.average)
-        .filter((a) => typeof a === "number");
+        const validAverages = c.questions
+          .map((q) => q.average)
+          .filter((a) => typeof a === "number");
 
-      const avgscore =
-        validAverages.length > 0
-          ? validAverages.reduce((a, b) => a + b, 0) / validAverages.length
-          : 0;
+        const avgscore =
+          validAverages.length > 0
+            ? validAverages.reduce((a, b) => a + b, 0) / validAverages.length
+            : 0;
 
-      totalCourses++;
-      totalAvg += avgscore;
-      totalImpressions += c.totalResponses || 0;
+        totalCourses++;
+        totalAvg += avgscore;
+        totalImpressions += c.totalResponses || 0;
 
-      return {
-        courseId: c.course._id,
-        name: c.course.name,
-        code: c.course.code,
-        avgscore: parseFloat(avgscore.toFixed(2)),
-      };
-    }).filter(Boolean);
+        return {
+          courseId: c.course._id,
+          name: c.course.name,
+          code: c.course.code,
+          avgscore: parseFloat(avgscore.toFixed(2)),
+        };
+      })
+      .filter(Boolean);
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
 
@@ -323,7 +345,9 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     const { facultyId, courseId } = req.query;
 
     if (!facultyId || !courseId) {
-      return res.status(400).json({ message: "facultyId and courseId are required" });
+      return res
+        .status(400)
+        .json({ message: "facultyId and courseId are required" });
     }
 
     // Get analytics record for this faculty and course
@@ -338,7 +362,9 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       });
 
     if (!analytics) {
-      return res.status(404).json({ message: "No analytics found for this faculty" });
+      return res
+        .status(404)
+        .json({ message: "No analytics found for this faculty" });
     }
 
     const courseData = analytics.courses.find(
@@ -349,35 +375,45 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       return res.status(404).json({ message: "Course analytics not found" });
     }
 
+    // Exclude text-based questions (order 16, 17)
+    const ratingQuestions = courseData.questions.filter(
+      (q) => q.question?.order !== 16 && q.question?.order !== 17
+    );
+
     // Calculate overall average
     const avgscore =
-      courseData.questions.length > 0
-        ? courseData.questions.reduce((sum, q) => sum + q.average, 0) /
-          courseData.questions.length
+      ratingQuestions.length > 0
+        ? ratingQuestions.reduce((sum, q) => sum + q.average, 0) /
+          ratingQuestions.length
         : 0;
 
+    // Calculate responses stats
     const totalResponses = courseData.totalResponses || 0;
     const totalEnrolled = await Enrollment.countDocuments({ course: courseId });
     const yetToSubmit = Math.max(totalEnrolled - totalResponses, 0);
 
-    const questions = courseData.questions.map((q, idx) => ({
+    // Prepare only rating-based questions for frontend
+    const questions = ratingQuestions.map((q, idx) => ({
       qno: q.question?.order ?? idx + 1,
       avgscore: parseFloat(q.average.toFixed(2)),
     }));
 
-    const ratingQuestions = courseData.questions.filter(
-      (q) => typeof q.average === "number"
-    );
+    // Find min & max (from rating questions only)
+    let minQ = null;
+    let maxQ = null;
 
-    const minQ = ratingQuestions.reduce(
-      (min, q) => (q.average < min.average ? q : min),
-      ratingQuestions[0]
-    );
-    const maxQ = ratingQuestions.reduce(
-      (max, q) => (q.average > max.average ? q : max),
-      ratingQuestions[0]
-    );
+    if (ratingQuestions.length > 0) {
+      minQ = ratingQuestions.reduce(
+        (min, q) => (q.average < min.average ? q : min),
+        ratingQuestions[0]
+      );
+      maxQ = ratingQuestions.reduce(
+        (max, q) => (q.average > max.average ? q : max),
+        ratingQuestions[0]
+      );
+    }
 
+    // Extract faculty & course feedbacks from text responses (orders 16 & 17)
     const facultyFeedbackQ = courseData.questions.find(
       (q) => q.question?.order === 16
     );
@@ -398,6 +434,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       })),
     };
 
+    // Send final response
     return res.status(200).json({
       name: courseData.course.name,
       coursecode: courseData.course.code,
@@ -406,7 +443,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
         submitted: totalResponses,
         yettosubmit: yetToSubmit,
       },
-      questions,
+      questions, // <- only rating questions (no 16/17)
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
         question: minQ?.question?.order || "N/A",
@@ -418,8 +455,10 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       feedback,
     });
   } catch (err) {
-    console.error("Error in viewFacultyCourseStatistics:", err);
-    return res.status(500).json({ message: "Error fetching course statistics", error: err.message });
+    console.error("Error fetching course statistics:", err);
+    return res
+      .status(500)
+      .json({ message: "Error fetching course statistics" });
   }
 };
 
@@ -429,10 +468,18 @@ export const addCourse = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, code, facultyEmails, abbreviation, credits, coursetype } = req.body;
+    const { name, code, facultyEmails, abbreviation, credits, coursetype } =
+      req.body;
 
     // Validate required fields
-    if (!name || !code || !facultyEmails || !abbreviation || !credits || !coursetype) {
+    if (
+      !name ||
+      !code ||
+      !facultyEmails ||
+      !abbreviation ||
+      !credits ||
+      !coursetype
+    ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -448,7 +495,9 @@ export const addCourse = async (req, res) => {
       } catch {
         return res
           .status(400)
-          .json({ message: "Invalid facultyEmails format. Must be a JSON array." });
+          .json({
+            message: "Invalid facultyEmails format. Must be a JSON array.",
+          });
       }
     } else {
       facultyEmailsJSON = facultyEmails;
@@ -510,7 +559,9 @@ export const addCourse = async (req, res) => {
 
     if (studentEmails.length === 0) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "No valid student emails found in CSV" });
+      return res
+        .status(400)
+        .json({ message: "No valid student emails found in CSV" });
     }
 
     // Find students
@@ -546,7 +597,9 @@ export const addCourse = async (req, res) => {
     }));
 
     for (const faculty of facultyDocs) {
-      let analytics = await Analytics.findOne({ faculty: faculty._id }).session(session);
+      let analytics = await Analytics.findOne({ faculty: faculty._id }).session(
+        session
+      );
 
       if (!analytics) {
         analytics = new Analytics({
@@ -633,21 +686,29 @@ export const addFacultyCSV = async (req, res) => {
     if (facultyData.length === 0) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(400).json({ message: "No valid faculty records found in CSV" });
+      return res
+        .status(400)
+        .json({ message: "No valid faculty records found in CSV" });
     }
 
     // Filter out already existing faculty emails
     const emails = facultyData.map((f) => f.email);
-    const existingFaculties = await Faculty.find({ email: { $in: emails } }).session(session);
+    const existingFaculties = await Faculty.find({
+      email: { $in: emails },
+    }).session(session);
     const existingEmails = existingFaculties.map((f) => f.email);
 
-    const newFacultyData = facultyData.filter((f) => !existingEmails.includes(f.email));
+    const newFacultyData = facultyData.filter(
+      (f) => !existingEmails.includes(f.email)
+    );
 
     if (newFacultyData.length === 0) {
       await session.abortTransaction();
       session.endSession();
       fs.unlink(filePath, () => {});
-      return res.status(400).json({ message: "All faculty already exist in the database" });
+      return res
+        .status(400)
+        .json({ message: "All faculty already exist in the database" });
     }
 
     // Insert new faculties
@@ -682,7 +743,9 @@ export const addFacultyCSV = async (req, res) => {
     console.error("Error adding faculty:", err);
     await session.abortTransaction();
     session.endSession();
-    return res.status(500).json({ message: "Error adding faculty", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error adding faculty", error: err.message });
   }
 };
 
@@ -720,7 +783,9 @@ export const addStudentsCSV = async (req, res) => {
 
     if (studentsData.length === 0) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "No valid student data found in CSV" });
+      return res
+        .status(400)
+        .json({ message: "No valid student data found in CSV" });
     }
 
     // Filter out existing students
@@ -735,13 +800,17 @@ export const addStudentsCSV = async (req, res) => {
     const existingRolls = existingStudents.map((s) => s.rollNumber);
 
     const newStudents = studentsData.filter(
-      (s) => !existingEmails.includes(s.email) && !existingRolls.includes(s.rollNumber)
+      (s) =>
+        !existingEmails.includes(s.email) &&
+        !existingRolls.includes(s.rollNumber)
     );
 
     if (newStudents.length === 0) {
       await session.abortTransaction();
       fs.unlink(filePath, () => {});
-      return res.status(400).json({ message: "All students in CSV already exist" });
+      return res
+        .status(400)
+        .json({ message: "All students in CSV already exist" });
     }
 
     // Insert new students
@@ -779,7 +848,9 @@ export const addStudentsCSV = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     fs.unlink(req.file?.path || "", () => {});
-    return res.status(500).json({ message: "Error adding students", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error adding students", error: err.message });
   }
 };
 
@@ -812,13 +883,16 @@ export const resetCourse = async (req, res) => {
     session.endSession();
 
     return res.status(200).json({
-      message: "Course reset successfully — all faculty and enrollments removed",
+      message:
+        "Course reset successfully — all faculty and enrollments removed",
     });
   } catch (err) {
     console.error("Error in resetCourse:", err);
     await session.abortTransaction();
     session.endSession();
-    return res.status(500).json({ message: "Error resetting course", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error resetting course", error: err.message });
   }
 };
 
@@ -884,7 +958,9 @@ export const addFacultyStudentstoCourse = async (req, res) => {
       } catch {
         return res
           .status(400)
-          .json({ message: "Invalid facultyEmails format. Must be a JSON array." });
+          .json({
+            message: "Invalid facultyEmails format. Must be a JSON array.",
+          });
       }
     } else {
       facultyEmailsJSON = facultyEmails;
@@ -911,7 +987,9 @@ export const addFacultyStudentstoCourse = async (req, res) => {
 
     const facultyIds = facultyDocs.map((f) => f._id);
     const currentIds = course.faculty.map((f) => f.toString());
-    const newFacultyIds = facultyIds.filter((id) => !currentIds.includes(id.toString()));
+    const newFacultyIds = facultyIds.filter(
+      (id) => !currentIds.includes(id.toString())
+    );
 
     course.faculty.push(...newFacultyIds);
     course.isreset = false;
@@ -936,7 +1014,9 @@ export const addFacultyStudentstoCourse = async (req, res) => {
 
     if (studentEmails.length === 0) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "No valid student emails found in CSV" });
+      return res
+        .status(400)
+        .json({ message: "No valid student emails found in CSV" });
     }
 
     const students = await Student.find({
@@ -944,7 +1024,9 @@ export const addFacultyStudentstoCourse = async (req, res) => {
     }).session(session);
 
     const foundEmails = students.map((s) => s.email);
-    const missingStudents = studentEmails.filter((e) => !foundEmails.includes(e));
+    const missingStudents = studentEmails.filter(
+      (e) => !foundEmails.includes(e)
+    );
 
     if (missingStudents.length > 0) {
       return res.status(400).json({

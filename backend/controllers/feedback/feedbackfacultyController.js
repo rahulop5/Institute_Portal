@@ -74,7 +74,7 @@ export const facultyDashboard = async (req, res) => {
 export const viewCourseStatistics = async (req, res) => {
   try {
     const { courseId } = req.query;
-    console.log(courseId)
+
     const faculty = await Faculty.findOne({ email: req.user.email });
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
@@ -91,8 +91,6 @@ export const viewCourseStatistics = async (req, res) => {
         select: "text order",
       });
 
-      console.log(analytics.courses)
-
     if (!analytics) {
       return res.status(404).json({ message: "No analytics found for this faculty" });
     }
@@ -105,38 +103,45 @@ export const viewCourseStatistics = async (req, res) => {
       return res.status(404).json({ message: "Course analytics not found" });
     }
 
+    // Exclude text-based questions (order 16, 17)
+    const ratingQuestions = courseData.questions.filter(
+      (q) => q.question?.order !== 16 && q.question?.order !== 17
+    );
+
     // Calculate overall average
     const avgscore =
-      courseData.questions.length > 0
-        ? courseData.questions.reduce((sum, q) => sum + q.average, 0) /
-          courseData.questions.length
+      ratingQuestions.length > 0
+        ? ratingQuestions.reduce((sum, q) => sum + q.average, 0) /
+          ratingQuestions.length
         : 0;
 
-    // Calculate submitted vs yet-to-submit (based on totalResponses)
+    // Calculate responses stats
     const totalResponses = courseData.totalResponses || 0;
     const totalEnrolled = await Enrollment.countDocuments({ course: courseId });
     const yetToSubmit = Math.max(totalEnrolled - totalResponses, 0);
 
-    // Prepare question-wise data
-    const questions = courseData.questions.map((q, idx) => ({
+    // Prepare only rating-based questions for frontend
+    const questions = ratingQuestions.map((q, idx) => ({
       qno: q.question?.order ?? idx + 1,
       avgscore: parseFloat(q.average.toFixed(2)),
     }));
 
-    // Find min & max
-    const ratingQuestions = courseData.questions.filter(
-      (q) => typeof q.average === "number"
-    );
-    const minQ = ratingQuestions.reduce(
-      (min, q) => (q.average < min.average ? q : min),
-      ratingQuestions[0]
-    );
-    const maxQ = ratingQuestions.reduce(
-      (max, q) => (q.average > max.average ? q : max),
-      ratingQuestions[0]
-    );
+    // Find min & max (from rating questions only)
+    let minQ = null;
+    let maxQ = null;
 
-    // Extract faculty & course feedbacks from textResponses (order 16 → faculty, 17 → course)
+    if (ratingQuestions.length > 0) {
+      minQ = ratingQuestions.reduce(
+        (min, q) => (q.average < min.average ? q : min),
+        ratingQuestions[0]
+      );
+      maxQ = ratingQuestions.reduce(
+        (max, q) => (q.average > max.average ? q : max),
+        ratingQuestions[0]
+      );
+    }
+
+    // Extract faculty & course feedbacks from text responses (orders 16 & 17)
     const facultyFeedbackQ = courseData.questions.find(
       (q) => q.question?.order === 16
     );
@@ -166,7 +171,7 @@ export const viewCourseStatistics = async (req, res) => {
         submitted: totalResponses,
         yettosubmit: yetToSubmit,
       },
-      questions,
+      questions, // <- only rating questions (no 16/17)
       min: {
         score: parseFloat(minQ?.average?.toFixed(2)) || 0,
         question: minQ?.question?.order || "N/A",

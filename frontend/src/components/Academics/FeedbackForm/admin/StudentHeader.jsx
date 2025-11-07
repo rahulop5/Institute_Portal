@@ -7,7 +7,7 @@ export default function StudentHeader({ students }) {
     const csvHeader = "Name,Email,Roll No.,Year of Study\n";
     const csvRows = students
       .map(
-        (s) => `${s.name},${s.email},${s.roll},${s.year}`
+        (s) => `${s.name},${s.email},${s.rollNumber},${s.batch}`
       )
       .join("\n");
     const blob = new Blob([csvHeader + csvRows], { type: "text/csv" });
@@ -19,7 +19,7 @@ export default function StudentHeader({ students }) {
 
   return (
     <div className={styles.container}>
-      <p className={styles.title}>Unregistered Students:</p>
+      <p className={styles.title}>Unsubmitted Students:</p>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -45,8 +45,8 @@ export default function StudentHeader({ students }) {
                     </div>
                   </div>
                 </td>
-                <td>{s.roll}</td>
-                <td>{s.year}</td>
+                <td>{s.rollNumber}</td>
+                <td>{s.batch}</td>
               </tr>
             ))}
           </tbody>
