@@ -1,74 +1,53 @@
-import { useState } from "react";
+// In AdminDashboard.jsx
+
+import { Outlet, Link, useLocation } from "react-router-dom"; 
+import { useState } from "react"; 
 import styles from "../styles/adminDashboard.module.css";
-import FacultyHeader from "./FacultyHeader.jsx";
-import FacultyDashboard from "../faculty/facultyDashboard.jsx";
-import CoursesHeader from "./CourseHeader.jsx";
-import StudentHeader from "./StudentHeader.jsx";
+import FacultyDashboard from "../faculty/facultyDashboard"; 
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("faculty");
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const location = useLocation();
+  const activeTab = location.pathname.split("/").pop();
 
-  const renderTabContent = () => {
-    if (selectedFaculty) {
-      return (
-        <FacultyDashboard
-          facultyData={selectedFaculty}
-          onBack={() => setSelectedFaculty(null)}
-        />
-      );
-    }
+ 
 
-    switch (activeTab) {
-      case "faculty":
-        return <FacultyHeader setSelectedFaculty={setSelectedFaculty} />;
-      case "students":
-        return <StudentHeader />
-      case "courses":
-        return <CoursesHeader />;
-      default:
-        return null;
-    }
-  };
+ 
 
   return (
     <div className={styles.container}>
-      
-      {!selectedFaculty && (
-        <>
-          <h1 className={styles.heading}>Admin Dashboard</h1>
+      <h1 className={styles.heading}>Admin Dashboard</h1>
+      <div className={styles.feedbackTabs}>
+        <Link
+          to="faculty"
+          className={`${styles.tabBtn} ${
+            activeTab === "faculty" ? styles.active : ""
+          }`}
+        >
+          Faculty
+        </Link>
+        <Link
+          to="students"
+          className={`${styles.tabBtn} ${
+            activeTab === "students" ? styles.active : ""
+          }`}
+        >
+          Students
+        </Link>
+        <Link
+          to="courses"
+          className={`${styles.tabBtn} ${
+            activeTab === "courses" ? styles.active : ""
+          }`}
+        >
+          Courses
+        </Link>
+      </div>
 
-          <div className={styles.feedbackTabs}>
-            <button
-              onClick={() => setActiveTab("faculty")}
-              className={`${styles.tabBtn} ${
-                activeTab === "faculty" ? styles.active : ""
-              }`}
-            >
-              Faculty
-            </button>
-            <button
-              onClick={() => setActiveTab("students")}
-              className={`${styles.tabBtn} ${
-                activeTab === "students" ? styles.active : ""
-              }`}
-            >
-              Students
-            </button>
-            <button
-              onClick={() => setActiveTab("courses")}
-              className={`${styles.tabBtn} ${
-                activeTab === "courses" ? styles.active : ""
-              }`}
-            >
-              Courses
-            </button>
-          </div>
-        </>
-      )}
+      <div className={styles.tabContent}>
+       
 
-      {/* Tab Content */}
-      <div className={styles.tabContent}>{renderTabContent()}</div>
+        <Outlet />
+      </div>
     </div>
   );
 }

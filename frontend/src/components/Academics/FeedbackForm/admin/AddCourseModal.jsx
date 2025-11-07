@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "../styles/AddCourseModal.module.css";
 
-export default function AddCourseModal({ onClose }) {
+export default function AddCourseModal({ onClose, faculty }) {
   const [formData, setFormData] = useState({
     name: "",
     abbreviation: "",

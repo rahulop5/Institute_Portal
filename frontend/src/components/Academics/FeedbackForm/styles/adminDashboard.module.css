@@ -14,7 +14,10 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  padding: 1rem;
   gap: 25px 30px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .card {
@@ -171,17 +174,22 @@ box-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.17);
 }
 
 .tabBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 80px;
   background-color: transparent;
   border: none;
   border-radius: 25px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   color: #555;
   transition: all 0.3s ease;
   height: 38px;
   min-width: 150px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .tabBtn:not(.active):hover {

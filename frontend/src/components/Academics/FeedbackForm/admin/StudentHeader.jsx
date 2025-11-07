@@ -1,45 +1,7 @@
-import React from "react";
 import styles from "../styles/StudentHeader.module.css";
 import download from "../../../../assets/studenticon.svg"
 
-export default function StudentHeader() {
-  const students = [
-    {
-      id: 11,
-      name: "Sahal Ansar Theparambil",
-      email: "sahalansar.t23@iiits.in",
-      roll: "S20230010210",
-      year: "UG2",
-    },
-    {
-      id: 12,
-      name: "Sahal Ansar Theparambil",
-      email: "sahalansar.t23@iiits.in",
-      roll: "S20230010210",
-      year: "UG2",
-    },
-    {
-      id: 13,
-      name: "Sahal Ansar Theparambil",
-      email: "sahalansar.t23@iiits.in",
-      roll: "S20230010210",
-      year: "UG2",
-    },
-    {
-      id: 14,
-      name: "Sahal Ansar Theparambil",
-      email: "sahalansar.t23@iiits.in",
-      roll: "S20230010210",
-      year: "UG3",
-    },
-    {
-      id: 15,
-      name: "Sahal Ansar Theparambil",
-      email: "sahalansar.t23@iiits.in",
-      roll: "S20230010210",
-      year: "UG3",
-    },
-  ];
+export default function StudentHeader({ students }) {
 
   const exportCSV = () => {
     const csvHeader = "Name,Email,Roll No.,Year of Study\n";

@@ -9,10 +9,10 @@ export default function AddFacultyModal({ onClose, onConfirm }) {
   const handleConfirm = () => {
     const newFaculty = { name, email, department };
 
-    // 🔹 Send data to parent or backend
+   
     if (onConfirm) onConfirm(newFaculty);
 
-    // Close modal after confirm
+   
     onClose();
   };
 
