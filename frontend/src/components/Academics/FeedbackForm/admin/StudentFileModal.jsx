@@ -1,24 +1,22 @@
 import { useState } from "react";
-import * as XLSX from "xlsx";
-import styles from "../styles/addFacultyModal.module.css"; 
 import { redirect, useSubmit } from "react-router";
 
-
+import * as XLSX from "xlsx";
+import styles from "../styles/addFacultyModal.module.css";
 import fileUploadImage from "../../../../assets/uploadfile.png";
 import warning from "../../../../assets/warning.png";
 import csv from "../../../../assets/csv.png";
 import xmark from "../../../../assets/xmark.png";
 
+import PreviewModal from "./PreviewModal.jsx";
 
-import PreviewModal from "./PreviewModal.jsx"; 
-
-export default function AddFacultyFileModal({ onClose, onConfirm }) {
+export default function StudentFileModal({ onClose, onConfirm }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [isDragging, setIsDragging] = useState(false); 
-  const submit = useSubmit();
+  const [isDragging, setIsDragging] = useState(false);
 
+  const submit = useSubmit();
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -69,7 +67,7 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
   };
 
   // This is called *from* the PreviewModal
-   const handleConfirmUpload = () => {
+  const handleConfirmUpload = () => {
     if (!selectedFile) return;
 
     const formData = new FormData();
@@ -77,7 +75,7 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
 
     submit(formData, {
       method: "post",
-      action: "/academics/feedback/admin/addFacultyCSV", // route pointing to addStudentsAction
+      action: "/academics/feedback/admin/addStudentsCSV", // route pointing to addStudentsAction
       encType: "multipart/form-data",
     });
 
@@ -85,17 +83,13 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
     onClose();
   };
 
-
-  // --- Render ---
-
   return (
     // 1. Structure from AddFacultyModal
     <div className={styles.modalOverlay}>
       <div className={styles.modalContainer}>
-        
         {/* 2. Header from AddFacultyModal */}
         <div className={styles.modalHeader}>
-          <h2 className={styles.title}>Add Faculty from File</h2>
+          <h2 className={styles.title}>Add Students from CSV File</h2>
           <button className={styles.closeBtn} onClick={onClose}>
             ✕
           </button>
@@ -116,7 +110,9 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
               <img src={fileUploadImage} alt="File Upload" />
               <p>Drag and drop file</p>
               <p>or</p>
-              <button onClick={() => document.getElementById("fileInput")?.click()}>
+              <button
+                onClick={() => document.getElementById("fileInput")?.click()}
+              >
                 Browse Files
               </button>
               <input
@@ -174,14 +170,15 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
           previewData={previewData}
           onClose={() => setShowPreview(false)}
           // Pass the final confirmation handler to the preview modal
-          onConfirm={handleConfirmUpload} 
+          onConfirm={handleConfirmUpload}
         />
       )}
     </div>
   );
 }
 
-export async function addFacultyAction({ request }) {
+
+export async function addStudentsAction({ request }) {
   const token = localStorage.getItem("token");
   const formData = await request.formData(); // includes "file"
   const file = formData.get("file");
@@ -189,7 +186,7 @@ export async function addFacultyAction({ request }) {
   const backendFormData = new FormData();
   backendFormData.append("file", file);
 
-  const response = await fetch("http://localhost:3000/puser/feedback/addFacultyCSV", {
+  const response = await fetch("http://localhost:3000/puser/feedback/addStudentsCSV", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -199,7 +196,6 @@ export async function addFacultyAction({ request }) {
 
   if (!response.ok) {
     const err = await response.json();
-  console.log(err);
     throw new Response(
       JSON.stringify({
         message: err.message || "Failed to upload student file",
@@ -209,7 +205,7 @@ export async function addFacultyAction({ request }) {
   }
 
   const res = await response.json();
-  console.log(res);
 
-  return redirect("/academics/feedback/admin/faculty");
+  return redirect("/academics/feedback/admin/students");
 }
+

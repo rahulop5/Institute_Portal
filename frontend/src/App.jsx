@@ -91,6 +91,9 @@ import AdminFacultyDetailPage, {
 import AdminFacultyStatistics, {
   adminCourseStatisticsLoader,
 } from "./components/Academics/FeedbackForm/admin/AdminFacultyStatistics.jsx";
+import { addStudentsAction } from "./components/Academics/FeedbackForm/admin/StudentFileModal.jsx";
+import { addFacultyAction } from "./components/Academics/FeedbackForm/admin/AddFacultyFileModal.jsx";
+import { deleteCourseAction } from "./components/Academics/FeedbackForm/admin/CourseHeader.jsx";
 
 const router = createBrowserRouter([
   {
@@ -298,6 +301,7 @@ const router = createBrowserRouter([
                     path: "courses",
                     element: <CoursesTab />,
                     loader: adminDashboardCoursesLoader,
+                    action: deleteCourseAction
                   },
                   {
                     path: "faculty/:facultyId",
@@ -309,6 +313,8 @@ const router = createBrowserRouter([
                     element: <AdminFacultyStatistics />,
                     loader: adminCourseStatisticsLoader,
                   },
+                  { path: "addStudentsCSV", action: addStudentsAction, element: <></> },
+                  { path: "addFacultyCSV", action: addFacultyAction, element: <></> },
                 ],
               },
               {
