@@ -3,67 +3,13 @@ import styles from "../styles/facultyStats.module.css";
 import DoughnutChartBox from "./DoughnutChartBox";
 import LineChartBox from "./LineChartBox";
 import FeedbackSection from "./FeedbackSection";
-import { useLoaderData } from "react-router";
 
-// const data = {
-//   name: "Theory of Computation",
-//   coursecode: "CS2018",
-//   coursetype: "Institute Core Course",
-//   avgscore: 7.8,
-//   responses: {
-//     submitted: 73,
-//     yettosubmit: 18,
-//   },
-//   questions: [
-//     { qno: 1, avgscore: 7.6 },
-//     { qno: 2, avgscore: 6.8 },
-//     { qno: 3, avgscore: 8.1 },
-//     { qno: 4, avgscore: 7.2 },
-//     { qno: 5, avgscore: 6.9 },
-//     { qno: 6, avgscore: 8.3 },
-//     { qno: 7, avgscore: 4.6 },
-//     { qno: 8, avgscore: 8.5 },
-//     { qno: 9, avgscore: 8.9 },
-//     { qno: 10, avgscore: 7.7 },
-//     { qno: 11, avgscore: 7.1 },
-//     { qno: 12, avgscore: 6.4 },
-//     { qno: 13, avgscore: 7.9 },
-//     { qno: 14, avgscore: 8.2 },
-//     { qno: 15, avgscore: 7.0 },
-//   ],
-//   min: { score: 4.6, question: 7 },
-//   max: { score: 8.9, question: 9 },
-//   feedback: {
-//     course: [
-//       {
-//         date: "13/02/24",
-//         text: "The course content was well-structured and easy to follow. Real-world examples helped me grasp the concepts better.",
-//         score: 9.2,
-//       },
-//       {
-//         date: "13/02/24",
-//         text: "Some topics were a bit rushed toward the end. More time for theorems and proofs would be helpful.",
-//         score: 6.8,
-//       },
-//     ],
-//     faculty: [
-//       {
-//         date: "13/02/24",
-//         text: "The faculty explained each topic clearly and handled queries patiently.",
-//         score: 9.1,
-//       },
-//       {
-//         date: "13/02/24",
-//         text: "Lectures were sometimes too fast-paced, especially during the later chapters.",
-//         score: 5.9,
-//       },
-//     ],
-//   },
-// };
+import { useLoaderData, useNavigate,useParams } from "react-router";
 
 export default function AdminFacultyStatistics() {
-  const data=useLoaderData();
-  console.log(data)
+  const data = useLoaderData();
+  const navigate = useNavigate(); // 2. Get the navigate function
+  console.log(data);
   const [activeTab, setActiveTab] = useState("course");
   const {
     name,
@@ -76,11 +22,21 @@ export default function AdminFacultyStatistics() {
     feedback,
   } = data;
 
+  const { facultyId } = useParams();
+
+  const handleBack = () => {
+    navigate(`/academics/feedback/admin/faculty/${facultyId}`);
+  };
   return (
     <div className={styles.container}>
+      <button className={styles.backBtn} onClick={handleBack}>
+        ← Back to Faculty Overview
+      </button>
+
       <h2 className={styles.heading}>Feedback Form Overview</h2>
 
       <div className={styles.topSection}>
+        {/* ... (rest of your component) ... */}
         <div className={styles.courseBox}>
           <div className={styles.courseInfo}>
             <h3 className={styles.courseTitle}>{name}</h3>
@@ -124,11 +80,12 @@ export default function AdminFacultyStatistics() {
 // This is the new, admin-specific loader
 export async function adminCourseStatisticsLoader({ params }) {
   const token = localStorage.getItem("token");
-  const { facultyId, courseId } = params; 
+  const { facultyId, courseId } = params;
 
   // Call your admin endpoint
   const response = await fetch(
-    `http://localhost:3000/puser/feedback/viewFacultyCourseStatistics?facultyId=${facultyId}&courseId=${courseId}`, {
+    `http://localhost:3000/puser/feedback/viewFacultyCourseStatistics?facultyId=${facultyId}&courseId=${courseId}`,
+    {
       headers: {
         Authorization: "Bearer " + token,
       },
@@ -141,5 +98,5 @@ export async function adminCourseStatisticsLoader({ params }) {
 
   // The component expects the data object directly
   const resData = await response.json();
-  return resData; 
+  return resData;
 }

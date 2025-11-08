@@ -93,3 +93,10 @@ td {
 .exportBtn:hover {
   opacity: 0.9;
 }
+
+.header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}

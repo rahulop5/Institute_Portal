@@ -243,3 +243,50 @@ textarea {
 .removeBtn:hover {
   color: #d20000;
 }
+/* ADD THESE STYLES TO AddCourseModal.module.css */
+
+.facultyPillContainer {
+  min-height: 100px; /* Adjust as needed */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  background: #f9f9f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.facultyPillPlaceholder {
+  color: #999;
+  padding: 4px;
+}
+
+.facultyPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0e0e0;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+}
+
+.removePillBtn {
+  background: #aaa;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.removePillBtn:hover {
+  background: #888;
+}

@@ -137,3 +137,24 @@
   color: white;
   box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
 }
+
+.deleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
