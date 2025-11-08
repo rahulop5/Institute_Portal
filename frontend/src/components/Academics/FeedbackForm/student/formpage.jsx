@@ -110,6 +110,40 @@ export default function FormPage({ feedback }) {
   };
 
   const handleSubmit = async () => {
+    setSubmitted(true);
+    // Check all pages for unanswered rating questions
+    let firstUnansweredPage = -1;
+    let firstUnansweredQuestionId = null;
+
+    for (let i = 0; i < responses.length; i++) {
+      const page = responses[i];
+      const fb = feedback.feedbacks[i];
+      const unanswered = fb.answers.filter(
+        (a) => !page.answers[a.question._id] && a.question.type === "rating"
+      );
+
+      if (unanswered.length > 0) {
+        firstUnansweredPage = i;
+        firstUnansweredQuestionId = unanswered[0].question._id;
+        break;
+      }
+    }
+
+    // If any unanswered rating found → go to that page and scroll
+    if (firstUnansweredPage !== -1) {
+      setCurrentIndex(firstUnansweredPage);
+      setTimeout(() => {
+        const element = document.getElementById(
+          `question-${firstUnansweredQuestionId}`
+        );
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 200);
+      return;
+    }
+
+    // Everything answered → proceed with submission
     const payload = {
       currentPage: currentIndex + 1,
       feedbacks: responses.map((page) => ({
@@ -130,6 +164,8 @@ export default function FormPage({ feedback }) {
       action: "submitfeedback",
       encType: "application/x-www-form-urlencoded",
     });
+
+    setSubmitted(false);
   };
 
   const currentResponses = currentPage.answers;
@@ -227,7 +263,9 @@ export default function FormPage({ feedback }) {
       </div>
 
       {/* --- Next/Save Buttons --- */}
+      {/* --- Navigation Buttons --- */}
       <div className={styles.submitContainer}>
+        {/* Back button */}
         <button
           type="button"
           className={styles.proceedButton}
@@ -244,28 +282,30 @@ export default function FormPage({ feedback }) {
         <button
           type="button"
           className={styles.proceedButton}
-          onClick={handleNext}
-        >
-          {currentIndex + 1 < feedback.feedbacks.length
-            ? "Next Faculty"
-            : "Done Reviewing"}
-        </button>
-
-        <button
-          type="button"
-          className={styles.proceedButton}
           onClick={handleSaveProgress}
         >
           Save Progress
         </button>
+        {/* Conditional Next / Submit button */}
+        {currentIndex + 1 < feedback.feedbacks.length ? (
+          <button
+            type="button"
+            className={styles.proceedButton}
+            onClick={handleNext}
+          >
+            Next Faculty
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.proceedButton}
+            onClick={handleSubmit}
+          >
+            Submit
+          </button>
+        )}
 
-        <button
-          type="button"
-          className={styles.proceedButton}
-          onClick={handleSubmit}
-        >
-          Submit
-        </button>
+        {/* Save Progress (always visible) */}
       </div>
     </div>
   );

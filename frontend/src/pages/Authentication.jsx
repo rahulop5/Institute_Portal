@@ -1,11 +1,14 @@
 import { redirect } from "react-router";
 import AuthForm from "../components/AuthForm";
+import Register1 from "../components/academics/FeedbackForm/login/register";
 
 export default function Authentication(){
-    return <AuthForm />;
+    // return <AuthForm />;
+    return <Register1 />;
 }
 
 export async function action({request}){
+    console.log("hi")
     const formData=await request.formData();
     const authData={
         email: formData.get("email"),

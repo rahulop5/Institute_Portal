@@ -94,6 +94,7 @@ import AdminFacultyStatistics, {
 import { addStudentsAction } from "./components/Academics/FeedbackForm/admin/StudentFileModal.jsx";
 import { addFacultyAction } from "./components/Academics/FeedbackForm/admin/AddFacultyFileModal.jsx";
 import { deleteCourseAction } from "./components/Academics/FeedbackForm/admin/CourseHeader.jsx";
+import Register1 from "./components/academics/FeedbackForm/login/register.jsx";
 
 const router = createBrowserRouter([
   {
@@ -110,7 +111,7 @@ const router = createBrowserRouter([
       },
       {
         path: "temp",
-        element: <AdminDashboard />,
+        element: <Register1 />,
       },
       {
         path: "academics",

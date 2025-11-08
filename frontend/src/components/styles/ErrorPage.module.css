@@ -1,0 +1,87 @@
+/* Styles for the new Error Page 
+  Save as /src/pages/ErrorPage.module.css 
+*/
+
+.errorWrapper {
+  width: 100%;
+  height: 100%; /* Make sure it fills the content area */
+  min-height: 80vh; /* Give it some minimum height */
+  
+  /* Background image settings */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  /* Center the content */
+  margin-top:10vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.errorContent {
+  /* This container holds the text and button */
+  max-width: 500px;
+  padding: 2rem;
+  margin-top:-5vh;
+}
+
+.errorCode {
+  /* --- FONT CHANGED --- */
+  font-family: "Mina", sans-serif; 
+  /* -------------------- */
+
+  font-size: 10rem;
+  font-weight: 200; /* You can change this to 700 for bold if you like */
+  color: #4a4a4a;
+  
+  /* Adds the subtle glow from your image */
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  
+  /* This matches the empty white bar area in your template */
+  /* background-color: #ffffff; */
+  padding: 1rem 3rem;
+  border-radius: 20px;
+  box-shadow: 0 5px 25px rgba(255, 255, 255, 0.8);
+  
+  /* Ensures it sits nicely over the background */
+  position: relative;
+  z-index: 2;
+}
+
+.errorMessage {
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: -5rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 2;
+  /* font-weight: 200; */
+}
+
+.homeButton {
+  display: inline-block;
+  padding: 0.9rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  background-color: #000;
+  color: #fff;
+  font-size: 1rem;
+  margin-top: 5vh;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  
+  /* Button shadow/glow from your image */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.homeButton:hover {
+  background-color: #333;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}

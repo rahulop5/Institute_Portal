@@ -1705,27 +1705,35 @@ export const submitFeedback = async (req, res) => {
           }
           existingAns.response = val;
         } else if (question.type === "text") {
-          if (typeof ans.response !== "string" || ans.response.trim() === "") {
-            return res.status(400).json({
-              message: `Invalid text response for question ${question._id}`,
-            });
+          //  Text is now optional — only store if provided
+          if (typeof ans.response === "string" && ans.response.trim() !== "") {
+            existingAns.response = ans.response.trim();
+          } else {
+            existingAns.response = ""; // leave blank if not provided
           }
-          existingAns.response = ans.response.trim();
         }
       }
 
-      // Mark as completed if all answered
-      const everyAnswered = existingEntry.answers.every(
-        (a) => a.response !== null && a.response !== ""
+      //  Mark as completed only if all RATING questions are answered
+      const everyAnswered = await Promise.all(
+        existingEntry.answers.map(async (a) => {
+          const q = await Question.findById(a.question).select("type");
+          if (!q) return false;
+          if (q.type === "rating") {
+            return a.response !== null && a.response !== "";
+          }
+          return true; // text questions can be empty
+        })
       );
-      existingEntry.completed = everyAnswered;
+
+      existingEntry.completed = everyAnswered.every(Boolean);
     }
 
-    // Reject if any page incomplete
+    // Reject if any page incomplete (due to missing rating)
     const incomplete = feedback.feedbacks.filter((f) => !f.completed);
     if (incomplete.length > 0) {
       return res.status(400).json({
-        message: "Cannot submit. Some feedback pages are incomplete.",
+        message: "Cannot submit. Some feedback pages are incomplete (missing ratings).",
         incompleteCount: incomplete.length,
       });
     }
@@ -1790,18 +1798,13 @@ export const submitFeedback = async (req, res) => {
 
           // Update average, min, max
           qEntry.average =
-            (qEntry.average * courseEntry.totalResponses + val) /
-            totalResponses;
+            (qEntry.average * courseEntry.totalResponses + val) / totalResponses;
           qEntry.min =
-            courseEntry.totalResponses === 0
-              ? val
-              : Math.min(qEntry.min, val);
+            courseEntry.totalResponses === 0 ? val : Math.min(qEntry.min, val);
           qEntry.max =
-            courseEntry.totalResponses === 0
-              ? val
-              : Math.max(qEntry.max, val);
+            courseEntry.totalResponses === 0 ? val : Math.max(qEntry.max, val);
         } else if (question.type === "text") {
-          // Now store as object with text + student's avg rating
+          // Only store if non-empty
           if (ans.response && ans.response.trim() !== "") {
             qEntry.textResponses.push({
               text: ans.response.trim(),
@@ -1827,5 +1830,5 @@ export const submitFeedback = async (req, res) => {
       error: err.message,
     });
   }
-};
+};  
 // update the statistics of faculty with each submission

@@ -1,101 +1,105 @@
 import React, { useState } from "react";
-import styles from "../styles/Register.module.css";
+import { Form, useNavigation } from "react-router";
 
-export default function Register() {
+import styles from "../styles/Register.module.css"; // Corrected path
+import loginImage from "../../../../assets/loginbackground1.png"; // Corrected path
+
+export default function Register1() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState(""); // --- ADDED: Password state
   const [errors, setErrors] = useState({});
+  const navigation=useNavigation();
+  const isSubmitting=navigation.state==="submitting"
 
   const validate = () => {
     const newErrors = {};
-
-    // Email validation (basic regex)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Email validation
     if (!email.trim()) {
       newErrors.email = "Email is required.";
     } else if (!emailRegex.test(email)) {
       newErrors.email = "Please enter a valid email address.";
     }
 
-    // Password validation
+    // --- ADDED: Password validation ---
     if (!password.trim()) {
       newErrors.password = "Password is required.";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
     }
-
-    // Confirm password validation
-    if (confirmPassword !== password) {
-      newErrors.confirmPassword = "Passwords do not match.";
-    }
+    // ---------------------------------
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // returns true if valid
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (validate()) {
-     
+    if (!validate()) {
+      e.preventDefault();
     }
   };
 
   return (
-    <div className={styles.registerContainer}>
-      <div className={styles.registerLeft}></div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.registerContainer}>
+        <div
+          className={styles.registerLeft}
+          style={{ backgroundImage: `url(${loginImage})` }}
+        ></div>
 
-      <div className={styles.registerRight}>
-        <h2 className={styles.registerTitle}>Register</h2>
+        <div className={styles.registerRight}>
+          {/* --- CHANGED: Title updated to Login --- */}
+          <h2 className={styles.registerTitle}>Login</h2>
 
-        <form onSubmit={handleSubmit}>
-          <label className={styles.inputLabel}>Email:</label>
-          <input
-            type="email"
-            placeholder="Type here..."
-            className={styles.inputField}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          {errors.email && <p className={styles.error}>{errors.email}</p>}
+          <Form onSubmit={handleSubmit} method="post" >
+            {/* --- Email Field (Unchanged) --- */}
+            <label className={styles.inputLabel}>Email:</label>
+            <input
+              name="email"
+              type="email"
+              placeholder="Type here..."
+              className={styles.inputField}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {errors.email && <p className={styles.error}>{errors.email}</p>}
 
-          <label className={styles.inputLabel}>Password:</label>
-          <input
-            type="password"
-            placeholder="Type here..."
-            className={styles.inputField}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {errors.password && <p className={styles.error}>{errors.password}</p>}
+            {/* --- ADDED: Password Field --- */}
+            <label
+              className={styles.inputLabel}
+              style={{ marginTop: "1rem" }} // Adds a little space
+            >
+              Password:
+            </label>
+            <input
+              name="password"
+              type="password"
+              placeholder="Type here..."
+              className={styles.inputField}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {errors.password && <p className={styles.error}>{errors.password}</p>}
+            {/* ------------------------------ */}
 
-          <input
-            type="password"
-            placeholder="Retype here..."
-            className={styles.inputField}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          {errors.confirmPassword && (
-            <p className={styles.error}>{errors.confirmPassword}</p>
-          )}
+            <button type="submit" className={styles.btnContinue}>
+              {isSubmitting ?"Logging In": "Log In"}
+            </button>
+          </Form>
 
-          <button type="submit" className={styles.btnContinue}>
-            Continue
-          </button>
-        </form>
+          <div className={styles.divider}>
+            <span className={styles.line}></span>
+            <span className={styles.orText}>or</span>
+            <span className={styles.line}></span>
+          </div>
 
-        <div className={styles.divider}>
-          <span className={styles.line}></span>
-          <span className={styles.orText}>or</span>
-          <span className={styles.line}></span>
+          {/* --- CHANGED: Text updated for login page --- */}
+          <p className={styles.alreadyText}>
+            Don't have an account?{" "}
+            <a href="/register" className={styles.loginLink}>
+              Register
+            </a>
+          </p>
         </div>
-
-        <p className={styles.alreadyText}>Already registered?</p>
-        <button className={styles.btnLogin}>
-          Login to a different account
-        </button>
       </div>
     </div>
   );

@@ -1,15 +1,43 @@
-import { useRouteError } from "react-router"
+import { useRouteError, Link } from "react-router-dom";
+import styles from "../components/styles/ErrorPage.module.css";
 
-//could do a whole lot better
-export default function ErrorPage(){
-    const error=useRouteError();
-    let message = 'Something went wrong!';
-    message=error?.data?.message;
+// Import the background template
+// Adjust the path if your ErrorPage.jsx is not in the /pages folder
+import errorBackground from "../assets/error_page_template.png"
 
-    return (
-        <>
-            <h1>Error Page</h1>
-            <p>{message}</p>
-        </>
-    )
+export default function ErrorPage() {
+  const error = useRouteError();
+
+  let status = "Oops!";
+  let message = "Something went wrong!";
+
+  if (error.status) {
+    status = error.status;
+  }
+
+  if (error.data?.message) {
+    message = error.data.message;
+  } else if (error.statusText) {
+    message = error.statusText;
+  }
+
+  // A specific message for 404
+  if (error.status === 404) {
+    message = "The page you are looking for is missing... If you think something is broken, report a problem.";
+  }
+
+  return (
+    <div
+      className={styles.errorWrapper}
+      style={{ backgroundImage: `url(${errorBackground})` }}
+    >
+      <div className={styles.errorContent}>
+        <h1 className={styles.errorCode}>{status}</h1>
+        <p className={styles.errorMessage}>{message}</p>
+        <Link to="/" className={styles.homeButton}>
+          Go Home
+        </Link>
+      </div>
+    </div>
+  );
 }
