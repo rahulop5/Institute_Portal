@@ -1,4 +1,3 @@
-// FacultySelectModal.js (Corrected)
 
 import React, { useState, useMemo } from "react";
 import styles from "../styles/FacultySelectModal.module.css";

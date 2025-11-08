@@ -98,7 +98,7 @@ export default function CoursesHeader({ courses, faculty }) {
             </div>
           ))
         ) : (
-          // 8. Add an 'else' case for no results
+          
           <p className={styles.noResults}>No courses found.</p>
         )}
       </div>

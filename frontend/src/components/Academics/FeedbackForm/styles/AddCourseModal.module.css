@@ -8,285 +8,229 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1500;
   backdrop-filter: blur(2px);
 }
 
 .modal {
-  background: #ffffff;
+  background: #fff;
+  border-radius: 16px;
   width: 820px;
-  border-radius: 18px;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
-  padding: 35px 45px 40px;
+  padding: 28px;
   position: relative;
-  font-family: "Inter", system-ui, sans-serif;
 }
 
 .closeBtn {
   position: absolute;
-  top: 22px;
-  right: 25px;
+  right: 20px;
+  top: 16px;
+  background: none;
   border: none;
-  background: transparent;
-  font-size: 22px;
-  color: #777;
+  font-size: 20px;
   cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.closeBtn:hover {
-  color: #000;
 }
 
 .title {
   text-align: center;
-  font-size: 27px;
-  font-weight: 400;
-  color: #1f1f1f;
-  margin-bottom: 28px;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
 }
 
-.form {
+.formGrid {
   display: flex;
-  gap: 36px;
+  gap: 32px;
 }
 
 .leftColumn,
 .rightColumn {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
 }
 
-label {
+.label {
   display: flex;
   flex-direction: column;
+  font-size: 14px;
   gap: 6px;
-  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.label input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.twoCol {
+  display: flex;
+  gap: 16px;
+}
+
+.fieldBlock {
+  margin-top: 12px;
+}
+
+.labelText {
+  font-size: 14px;
   font-weight: 500;
-  color: #222;
-}
-
-input,
-textarea {
-  border: 1px solid #d7d7d7;
-  border-radius: 10px;
-  background: #fdfdfd;
-  font-size: 12px;
-  color: #333;
-  padding: 14px 12px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-input:focus,
-textarea:focus {
-  border-color: #7c3aed;
-}
-
-textarea {
-  resize: none;
-  height: 110px;
-}
-
-.row {
-  display: flex;
-  gap: 14px;
-}
-
-.structure,
-.credits {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  margin-bottom: 6px;
+  display: block;
 }
 
 .btnGroup {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.btnGroup button,
-.credits button {
-  flex: 1;
-  border: 1px solid #d7d7d7;
-  border-radius: 10px;
-  padding: 9px 0;
-  background: #ffffff;
+.optionBtn {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 14px;
+  background: #fff;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
+  font-size: 13px;
+  transition: 0.2s;
 }
 
-.btnGroup button:hover,
-.credits button:hover {
-  background: #f3f3f3;
+.optionBtn:hover {
+  background: #f4f4f4;
 }
 
 .active {
-  border-color: #0066ff;
-  background-color: #e9f2ff;
-  color: #0050d1;
+  border-color: #4caf50;
+  background: #e8f5e9;
+  color: #2e7d32;
   font-weight: 500;
 }
 
-.addFacultyBtnContainer {
-    display: flex;
-    justify-content: flex-end;
+.facultyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
+.facultyContainer {
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 140px;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.facultyItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 6px;
+}
+
+.facultyIndex {
+  font-weight: 500;
+  width: 28px;
+}
+
+.facultyInfo {
+  flex: 1;
+}
+
+.facultyName {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.facultyEmail {
+  font-size: 12px;
+  color: #777;
+}
+
+.removeFacultyBtn {
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: #888;
+  cursor: pointer;
 }
 
 .addFacultyBtn {
-  border: 1px solid #FF6A00;
-  background: #fff;
-  color: #FF6A00;
+  border: 1px solid #4caf50;
+  color: #4caf50;
+  background: none;
   border-radius: 20px;
   padding: 6px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  align-self: flex-start;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  align-self: flex-start;
+  transition: 0.2s;
 }
 
 .addFacultyBtn:hover {
-  background: #FF6A00;
-  color: white;
+  background: #e8f5e9;
 }
 
 .uploadBox {
-  border: 1.5px dashed #c8c8c8;
-  border-radius: 11px;
-  padding: 24px;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  padding: 16px;
   text-align: center;
   font-size: 14px;
-  color: #707070;
-  line-height: 1.6;
-  cursor: pointer;
-}
-
-.uploadBox span {
-  color: #5b5b5b;
+  color: #666;
 }
 
 .browseBtn {
-  color: #008c3b;
-  border: 1px solid #008c3b;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 6px 18px;
-  font-size: 14px;
+  color: #2e7d32;
+  text-decoration: underline;
   cursor: pointer;
-  margin-left: 8px;
-  transition: all 0.2s ease;
-}
-
-.browseBtn:hover {
-  background: #eafbee;
 }
 
 .fileInput {
   display: none;
 }
 
-.confirmRow {
-  display: flex;
-  justify-content: center;
-  margin-top: 36px;
-}
-
-.confirmBtn {
-  background: transparent;
-  color: #4EB655;
-  border: 2px solid #4EB655;
-  border-radius: 10px;
-  padding: 12px 100px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.confirmBtn:hover {
-  background: #4EB655;
-  color: white;
-}
-
 .fileInfo {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8f8f8;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  color: #333;
 }
 
 .fileName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 70%;
+  font-size: 14px;
 }
 
-.removeBtn {
-  background: transparent;
+.removeFileBtn {
+  background: none;
   border: none;
-  color: #ff4b4b;
+  color: #d32f2f;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 13px;
-  transition: color 0.2s;
 }
 
-.removeBtn:hover {
-  color: #d20000;
-}
-/* ADD THESE STYLES TO AddCourseModal.module.css */
-
-.facultyPillContainer {
-  min-height: 100px; /* Adjust as needed */
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 8px;
-  background: #f9f9f9;
+.confirmRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
-.facultyPillPlaceholder {
-  color: #999;
-  padding: 4px;
-}
-
-.facultyPill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #e0e0e0;
-  border-radius: 16px;
-  padding: 4px 10px;
-  font-size: 0.9rem;
-}
-
-.removePillBtn {
-  background: #aaa;
+.confirmBtn {
+  background: #4caf50;
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 10px;
+  padding: 10px 40px;
+  font-size: 15px;
   cursor: pointer;
-  font-size: 0.8rem;
-  padding: 0;
-  line-height: 1;
+  transition: 0.2s;
 }
 
-.removePillBtn:hover {
-  background: #888;
+.confirmBtn:hover {
+  background: #43a047;
 }

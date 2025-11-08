@@ -79,19 +79,25 @@ td {
 }
 
 .exportBtn {
-  background: linear-gradient(90deg, #a174ff, #8e63f7);
-  border: none;
-  color: #fff;
-  padding: 10px 26px;
+  margin-top: 0.35rem;
+  margin-left: 0.7rem;
+  background-color: transparent;
+  border: 2px solid #A97ACA;
+  color: #A97ACA;
+  padding: 12px 46px;
   border-radius: 25px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .exportBtn:hover {
+  background-color: #A97ACA;
   opacity: 0.9;
+  border: none;
+  color: white;
+  box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
 }
 
 .header{

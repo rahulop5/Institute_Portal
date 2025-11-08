@@ -1,10 +1,10 @@
-// AddCourseModal.js (Fully Corrected)
-
 import React, { useState } from "react";
 import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
 
 export default function AddCourseModal({ onClose, faculty }) {
+  const [showFacultyModal, setShowFacultyModal] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     abbreviation: "",
@@ -15,14 +15,37 @@ export default function AddCourseModal({ onClose, faculty }) {
     students: null,
   });
 
-  console.log("Form Data State:", faculty);
-  const [showFacultyModal, setShowFacultyModal] = useState(false);
-
+  // Handle text inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle structure selection
+  const handleStructureSelect = (type) => {
+    setFormData((prev) => ({ ...prev, structure: type }));
+  };
+
+  // Handle credits selection
+  const handleCreditsSelect = (num) => {
+    setFormData((prev) => ({ ...prev, credits: num }));
+  };
+
+  // Handle faculty selection modal confirm
+  const handleFacultyConfirm = (selected) => {
+    setFormData((prev) => ({ ...prev, faculty: selected }));
+    setShowFacultyModal(false);
+  };
+
+  // Remove selected faculty
+  const handleRemoveFaculty = (id) => {
+    setFormData((prev) => ({
+      ...prev,
+      faculty: prev.faculty.filter((f) => f.id !== id),
+    }));
+  };
+
+  // Handle file upload
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -30,14 +53,13 @@ export default function AddCourseModal({ onClose, faculty }) {
     }
   };
 
+  // Drag & Drop
   const handleDragOver = (e) => {
     e.preventDefault();
-    e.stopPropagation();
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    e.stopPropagation();
     const file = e.dataTransfer.files[0];
     if (file) {
       setFormData((prev) => ({ ...prev, students: file }));
@@ -48,46 +70,30 @@ export default function AddCourseModal({ onClose, faculty }) {
     setFormData((prev) => ({ ...prev, students: null }));
   };
 
+  // Final submit
   const handleSubmit = () => {
     const submissionData = {
       ...formData,
       faculty: formData.faculty.map((f) => f.id),
     };
-    console.log("Course Added:", submissionData);
+    console.log("New Course Added:", submissionData);
     onClose();
-  };
-
-  const handleFacultyConfirm = (selectedFaculty) => {
-    setFormData((prev) => ({
-      ...prev,
-      faculty: selectedFaculty,
-    }));
-    setShowFacultyModal(false);
-  };
-
-  const handleRemoveFaculty = (facultyIdToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      faculty: prev.faculty.filter((f) => f.id !== facultyIdToRemove),
-    }));
   };
 
   return (
     <>
-   
-     
       <div className={styles.overlay} onClick={onClose}>
-  
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <button className={styles.closeBtn} onClick={onClose}>
             ✕
           </button>
+
           <h2 className={styles.title}>Add course</h2>
 
-          <div className={styles.form}>
+          <div className={styles.formGrid}>
+            {/* Left column */}
             <div className={styles.leftColumn}>
-             
-              <label>
+              <label className={styles.label}>
                 Name:
                 <input
                   type="text"
@@ -98,8 +104,8 @@ export default function AddCourseModal({ onClose, faculty }) {
                 />
               </label>
 
-              <div className={styles.row}>
-                <label>
+              <div className={styles.twoCol}>
+                <label className={styles.label}>
                   Abbreviation:
                   <input
                     type="text"
@@ -109,7 +115,8 @@ export default function AddCourseModal({ onClose, faculty }) {
                     onChange={handleInputChange}
                   />
                 </label>
-                <label>
+
+                <label className={styles.label}>
                   Code:
                   <input
                     type="text"
@@ -121,39 +128,35 @@ export default function AddCourseModal({ onClose, faculty }) {
                 </label>
               </div>
 
-              <div className={styles.structure}>
-                <span>Structure:</span>
+              <div className={styles.fieldBlock}>
+                <span className={styles.labelText}>Structure:</span>
                 <div className={styles.btnGroup}>
-                  {["Institute Core", "Elective", "Program Core"].map(
-                    (type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        className={
-                          formData.structure === type ? styles.active : ""
-                        }
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, structure: type }))
-                        }
-                      >
-                        {type}
-                      </button>
-                    )
-                  )}
+                  {["Institute Core", "Elective", "Program Core"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`${styles.optionBtn} ${
+                        formData.structure === type ? styles.active : ""
+                      }`}
+                      onClick={() => handleStructureSelect(type)}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className={styles.credits}>
-                <span>Credits:</span>
+              <div className={styles.fieldBlock}>
+                <span className={styles.labelText}>Credits:</span>
                 <div className={styles.btnGroup}>
                   {[2, 3, 4].map((num) => (
                     <button
                       key={num}
                       type="button"
-                      className={formData.credits === num ? styles.active : ""}
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, credits: num }))
-                      }
+                      className={`${styles.optionBtn} ${
+                        formData.credits === num ? styles.active : ""
+                      }`}
+                      onClick={() => handleCreditsSelect(num)}
                     >
                       {num}
                     </button>
@@ -162,51 +165,48 @@ export default function AddCourseModal({ onClose, faculty }) {
               </div>
             </div>
 
+            {/* Right column */}
             <div className={styles.rightColumn}>
-              <label>
-                Faculty:
-             
-               
-                <div
-                  className={styles.facultyPillContainer}
-                
-                >
-                  {formData.faculty.length > 0 ? (
-                    formData.faculty.map((f) => (
-                      <div key={f.id} className={styles.facultyPill}>
-                        <span>{f.name}</span>
-
-                        <button
-                          type="button"
-                          className={styles.removePillBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveFaculty(f.id);
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <span className={styles.facultyPillPlaceholder}>
-                      Add faculty here...
-                    </span>
-                  )}
-                </div>
-              </label>
-              <div className={styles.addFacultyBtnContainer}>
-                <button
-                  type="button"
-                  className={styles.addFacultyBtn}
-                  onClick={() => setShowFacultyModal(true)}
-                >
-                  Add faculty
-                </button>
+              <div className={styles.facultyHeader}>
+                <span className={styles.labelText}>Faculty:</span>
               </div>
 
-             
-              <label>
+              <div className={styles.facultyContainer}>
+                {formData.faculty.length > 0 ? (
+                  formData.faculty.map((f, index) => (
+                    <div key={f.id} className={styles.facultyItem}>
+                      <span className={styles.facultyIndex}>
+                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                      </span>
+                      <div className={styles.facultyInfo}>
+                        <span className={styles.facultyName}>{f.name}</span>
+                        <span className={styles.facultyEmail}>{f.email}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.removeFacultyBtn}
+                        onClick={() => handleRemoveFaculty(f.id)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className={styles.facultyPlaceholder}>
+                    No faculty selected
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className={styles.addFacultyBtn}
+                onClick={() => setShowFacultyModal(true)}
+              >
+                Add faculty
+              </button>
+
+              <label className={styles.label}>
                 Students:
                 <div
                   className={styles.uploadBox}
@@ -237,7 +237,7 @@ export default function AddCourseModal({ onClose, faculty }) {
                       </p>
                       <button
                         type="button"
-                        className={styles.removeBtn}
+                        className={styles.removeFileBtn}
                         onClick={handleRemoveFile}
                       >
                         Remove

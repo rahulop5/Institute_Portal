@@ -40,18 +40,28 @@ export default function FacultyStatistics() {
       <h2 className={styles.heading}>Feedback Form Overview</h2>
 
       <div className={styles.topSection}>
-        {/* ... (rest of your component) ... */}
-        <div className={styles.courseBox}>
-          <div className={styles.courseInfo}>
-            <h3 className={styles.courseTitle}>{name}</h3>
-            <p className={styles.courseCode}>{coursecode}</p>
-          </div>
-        </div>
-
-        <div className={styles.infoBoxes}>
-          {/* ... */}
-        </div>
-      </div>
+             {/* ... (rest of your component) ... */}
+             <div className={styles.courseBox}>
+               <div className={styles.courseInfo}>
+                 <h3 className={styles.courseTitle}>{name}</h3>
+                 <p className={styles.courseCode}>{coursecode}</p>
+               </div>
+             </div>
+     
+             <div className={styles.infoBoxes}>
+               <div className={styles.infoCard}>
+                 <div className={styles.scoreTop}>
+                   <h2>{avgscore}</h2>
+                 </div>
+                 <p className={styles.label}>Average Score</p>
+               </div>
+     
+               <div className={styles.infoCard}>
+                 <h2 className={styles.number}>{responses.submitted}</h2>
+                 <p className={styles.label}>Responses</p>
+               </div>
+             </div>
+           </div>
 
       {/* Charts */}
       <h3 className={styles.subHeading}>Data & Analytics</h3>
