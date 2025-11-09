@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
+import { useSubmit, redirect } from "react-router";
 
 export default function AddCourseModal({ onClose, faculty }) {
   const [showFacultyModal, setShowFacultyModal] = useState(false);
+  const submit=useSubmit();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -71,12 +73,30 @@ export default function AddCourseModal({ onClose, faculty }) {
   };
 
   // Final submit
-  const handleSubmit = () => {
-    const submissionData = {
-      ...formData,
-      faculty: formData.faculty.map((f) => f.id),
-    };
-    console.log("New Course Added:", submissionData);
+  // Final submit
+  const handleSubmit = async () => {
+    if (!formData.students) {
+      alert("Please upload a CSV file before submitting.");
+      return;
+    }
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("code", formData.code);
+    formDataToSend.append("abbreviation", formData.abbreviation);
+    formDataToSend.append("credits", formData.credits);
+    formDataToSend.append("coursetype", formData.structure);
+    formDataToSend.append(
+      "facultyEmails",
+      JSON.stringify(formData.faculty.map((f) => f.email))
+    );
+    formDataToSend.append("file", formData.students);
+
+    submit(formDataToSend, {
+      method: "post",
+      action: "/academics/feedback/admin/addcourse",
+      encType: "multipart/form-data",
+    });
     onClose();
   };
 
@@ -131,18 +151,20 @@ export default function AddCourseModal({ onClose, faculty }) {
               <div className={styles.fieldBlock}>
                 <span className={styles.labelText}>Structure:</span>
                 <div className={styles.btnGroup}>
-                  {["Institute Core", "Elective", "Program Core"].map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      className={`${styles.optionBtn} ${
-                        formData.structure === type ? styles.active : ""
-                      }`}
-                      onClick={() => handleStructureSelect(type)}
-                    >
-                      {type}
-                    </button>
-                  ))}
+                  {["Institute Core", "Elective", "Program Core"].map(
+                    (type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`${styles.optionBtn} ${
+                          formData.structure === type ? styles.active : ""
+                        }`}
+                        onClick={() => handleStructureSelect(type)}
+                      >
+                        {type}
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -267,4 +289,36 @@ export default function AddCourseModal({ onClose, faculty }) {
       )}
     </>
   );
+}
+
+// routes/courses.jsx or similar
+export async function addCourseAction({ request }) {
+  const token = localStorage.getItem("token");
+  const formData = await request.formData();
+
+  const response = await fetch(
+    "http://localhost:3000/puser/feedback/addcourse",
+    {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json();
+    console.log(err)
+    throw new Response(
+      JSON.stringify({
+        message: err.message || "Failed to upload student file",
+      }),
+      { status: response.status || 500 }
+    );
+  }
+
+  const res = await response.json();
+
+  return redirect("/academics/feedback/admin/courses");
 }

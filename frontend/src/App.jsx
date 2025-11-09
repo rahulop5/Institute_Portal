@@ -95,6 +95,7 @@ import { addStudentsAction } from "./components/Academics/FeedbackForm/admin/Stu
 import { addFacultyAction } from "./components/Academics/FeedbackForm/admin/AddFacultyFileModal.jsx";
 import { deleteCourseAction } from "./components/Academics/FeedbackForm/admin/CourseHeader.jsx";
 import Register1 from "./components/academics/FeedbackForm/login/register.jsx";
+import { addCourseAction } from "./components/Academics/FeedbackForm/admin/AddCourseModal.jsx";
 
 const router = createBrowserRouter([
   {
@@ -316,6 +317,7 @@ const router = createBrowserRouter([
                   },
                   { path: "addStudentsCSV", action: addStudentsAction, element: <></> },
                   { path: "addFacultyCSV", action: addFacultyAction, element: <></> },
+                  { path: "addcourse", action: addCourseAction, element: <></> },
                 ],
               },
               {

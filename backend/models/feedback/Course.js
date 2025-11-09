@@ -9,7 +9,7 @@ const courseSchema = new mongoose.Schema(
     isreset: { type: Boolean, required: true, default: false },
     coursetype: {
         type: String,
-        enum: ["Institute Core", "Program Core", "Institute Elective", "Program Elective"],
+        enum: ["Institute Core", "Program Core", "Institute Elective", "Program Elective", "Elective"],
         required: true,
     },
     code: { type: String, required: true, unique: true }, // CS101wtevr
