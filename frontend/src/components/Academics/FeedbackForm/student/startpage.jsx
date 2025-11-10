@@ -55,9 +55,9 @@ export default function StartPage() {
 
       
         <div className={styles.deadlinecontainer}>
-          <h2>Deadline:</h2>
+          {/* <h2>Deadline:</h2> */}
 
-          <div className={styles.deadline}>
+          {/* <div className={styles.deadline}>
             
             <div className={styles.datewrapper}>
               <div className={styles.dateimage}>
@@ -83,7 +83,7 @@ export default function StartPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
        
           {feedbackData.isOpen ? (
@@ -97,7 +97,7 @@ export default function StartPage() {
             </button>
           ) : (
             <button disabled className={styles.noformbutton}>
-              Form Closed
+              Submitted
             </button>
           )}
         </div>
