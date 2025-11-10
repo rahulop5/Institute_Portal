@@ -153,16 +153,16 @@ export default function AddCourseModal({ onClose, faculty }) {
                 <div className={styles.btnGroup}>
                   {["Institute Core", "Elective", "Program Core"].map(
                     (type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        className={`${styles.optionBtn} ${
-                          formData.structure === type ? styles.active : ""
-                        }`}
-                        onClick={() => handleStructureSelect(type)}
-                      >
-                        {type}
-                      </button>
+                    <button
+                      key={type}
+                      type="button"
+                      className={`${styles.optionBtn} ${
+                        formData.structure === type ? styles.active : ""
+                      }`}
+                      onClick={() => handleStructureSelect(type)}
+                    >
+                      {type}
+                    </button>
                     )
                   )}
                 </div>

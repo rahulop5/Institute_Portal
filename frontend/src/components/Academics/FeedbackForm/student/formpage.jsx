@@ -52,7 +52,8 @@ export default function FormPage({ feedback }) {
       setCurrentIndex((prev) => prev - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      alert("You are already at the first faculty.");
+      // Replaced alert with console.warn or a non-blocking UI notification
+      console.warn("You are already at the first faculty.");
     }
   };
 
@@ -80,7 +81,8 @@ export default function FormPage({ feedback }) {
       setCurrentIndex((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      alert("All feedback completed! You can now save your progress.");
+      // Replaced alert with console.info or a non-blocking UI notification
+      console.info("All feedback completed! You can now save your progress.");
     }
 
     setSubmitted(false);
@@ -139,7 +141,7 @@ export default function FormPage({ feedback }) {
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-      }, 200);
+      }, 200); // Small delay to ensure state update and re-render
       return;
     }
 
@@ -227,7 +229,7 @@ export default function FormPage({ feedback }) {
               <p className={styles.questionNumber}>{q.order}</p>
             </div>
 
-            <div>
+            <div className={styles.questionContent}>
               <p className={styles.questionText}>{q.text}</p>
 
               {q.type === "rating" ? (
@@ -251,61 +253,62 @@ export default function FormPage({ feedback }) {
                   })}
                 </div>
               ) : (
-                <textarea
-                  value={currentResponses[q._id] || ""}
-                  onChange={(e) => handleTextChange(q._id, e.target.value)}
-                  placeholder="Write your feedback here..."
-                />
+                <div className={styles.suggestionsBox}>
+                  <textarea
+                    value={currentResponses[q._id] || ""}
+                    onChange={(e) => handleTextChange(q._id, e.target.value)}
+                    placeholder="Write your feedback here..."
+                  />
+                </div>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* --- Next/Save Buttons --- */}
-      {/* --- Navigation Buttons --- */}
       <div className={styles.submitContainer}>
         {/* Back button */}
-        <button
-          type="button"
-          className={styles.proceedButton}
-          onClick={handleBack}
-          disabled={currentIndex === 0}
-          style={{
-            opacity: currentIndex === 0 ? 0.5 : 1,
-            cursor: currentIndex === 0 ? "not-allowed" : "pointer",
-          }}
-        >
-          Back
-        </button>
-
-        <button
-          type="button"
-          className={styles.proceedButton}
-          onClick={handleSaveProgress}
-        >
-          Save Progress
-        </button>
-        {/* Conditional Next / Submit button */}
-        {currentIndex + 1 < feedback.feedbacks.length ? (
+        <div>
           <button
             type="button"
             className={styles.proceedButton}
-            onClick={handleNext}
+            onClick={handleSaveProgress}
           >
-            Next Faculty
+            Save Progress
           </button>
-        ) : (
+        </div>
+        <div className={styles.navigatebtns}>
           <button
             type="button"
             className={styles.proceedButton}
-            onClick={handleSubmit}
+            onClick={handleBack}
+            disabled={currentIndex === 0}
+            style={{
+              opacity: currentIndex === 0 ? 0.5 : 1,
+              cursor: currentIndex === 0 ? "not-allowed" : "pointer",
+            }}
           >
-            Submit
+            Back
           </button>
-        )}
-
-        {/* Save Progress (always visible) */}
+          {/* Conditional Next / Submit button */}
+          {currentIndex + 1 < feedback.feedbacks.length ? (
+            <button
+              type="button"
+              className={styles.proceedButton}
+              onClick={handleNext}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.submitButton}
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
