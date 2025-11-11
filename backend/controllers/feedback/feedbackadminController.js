@@ -157,13 +157,11 @@ export const adminDashboardCourse = async (req, res) => {
         .json({ message: "No faculties found", faculties: [] });
     }
 
-    const facultyEmails = faculties.map((fac) => {
-      return {
-        id: fac._id,
-        email: fac.email,
-        name: fac.name,
-      };
-    });
+    const facultyEmails = faculties.map((fac) => ({
+      id: fac._id,
+      email: fac.email,
+      name: fac.name,
+    }));
 
     // Compute faculty count & enrollment strength for each course
     const courseData = await Promise.all(
@@ -176,19 +174,28 @@ export const adminDashboardCourse = async (req, res) => {
           name: course.name,
           code: course.code,
           coursetype: course.coursetype,
-          facultycount: course.faculty ? course.faculty.length : 0,
+          facultycount: course.faculty?.length || 0,
           strength,
-          isreset: course.isreset, // Added: include isreset status in response
+          isreset: course.isreset,
+          batch: course.batch, // include batch
         };
       })
     );
 
-    // Added: separate based on isreset
+    // Group by batch
+    const batchWiseCourses = courseData.reduce((acc, course) => {
+      if (!acc[course.batch]) acc[course.batch] = [];
+      acc[course.batch].push(course);
+      return acc;
+    }, {});
+
+    // Separate based on isreset (optional — still kept)
     const activeCourses = courseData.filter((c) => !c.isreset);
     const resetCourses = courseData.filter((c) => c.isreset);
 
     return res.status(200).json({
       totalCourses: courses.length,
+      batchWiseCourses, // 🆕 send batch-wise grouped data
       activeCourses,
       resetCourses,
       availableFaculty: facultyEmails,
@@ -201,6 +208,7 @@ export const adminDashboardCourse = async (req, res) => {
     });
   }
 };
+
 
 //view individual course
 export const viewCourse = async (req, res) => {
@@ -470,7 +478,7 @@ export const addCourse = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, code, facultyEmails, abbreviation, credits, coursetype } =
+    const { name, code, facultyEmails, abbreviation, credits, coursetype, batch } =
       req.body;
 
     // Validate required fields
@@ -480,6 +488,7 @@ export const addCourse = async (req, res) => {
       !facultyEmails ||
       !abbreviation ||
       !credits ||
+      !batch ||
       !coursetype
     ) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -532,6 +541,7 @@ export const addCourse = async (req, res) => {
           credits,
           coursetype,
           code,
+          batch,
           faculty: facultyDocs.map((f) => f._id),
           isreset: false,
         },
