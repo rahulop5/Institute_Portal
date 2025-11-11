@@ -1060,3 +1060,4 @@ export const addFacultyStudentstoCourse = async (req, res) => {
       .json({ message: "Error adding faculty/students", error: err.message });
   }
 };
+

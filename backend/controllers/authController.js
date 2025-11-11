@@ -185,24 +185,41 @@ export const handleLogin = async (req, res) => {
   });
 };
 
-// export const userDetails=async(req, res)=>{
-//     try{
-//         const { email, role } = req.user;
-//         const Model = RoleModelMap[role];
-//         if (!Model){
-//             return res.status(400).json({
-//                 message: "Invalid role"
-//             });
-//         }
-//         const user=Model.findOne({
-//             email: req.user.email
-//         });
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
 
-//     }
-//     catch(err){
-//         console.log(err);
-//         return res.status(500).json({
-//             message: "Error getting the details of the student"
-//         });
-//     }
-// }
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: "Both old and new passwords are required." });
+    }
+
+    // Get logged-in user's email from token middleware
+    const userEmail = req.user.email;
+    const user = await User.findOne({ email: userEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Compare old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect." });
+    }
+
+    // Hash and update new password
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(newPassword, salt);
+    user.password = hashed;
+
+    await user.save();
+
+    return res.status(200).json({ message: "Password changed successfully!" });
+  } catch (err) {
+    console.error("Error changing password:", err);
+    return res.status(500).json({
+      message: "Error changing password",
+      error: err.message,
+    });
+  }
+};
