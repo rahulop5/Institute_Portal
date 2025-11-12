@@ -1,5 +1,5 @@
 import React from "react";
-import { Form } from "react-router-dom";
+import { Form,Link } from "react-router-dom";
 import classes from "./styles/ProfileDropDown.module.css";
 import profileIcon from "./../assets/profile.svg"; // Re-using the icon from your header
 
@@ -50,7 +50,9 @@ export default function ProfileDropdown() {
 
       <div className={classes.actionButtons}>
         {/* Assuming these are buttons, not links, for now */}
-        <button className={classes.actionBtn}>Change Password</button>
+        <Link to="/change-password">
+          <button className={classes.actionBtn}>Change Password</button>
+        </Link>
         {/* This should ideally be a Form for the logout action */}
         <Form action="/logout" method="post">
           <button className={classes.actionBtn}>Log Out</button>

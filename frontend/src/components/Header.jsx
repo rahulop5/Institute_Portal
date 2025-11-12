@@ -1,19 +1,41 @@
-import { useState } from "react"; 
+// 1. Import useState AND useRef
+import { useState, useRef } from "react"; 
 import CollegeIcon from "./../assets/college_logo.svg";
 import SearchIcon from "./../assets/search.svg";
 import notificationIcon from "./../assets/notification.png";
 import profileIcon from "./../assets/profile.svg";
 import classes from "./styles/Header.module.css";
-import ProfileDropdown from "./ProfileDropDown"; 
+import ProfileDropdown from "./ProfileDropdown.jsx";
 
 export default function Header() {
   const name = localStorage.getItem("name");
-  // 3. Add state for dropdown visibility
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+  
+  // 2. Create a ref to store the timer ID
+  const closeTimer = useRef(null);
+
+  // 3. Create a handler for mouse enter
+  const handleMouseEnter = () => {
+    // If there's a pending timer to close, cancel it
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+    }
+    // Show the dropdown
+    setDropdownVisible(true);
+  };
+
+  // 4. Create a handler for mouse leave
+  const handleMouseLeave = () => {
+    // Set a timer to close the dropdown after 300ms
+    closeTimer.current = setTimeout(() => {
+      setDropdownVisible(false);
+    }, 300); // 300ms grace period
+  };
 
   return (
     <>
       <div className={classes["header"]}>
+        {/* ... your logo and search code ... */}
         <div className={classes["logo"]}>
           <img src={CollegeIcon} alt="College logo" />
           <div>
@@ -43,17 +65,16 @@ export default function Header() {
             <h3>Hello, {name ? name : "noname"} <br />Have a great day!</h3>
           </div>
 
-          {/* 4. Wrap the button in a div to manage hover state */}
+          {/* 5. Apply the new handlers to the container */}
           <div
             className={classes["profile-container"]}
-            onMouseEnter={() => setDropdownVisible(true)}
-            onMouseLeave={() => setDropdownVisible(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             <button className={`${classes["icon-button"]} ${classes["profile-button"]}`}>
               <img src={profileIcon} alt="Profile" />
             </button>
 
-            {/* 5. Conditionally render the dropdown */}
             {isDropdownVisible && <ProfileDropdown />}
           </div>
         </div>

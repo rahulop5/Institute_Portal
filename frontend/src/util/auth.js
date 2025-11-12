@@ -35,3 +35,12 @@ export function checkAuthLoader() {
   }
   return null;
 }
+
+export function checkAuthHomeLoader() {
+  const token = getAuthToken();
+
+  if (!token) {
+    return redirect('/auth');
+  }
+  return redirect('/academics/feedback');
+}

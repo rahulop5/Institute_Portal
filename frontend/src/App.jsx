@@ -96,6 +96,9 @@ import { addFacultyAction } from "./components/Academics/FeedbackForm/admin/AddF
 import { deleteCourseAction } from "./components/Academics/FeedbackForm/admin/CourseHeader.jsx";
 import Register1 from "./components/academics/FeedbackForm/login/register.jsx";
 import { addCourseAction } from "./components/Academics/FeedbackForm/admin/AddCourseModal.jsx";
+import { checkAuthHomeLoader } from "./util/auth.js";
+import ChangePassword from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
+import { action as changePasswordAction } from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
 
 const router = createBrowserRouter([
   {
@@ -107,8 +110,8 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        loader: () => redirect("/academics/feedback")
-        // loader: checkAuthLoader,
+        element: <Homepage />,
+        loader: checkAuthHomeLoader,
       },
       {
         path: "temp",
@@ -358,6 +361,12 @@ const router = createBrowserRouter([
         path: "logout",
         action: logoutAction,
       },
+      {
+        path: "change-password",
+        element: <ChangePassword />,
+        action: changePasswordAction,
+        loader: checkAuthLoader,
+      }
     ],
   },
 ]);
