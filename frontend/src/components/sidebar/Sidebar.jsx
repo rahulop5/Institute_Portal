@@ -42,22 +42,15 @@ export default function Sidebar() {
   return (
     <nav id="sidebar" className={isSidebarClosed ? "close" : ""}>
       <ul>
-        <SimpleNavItem to="/" icon={homeIcon} label="Home" />
+        <SimpleNavItem to="/academics/feedback" icon={homeIcon} label="Home" />
 
-        <DropdownNavItem
-          index={0}
-          isOpen={openDropdown === 0}
-          toggleSubMenu={toggleSubMenu}
-          icon={academicsIcon}
-          label="Academics"
-          arrowIcon={arrow}
-        >
-          <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" />
-          <SubMenuItem to="/academics/btp" icon={btpIcon} label="BTP" />
+        
+          {/* <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" />
+          <SubMenuItem to="/academics/btp" icon={btpIcon} label="BTP" /> */}
           <SubMenuItem to="/academics/feedback" icon={feedbackIcon} label="Feedback Form" />
-        </DropdownNavItem>
+      
 
-        <DropdownNavItem
+        {/* <DropdownNavItem
           index={1}
           isOpen={openDropdown === 1}
           toggleSubMenu={toggleSubMenu}
@@ -68,9 +61,9 @@ export default function Sidebar() {
           <SubMenuItem to="/people/student" icon={studentIcon} label="Student" />
           <SubMenuItem to="/people/staff" icon={staffIcon} label="Staff" />
           <SubMenuItem to="/people/faculty" icon={facultyIcon} label="Faculty" />
-        </DropdownNavItem>
+        </DropdownNavItem> */}
 
-        <SimpleNavItem to="/settings" icon={settingsIcon} label="Settings" />
+        {/* <SimpleNavItem to="/settings" icon={settingsIcon} label="Settings" /> */}
         <LogoutButton />
         
       </ul>

@@ -24,6 +24,12 @@
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 }
+/* ADD THIS TO YOUR Header.module.css FILE */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
 .search-container {
   position: relative;

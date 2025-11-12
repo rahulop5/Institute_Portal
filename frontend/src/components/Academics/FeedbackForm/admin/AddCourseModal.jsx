@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
-import { useSubmit, redirect } from "react-router";
+// CHANGED: Removed unused 'redirect' import, kept 'useSubmit'
+import { useSubmit } from "react-router-dom";
 
 export default function AddCourseModal({ onClose, faculty }) {
   const [showFacultyModal, setShowFacultyModal] = useState(false);
-  const submit=useSubmit();
+  const submit = useSubmit();
 
   const [formData, setFormData] = useState({
     name: "",
     abbreviation: "",
     code: "",
+    // NEW: Added batch to state
+    batch: "", 
     structure: "",
     credits: "",
     faculty: [],
@@ -73,16 +76,22 @@ export default function AddCourseModal({ onClose, faculty }) {
   };
 
   // Final submit
-  // Final submit
   const handleSubmit = async () => {
     if (!formData.students) {
       alert("Please upload a CSV file before submitting.");
+      return;
+    }
+    // NEW: Added validation for batch
+    if (!formData.batch) {
+      alert("Please enter a batch year before submitting.");
       return;
     }
 
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("code", formData.code);
+    // NEW: Append batch data
+    formDataToSend.append("batch", formData.batch); 
     formDataToSend.append("abbreviation", formData.abbreviation);
     formDataToSend.append("credits", formData.credits);
     formDataToSend.append("coursetype", formData.structure);
@@ -124,6 +133,18 @@ export default function AddCourseModal({ onClose, faculty }) {
                 />
               </label>
 
+              {/* NEW: Batch Input Field */}
+              <label className={styles.label}>
+                Batch:
+                <input
+                  type="text"
+                  name="batch"
+                  placeholder="e.g., 2025"
+                  value={formData.batch}
+                  onChange={handleInputChange}
+                />
+              </label>
+
               <div className={styles.twoCol}>
                 <label className={styles.label}>
                   Abbreviation:
@@ -153,16 +174,16 @@ export default function AddCourseModal({ onClose, faculty }) {
                 <div className={styles.btnGroup}>
                   {["Institute Core", "Elective", "Program Core"].map(
                     (type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      className={`${styles.optionBtn} ${
-                        formData.structure === type ? styles.active : ""
-                      }`}
-                      onClick={() => handleStructureSelect(type)}
-                    >
-                      {type}
-                    </button>
+                      <button
+                        key={type}
+                        type="button"
+                        className={`${styles.optionBtn} ${
+                          formData.structure === type ? styles.active : ""
+                        }`}
+                        onClick={() => handleStructureSelect(type)}
+                      >
+                        {type}
+                      </button>
                     )
                   )}
                 </div>
@@ -187,7 +208,7 @@ export default function AddCourseModal({ onClose, faculty }) {
               </div>
             </div>
 
-            {/* Right column */}
+            {/* Right column (No changes here) */}
             <div className={styles.rightColumn}>
               <div className={styles.facultyHeader}>
                 <span className={styles.labelText}>Faculty:</span>

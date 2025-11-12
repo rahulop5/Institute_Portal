@@ -5,8 +5,8 @@ export default function CoursesTab() {
 
   const data = useLoaderData();
   console.log("Loader Data in CoursesTab:", data);  
-  const courseList = data?.activeCourses || [];
+  const courseList = data?.batchWiseCourses || [];
   const facultyList = data?.availableFaculty || [];
 
-  return <CoursesHeader courses={courseList} faculty={facultyList} />;
+  return <CoursesHeader batchWiseCourses={courseList} faculty={facultyList} />;
 }

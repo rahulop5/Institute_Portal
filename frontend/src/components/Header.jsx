@@ -1,11 +1,15 @@
+import { useState } from "react"; 
 import CollegeIcon from "./../assets/college_logo.svg";
 import SearchIcon from "./../assets/search.svg";
 import notificationIcon from "./../assets/notification.png";
 import profileIcon from "./../assets/profile.svg";
 import classes from "./styles/Header.module.css";
+import ProfileDropdown from "./ProfileDropDown"; 
 
 export default function Header() {
   const name = localStorage.getItem("name");
+  // 3. Add state for dropdown visibility
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
 
   return (
     <>
@@ -39,9 +43,19 @@ export default function Header() {
             <h3>Hello, {name ? name : "noname"} <br />Have a great day!</h3>
           </div>
 
-          <button className={`${classes["icon-button"]} ${classes["profile-button"]}`}>
-            <img src={profileIcon} alt="Profile" />
-          </button>
+          {/* 4. Wrap the button in a div to manage hover state */}
+          <div
+            className={classes["profile-container"]}
+            onMouseEnter={() => setDropdownVisible(true)}
+            onMouseLeave={() => setDropdownVisible(false)}
+          >
+            <button className={`${classes["icon-button"]} ${classes["profile-button"]}`}>
+              <img src={profileIcon} alt="Profile" />
+            </button>
+
+            {/* 5. Conditionally render the dropdown */}
+            {isDropdownVisible && <ProfileDropdown />}
+          </div>
         </div>
       </div>
     </>

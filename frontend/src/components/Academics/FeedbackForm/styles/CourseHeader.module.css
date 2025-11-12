@@ -55,9 +55,7 @@
 .courseCode {
   font-size: 0.8rem;
   color: #6f6f6f;
-  
 }
-
 
 .actions {
   display: flex;
@@ -66,7 +64,7 @@
   margin-top: 10px;
 }
 
-.icon { 
+.icon {
   width: 20px;
   color: #767676;
   cursor: pointer;
@@ -77,7 +75,7 @@
   color: #333;
 }
 
-.iconedit { 
+.iconedit {
   width: 23px;
   color: #767676;
   cursor: pointer;
@@ -100,7 +98,8 @@
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  box-shadow:  0 1px 3px rgba(0, 0, 0, 0.3);
+  /* CORRECTED: Removed invalid space before '0' */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .statLabel {
@@ -114,12 +113,12 @@
   color: #1a1a1a;
 }
 
-
 .addcourseBtnContainer {
   display: flex;
   justify-content: flex-end;
   margin-top: 30px;
 }
+
 .addcourseBtn {
   background: white;
   color: black;
@@ -132,7 +131,7 @@
   transition: background 0.2s ease;
 }
 
-.addcourseBtn:hover  {
+.addcourseBtn:hover {
   background: #485290;
   color: white;
   box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
@@ -152,9 +151,84 @@
   padding: 0;
 }
 
-.header{
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+/* === NEW STYLES === */
+
+.batchSection {
+  /* Adds space between batches when "All" is selected */
+  margin-bottom: 30px;
+}
+
+.batchHeader {
+  /* The "Batch 2025" title */
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.batchSelector {
+  /* Container for the batch filter buttons */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px; /* Matches .subHeading margin */
+}
+
+.batchSelector button {
+  /* Individual batch buttons */
+  background: #ffffff;
+  color: #485290;
+  padding: 10px 36px;
+  border: 2px solid #485290;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.batchSelector button:hover {
+  background: #485290;
+  border-color: #485290;
+  color: #ffffff;
+  box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6);
+
+}
+
+.batchSelector .activeButton {
+  /* The currently selected batch button */
+  background: #485290;
+  color: #ffffff;
+  border-color: #485290;
+  /* box-shadow: inset 0 5px 10px rgba(255, 255, 255, 0.6); */
+
+}
+
+.batchSelector .activeButton:hover {
+  /* Keep the active style on hover */
+  background: #485290;
+  border-color: #485290;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.6);
+
+}
+
+.noResults {
+  color: #6f6f6f;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 30px;
+}
+
+.courseListContainer {
+  /* This ensures the "No courses found" text is contained */
+  width: 100%;
 }

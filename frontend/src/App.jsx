@@ -107,8 +107,8 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Homepage />,
-        loader: checkAuthLoader,
+        loader: () => redirect("/academics/feedback")
+        // loader: checkAuthLoader,
       },
       {
         path: "temp",

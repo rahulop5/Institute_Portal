@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react"; // 1. Import hooks
+import React, { useState, useMemo, useCallback } from "react";
 import { Form } from "react-router-dom";
 import AddCourseModal from "./AddCourseModal";
 import styles from "../styles/CourseHeader.module.css";
@@ -7,98 +7,168 @@ import trashcan from "../../../../assets/trashcan.png";
 import edit from "../../../../assets/edit .png";
 import SearchContainer from "./Searchcontainer.jsx";
 
-export default function CoursesHeader({ courses, faculty }) {
+// Added default value for batchWiseCourses
+export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
   const [showModal, setShowModal] = useState(false);
-  // 3. Add state for the search term
   const [searchTerm, setSearchTerm] = useState("");
-  console.log("Course header courses:", courses);
+  
+  // NEW: State to track the selected batch. "All" is the default.
+  const [selectedBatch, setSelectedBatch] = useState("All");
 
-  // 4. Create the callback for the search component
   const handleSearchChange = useCallback((value) => {
     setSearchTerm(value);
   }, []);
 
-  // 5. Create the filtered list based on the search term
-  const filteredCourses = useMemo(() => {
+  // NEW: Get a memoized list of batch years to create the buttons
+  const batchYears = useMemo(() => {
+    return Object.keys(batchWiseCourses).sort((a, b) => b - a); // Sort descending
+  }, [batchWiseCourses]);
+
+  // CHANGED: This memo now *only* filters by the search term
+  const searchedCoursesByBatch = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase();
-    return courses.filter(
-      (course) =>
-        course.name.toLowerCase().includes(lowerSearch) ||
-        course.code.toLowerCase().includes(lowerSearch)
-    );
-  }, [courses, searchTerm]);
+
+    if (!lowerSearch) {
+      return batchWiseCourses;
+    }
+
+    return Object.entries(batchWiseCourses).reduce((acc, [batch, courses]) => {
+      const filteredCoursesInBatch = courses.filter(
+        (course) =>
+          course.name.toLowerCase().includes(lowerSearch) ||
+          course.code.toLowerCase().includes(lowerSearch)
+      );
+
+      if (filteredCoursesInBatch.length > 0) {
+        acc[batch] = filteredCoursesInBatch;
+      }
+      
+      return acc;
+    }, {});
+
+  }, [batchWiseCourses, searchTerm]);
+
+  // NEW: A second memo to filter based on the *selected batch*
+  const coursesToDisplay = useMemo(() => {
+    // If "All" is selected, return all the search results
+    if (selectedBatch === "All") {
+      return searchedCoursesByBatch;
+    }
+
+    // If a specific batch is selected, check if it exists in the search results
+    if (searchedCoursesByBatch[selectedBatch]) {
+      // Return a new object containing *only* that batch's data
+      return { [selectedBatch]: searchedCoursesByBatch[selectedBatch] };
+    }
+
+    // Otherwise, return an empty object (no courses for this batch)
+    return {};
+  }, [searchedCoursesByBatch, selectedBatch]);
+
+
+  // CHANGED: This now checks the final `coursesToDisplay` object
+  const hasCourses = Object.keys(coursesToDisplay).length > 0;
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.subHeading}>Courses Overview</h2>
-
-        {/* 6. Add the SearchContainer component */}
         <SearchContainer
           onSearchChange={handleSearchChange}
           placeholder="Search by Course Name or Code"
         />
       </div>
 
-      <div className={styles.grid}>
-        {/* 7. Map over 'filteredCourses' */}
-        {filteredCourses.length > 0 ? (
-          filteredCourses.map((course, index) => (
-            <div key={index} className={styles.card}>
-              <div className={styles.topRow}>
-                <div className={styles.courseInfo}>
-                  <img
-                    src={bookIcon}
-                    alt="course"
-                    className={styles.courseIcon}
-                  />
-                  <div>
-                    <div className={styles.abbrev}>{course.name}</div>
-                    <div className={styles.courseCode}>{course.code}</div>
-                  </div>
-                </div>
-                <div className={styles.actions}>
-                  <Form
-                    method="delete"
-                    onSubmit={(event) => {
-                      if (
-                        !confirm("Are you sure you want to delete this course?")
-                      ) {
-                        event.preventDefault();
-                      }
-                    }}
-                  >
-                    <input type="hidden" name="courseId" value={course.id} />
-                    <button type="submit" className={styles.deleteButton}>
-                      <img
-                        src={trashcan}
-                        alt="Delete"
-                        className={styles.icon}
-                      />
-                    </button>
-                  </Form>
-                  <button className={styles.editButton}>
-                    <img src={edit} alt="Edit" className={styles.iconedit} />
-                  </button>
-                </div>
-              </div>
+      {/* NEW: Batch Selector Buttons */}
+      <div className={styles.batchSelector}> {/* This comment is fine */}
+        <button
+          onClick={() => setSelectedBatch("All")}
+          // SYNTAX ERROR FIXED on this line:
+          className={selectedBatch === "All" ? styles.activeButton : ""}
+        >
+          All
+        </button>
+        {batchYears.map((year) => (
+          <button
+            key={year}
+            onClick={() => setSelectedBatch(year)}
+            className={selectedBatch === year ? styles.activeButton : ""}
+          >
+           {year}
+          </button>
+        ))}
+      </div>
 
-              <div className={styles.stats}>
-                <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Faculty Count</span>
-                  <span className={styles.statValue}>
-                    {course.facultycount}
-                  </span>
-                </div>
-                <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Class Strength</span>
-                  <span className={styles.statValue}>{course.strength}</span>
-                </div>
+      {/* CHANGED: This container now renders based on `coursesToDisplay` */}
+      <div className={styles.courseListContainer}>
+        {hasCourses ? (
+          // This loop now renders "All" batches or a *single* batch
+          Object.entries(coursesToDisplay).map(([batchYear, coursesInBatch]) => (
+            <div key={batchYear} className={styles.batchSection}>
+              {/* Only show the "Batch XXXX" header if "All" is selected */}
+              {selectedBatch === "All" && (
+                <h3 className={styles.batchHeader}>Batch {batchYear}</h3>
+              )}
+              
+              <div className={styles.grid}>
+                {coursesInBatch.map((course) => (
+                  <div key={course.id} className={styles.card}>
+                    <div className={styles.topRow}>
+                      <div className={styles.courseInfo}>
+                        <img
+                          src={bookIcon}
+                          alt="course"
+                          className={styles.courseIcon}
+                        />
+                        <div>
+                          <div className={styles.abbrev}>{course.name}</div>
+                          <div className={styles.courseCode}>{course.code}</div>
+                        </div>
+                      </div>
+                      <div className={styles.actions}>
+                        <Form
+                          method="delete"
+                          onSubmit={(event) => {
+                            if (
+                              !confirm("Are you sure you want to delete this course?")
+                            ) {
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          <input type="hidden" name="courseId" value={course.id} />
+                          <button type="submit" className={styles.deleteButton}>
+                            <img
+                              src={trashcan}
+                              alt="Delete"
+                              className={styles.icon}
+                            />
+                          </button>
+                        </Form>
+                        {/* <button className={styles.editButton}>
+                          <img src={edit} alt="Edit" className={styles.iconedit} />
+                        </button> */}
+                      </div>
+                    </div>
+
+                    <div className={styles.stats}>
+                      <div className={styles.statBox}>
+                        <span className={styles.statLabel}>Faculty Count</span>
+                        <span className={styles.statValue}>
+                          {course.facultycount}
+                        </span>
+                      </div>
+                      <div className={styles.statBox}>
+                        <span className={styles.statLabel}>Class Strength</span>
+                        <span className={styles.statValue}>{course.strength}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))
         ) : (
-          
           <p className={styles.noResults}>No courses found.</p>
         )}
       </div>
@@ -119,7 +189,9 @@ export default function CoursesHeader({ courses, faculty }) {
   );
 }
 
+// Delete action function remains unchanged
 export async function deleteCourseAction({ request }) {
+  // ... (no changes here)
   let token;
   let courseId;
 
