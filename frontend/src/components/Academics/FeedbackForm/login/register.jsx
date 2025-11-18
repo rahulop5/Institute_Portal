@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { Form, useNavigation } from "react-router";
 
-import styles from "../styles/Register.module.css"; // Corrected path
-import loginImage from "../../../../assets/loginbackground1.png"; // Corrected path
+import styles from "../styles/Register.module.css";
+import loginImage from "../../../../assets/FrontBG.png"; // Corrected path
 
 export default function Register1() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); // --- ADDED: Password state
   const [errors, setErrors] = useState({});
-  const navigation=useNavigation();
-  const isSubmitting=navigation.state==="submitting"
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   const validate = () => {
     const newErrors = {};
@@ -41,16 +41,11 @@ export default function Register1() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.registerContainer}>
-        <div
-          className={styles.registerLeft}
-          style={{ backgroundImage: `url(${loginImage})` }}
-        ></div>
-
         <div className={styles.registerRight}>
           {/* --- CHANGED: Title updated to Login --- */}
           <h2 className={styles.registerTitle}>Login</h2>
 
-          <Form onSubmit={handleSubmit} method="post" >
+          <Form onSubmit={handleSubmit} method="post">
             {/* --- Email Field (Unchanged) --- */}
             <label className={styles.inputLabel}>Email:</label>
             <input
@@ -78,11 +73,13 @@ export default function Register1() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {errors.password && <p className={styles.error}>{errors.password}</p>}
+            {errors.password && (
+              <p className={styles.error}>{errors.password}</p>
+            )}
             {/* ------------------------------ */}
 
             <button type="submit" className={styles.btnContinue}>
-              {isSubmitting ?"Logging In": "Log In"}
+              {isSubmitting ? "Logging In" : "Log In"}
             </button>
           </Form>
 
@@ -100,6 +97,18 @@ export default function Register1() {
             </a>
           </p>
         </div>
+
+        <div
+          className={styles.registerLeft}
+          style={{
+            backgroundImage: `url(${loginImage})`,
+            backgroundSize: "30rem", // covers entire div
+            backgroundPosition: "-center", // centers the image
+            backgroundRepeat: "no-repeat", // prevents repeating
+           
+
+          }}
+        ></div>
       </div>
     </div>
   );
