@@ -146,22 +146,23 @@ export const adminDashboardCourse = async (req, res) => {
     // Fetch all courses
     const courses = await Course.find().lean();
 
-    if (!courses || courses.length === 0) {
-      return res.status(200).json({ message: "No courses found", courses: [] });
-    }
-
+    
     const faculties = await Faculty.find().lean();
     if (!faculties || faculties.length === 0) {
       return res
-        .status(500)
-        .json({ message: "No faculties found", faculties: [] });
+      .status(500)
+      .json({ message: "No faculties found", faculties: [] });
     }
-
+    
     const facultyEmails = faculties.map((fac) => ({
       id: fac._id,
       email: fac.email,
       name: fac.name,
     }));
+    
+    if (!courses || courses.length === 0) {
+      return res.status(200).json({ message: "No courses found", courses: [], availableFaculty: facultyEmails });
+    }
 
     // Compute faculty count & enrollment strength for each course
     const courseData = await Promise.all(
@@ -208,7 +209,6 @@ export const adminDashboardCourse = async (req, res) => {
     });
   }
 };
-
 
 //view individual course
 export const viewCourse = async (req, res) => {
@@ -680,6 +680,7 @@ export const addFacultyCSV = async (req, res) => {
         .on("data", (row) => {
           if (row.email && row.name && row.dept) {
             facultyData.push({
+              emp_no: row.emp_no.trim(),
               email: row.email.trim(),
               name: row.name.trim(),
               dept: row.dept.trim(),
@@ -777,7 +778,8 @@ export const addStudentsCSV = async (req, res) => {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (row) => {
-          if (row.email && row.name && row.rollNumber) {
+          console.log(row)
+          if (row.email && row.name && row.rollNumber && row.department && row.batch) {
             studentsData.push({
               name: row.name.trim(),
               email: row.email.trim().toLowerCase(),

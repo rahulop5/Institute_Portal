@@ -11,13 +11,14 @@ export const facultyDashboard = async (req, res) => {
     }
 
     // Find analytics for that faculty
-    const analytics = await Analytics.findOne({ faculty: faculty._id })
-      .populate({
-        path: "courses.course",
-        select: "name code",
-      });
+    const analytics = await Analytics.findOne({
+      faculty: faculty._id,
+    }).populate({
+      path: "courses.course",
+      select: "name code",
+    });
 
-    console.log(analytics)
+    console.log(analytics);
 
     if (!analytics || analytics.courses.length === 0) {
       return res.status(200).json({
@@ -39,7 +40,7 @@ export const facultyDashboard = async (req, res) => {
     for (const c of analytics.courses) {
       if (!c.course) continue;
       const qAverages = c.questions.map((q) => q.average);
-      
+
       const validAverages = qAverages.filter((a) => typeof a === "number");
       const courseAvg =
         validAverages.length > 0
@@ -58,7 +59,7 @@ export const facultyDashboard = async (req, res) => {
     }
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
-    console.log(totalCourses)
+    console.log(totalCourses);
 
     // Send response
     return res.status(200).json({
@@ -71,7 +72,9 @@ export const facultyDashboard = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching faculty dashboard:", err);
-    return res.status(500).json({ message: "Error fetching faculty dashboard" });
+    return res
+      .status(500)
+      .json({ message: "Error fetching faculty dashboard" });
   }
 };
 
@@ -96,7 +99,9 @@ export const viewCourseStatistics = async (req, res) => {
       });
 
     if (!analytics) {
-      return res.status(404).json({ message: "No analytics found for this faculty" });
+      return res
+        .status(404)
+        .json({ message: "No analytics found for this faculty" });
     }
 
     const courseData = analytics.courses.find(
@@ -153,16 +158,20 @@ export const viewCourseStatistics = async (req, res) => {
       (q) => q.question?.order === 17
     );
 
+    const formattedDate = new Date(courseData.lastUpdated)
+      .toISOString()
+      .split("T")[0];
+
     const feedback = {
       faculty: (facultyFeedbackQ?.textResponses || []).map((resp) => ({
         text: resp.text,
         score: resp.score ?? null,
-        date: courseData.lastUpdated,
+        date: formattedDate,
       })),
       course: (courseFeedbackQ?.textResponses || []).map((resp) => ({
         text: resp.text,
         score: resp.score ?? null,
-        date: courseData.lastUpdated,
+        date: formattedDate,
       })),
     };
 
@@ -188,6 +197,8 @@ export const viewCourseStatistics = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching course statistics:", err);
-    return res.status(500).json({ message: "Error fetching course statistics" });
+    return res
+      .status(500)
+      .json({ message: "Error fetching course statistics" });
   }
 };
