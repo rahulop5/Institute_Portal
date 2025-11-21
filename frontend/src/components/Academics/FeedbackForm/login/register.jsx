@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Form, useNavigation } from "react-router";
 
 import styles from "../styles/Register.module.css";
-import loginImage from "../../../../assets/FrontBG.png"; // Corrected path
+import loginImage from "../../../../assets/finalimage.png"; // Corrected path
 
 export default function Register1() {
   const [email, setEmail] = useState("");
@@ -41,74 +41,73 @@ export default function Register1() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.registerContainer}>
-        <div className={styles.registerRight}>
-          {/* --- CHANGED: Title updated to Login --- */}
-          <h2 className={styles.registerTitle}>Login</h2>
-
-          <Form onSubmit={handleSubmit} method="post">
-            {/* --- Email Field (Unchanged) --- */}
-            <label className={styles.inputLabel}>Email:</label>
-            <input
-              name="email"
-              type="email"
-              placeholder="Type here..."
-              className={styles.inputField}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {errors.email && <p className={styles.error}>{errors.email}</p>}
-
-            {/* --- ADDED: Password Field --- */}
-            <label
-              className={styles.inputLabel}
-              style={{ marginTop: "1rem" }} // Adds a little space
-            >
-              Password:
-            </label>
-            <input
-              name="password"
-              type="password"
-              placeholder="Type here..."
-              className={styles.inputField}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {errors.password && (
-              <p className={styles.error}>{errors.password}</p>
-            )}
-            {/* ------------------------------ */}
-
-            <button type="submit" className={styles.btnContinue}>
-              {isSubmitting ? "Logging In" : "Log In"}
-            </button>
-          </Form>
-
-          <div className={styles.divider}>
-            <span className={styles.line}></span>
-            <span className={styles.orText}>or</span>
-            <span className={styles.line}></span>
-          </div>
-
-          {/* --- CHANGED: Text updated for login page --- */}
-          <p className={styles.alreadyText}>
-            Don't have an account?{" "}
-            <a href="/register" className={styles.loginLink}>
-              Register
-            </a>
-          </p>
-        </div>
-
         <div
           className={styles.registerLeft}
           style={{
             backgroundImage: `url(${loginImage})`,
-            backgroundSize: "30rem", // covers entire div
-            backgroundPosition: "-center", // centers the image
+            backgroundSize: "37rem", // covers entire div
             backgroundRepeat: "no-repeat", // prevents repeating
-           
-
+            backgroundPosition: "center", // centers the image
           }}
         ></div>
+
+        <div className={styles.registerRight}>
+          <h2 className={styles.registerTitle}>Login</h2>
+
+          
+            <Form onSubmit={handleSubmit} method="post" className={styles.form}>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Email:</label>
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Type here..."
+                  className={styles.inputField}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                {errors.email && <p className={styles.error}>{errors.email}</p>}
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label
+                  className={styles.inputLabel}
+                  style={{ marginTop: "1rem" }}
+                >
+                  Password:
+                </label>
+                <input
+                  name="password"
+                  type="password"
+                  placeholder="Type here..."
+                  className={styles.inputField}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {errors.password && (
+                  <p className={styles.error}>{errors.password}</p>
+                )}
+              </div>
+
+              <button type="submit" className={styles.btnContinue}>
+                {isSubmitting ? "Logging In" : "Log In"}
+              </button>
+            </Form>
+
+            <div className={styles.divider}>
+              <span className={styles.line}></span>
+              <span className={styles.orText}>or</span>
+              <span className={styles.line}></span>
+            </div>
+
+            <p className={styles.alreadyText}>
+              Don't have an account?{" "}
+              <a href="/register" className={styles.loginLink}>
+                Register
+              </a>
+            </p>
+   
+        </div>
       </div>
     </div>
   );

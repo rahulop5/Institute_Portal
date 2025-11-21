@@ -11,7 +11,7 @@ import SearchContainer from "./Searchcontainer.jsx";
 export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // NEW: State to track the selected batch. "All" is the default.
   const [selectedBatch, setSelectedBatch] = useState("All");
 
@@ -42,10 +42,9 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
       if (filteredCoursesInBatch.length > 0) {
         acc[batch] = filteredCoursesInBatch;
       }
-      
+
       return acc;
     }, {});
-
   }, [batchWiseCourses, searchTerm]);
 
   // NEW: A second memo to filter based on the *selected batch*
@@ -65,112 +64,134 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
     return {};
   }, [searchedCoursesByBatch, selectedBatch]);
 
-
   // CHANGED: This now checks the final `coursesToDisplay` object
   const hasCourses = Object.keys(coursesToDisplay).length > 0;
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.subHeading}>Courses Overview</h2>
-        <SearchContainer
-          onSearchChange={handleSearchChange}
-          placeholder="Search by Course Name or Code"
-        />
-      </div>
+      
+        <div className={styles.header}>
+          <h2 className={styles.subHeading}>Courses Overview</h2>
+          <SearchContainer
+            onSearchChange={handleSearchChange}
+            placeholder="Search by Course Name or Code"
+          />
+        </div>
 
-      {/* NEW: Batch Selector Buttons */}
-      <div className={styles.batchSelector}> {/* This comment is fine */}
-        <button
-          onClick={() => setSelectedBatch("All")}
-          // SYNTAX ERROR FIXED on this line:
-          className={selectedBatch === "All" ? styles.activeButton : ""}
-        >
-          All
-        </button>
-        {batchYears.map((year) => (
+        {/* NEW: Batch Selector Buttons */}
+        <div className={styles.batchSelector}>
+          {" "}
+          {/* This comment is fine */}
           <button
-            key={year}
-            onClick={() => setSelectedBatch(year)}
-            className={selectedBatch === year ? styles.activeButton : ""}
+            onClick={() => setSelectedBatch("All")}
+            // SYNTAX ERROR FIXED on this line:
+            className={selectedBatch === "All" ? styles.activeButton : ""}
           >
-           {year}
+            All
           </button>
-        ))}
-      </div>
+          {batchYears.map((year) => (
+            <button
+              key={year}
+              onClick={() => setSelectedBatch(year)}
+              className={selectedBatch === year ? styles.activeButton : ""}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+       <div className={styles.content}>
+        {/* CHANGED: This container now renders based on `coursesToDisplay` */}
+        <div className={styles.courseListContainer}>
+          {hasCourses ? (
+            // This loop now renders "All" batches or a *single* batch
+            Object.entries(coursesToDisplay).map(
+              ([batchYear, coursesInBatch]) => (
+                <div key={batchYear} className={styles.batchSection}>
+                  {/* Only show the "Batch XXXX" header if "All" is selected */}
+                  {selectedBatch === "All" && (
+                    <h3 className={styles.batchHeader}>Batch {batchYear}</h3>
+                  )}
 
-      {/* CHANGED: This container now renders based on `coursesToDisplay` */}
-      <div className={styles.courseListContainer}>
-        {hasCourses ? (
-          // This loop now renders "All" batches or a *single* batch
-          Object.entries(coursesToDisplay).map(([batchYear, coursesInBatch]) => (
-            <div key={batchYear} className={styles.batchSection}>
-              {/* Only show the "Batch XXXX" header if "All" is selected */}
-              {selectedBatch === "All" && (
-                <h3 className={styles.batchHeader}>Batch {batchYear}</h3>
-              )}
-              
-              <div className={styles.grid}>
-                {coursesInBatch.map((course) => (
-                  <div key={course.id} className={styles.card}>
-                    <div className={styles.topRow}>
-                      <div className={styles.courseInfo}>
-                        <img
-                          src={bookIcon}
-                          alt="course"
-                          className={styles.courseIcon}
-                        />
-                        <div>
-                          <div className={styles.abbrev}>{course.name}</div>
-                          <div className={styles.courseCode}>{course.code}</div>
-                        </div>
-                      </div>
-                      <div className={styles.actions}>
-                        <Form
-                          method="delete"
-                          onSubmit={(event) => {
-                            if (
-                              !confirm("Are you sure you want to delete this course?")
-                            ) {
-                              event.preventDefault();
-                            }
-                          }}
-                        >
-                          <input type="hidden" name="courseId" value={course.id} />
-                          <button type="submit" className={styles.deleteButton}>
+                  <div className={styles.grid}>
+                    {coursesInBatch.map((course) => (
+                      <div key={course.id} className={styles.card}>
+                        <div className={styles.topRow}>
+                          <div className={styles.courseInfo}>
                             <img
-                              src={trashcan}
-                              alt="Delete"
-                              className={styles.icon}
+                              src={bookIcon}
+                              alt="course"
+                              className={styles.courseIcon}
                             />
-                          </button>
-                        </Form>
-                        {/* <button className={styles.editButton}>
+                            <div>
+                              <div className={styles.abbrev}>{course.name}</div>
+                              <div className={styles.courseCode}>
+                                {course.code}
+                              </div>
+                            </div>
+                          </div>
+                          <div className={styles.actions}>
+                            <Form
+                              method="delete"
+                              onSubmit={(event) => {
+                                if (
+                                  !confirm(
+                                    "Are you sure you want to delete this course?"
+                                  )
+                                ) {
+                                  event.preventDefault();
+                                }
+                              }}
+                            >
+                              <input
+                                type="hidden"
+                                name="courseId"
+                                value={course.id}
+                              />
+                              <button
+                                type="submit"
+                                className={styles.deleteButton}
+                              >
+                                <img
+                                  src={trashcan}
+                                  alt="Delete"
+                                  className={styles.icon}
+                                />
+                              </button>
+                            </Form>
+                            {/* <button className={styles.editButton}>
                           <img src={edit} alt="Edit" className={styles.iconedit} />
                         </button> */}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
 
-                    <div className={styles.stats}>
-                      <div className={styles.statBox}>
-                        <span className={styles.statLabel}>Faculty Count</span>
-                        <span className={styles.statValue}>
-                          {course.facultycount}
-                        </span>
+                        <div className={styles.stats}>
+                          <div className={styles.statBox}>
+                            <span className={styles.statLabel}>
+                              Faculty Count
+                            </span>
+                            <span className={styles.statValue}>
+                              {course.facultycount}
+                            </span>
+                          </div>
+                          <div className={styles.statBox}>
+                            <span className={styles.statLabel}>
+                              Class Strength
+                            </span>
+                            <span className={styles.statValue}>
+                              {course.strength}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className={styles.statBox}>
-                        <span className={styles.statLabel}>Class Strength</span>
-                        <span className={styles.statValue}>{course.strength}</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className={styles.noResults}>No courses found.</p>
-        )}
+                </div>
+              )
+            )
+          ) : (
+            <p className={styles.noResults}>No courses found.</p>
+          )}
+        </div>
       </div>
 
       <div className={styles.addcourseBtnContainer}>

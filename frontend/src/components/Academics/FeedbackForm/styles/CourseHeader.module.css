@@ -2,6 +2,13 @@
   padding: 20px 30px;
   background-color: #f8f6ff;
   min-height: 100vh;
+  padding-top: 0vh;
+}
+
+.content{
+  height: 35vh;
+  overflow-y: auto;
+  width: 100%;
 }
 
 .subHeading {
