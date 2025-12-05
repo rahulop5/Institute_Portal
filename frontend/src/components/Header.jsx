@@ -11,8 +11,45 @@ export default function Header() {
   const name = localStorage.getItem("name");
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   
+  // Lifted state for profile data
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
   // 2. Create a ref to store the timer ID
   const closeTimer = useRef(null);
+
+  const fetchProfile = async () => {
+    // If we already have profile data or are currently loading, do nothing
+    if (profile || loading) return;
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      const response = await fetch("http://localhost:3000/auth/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+
+      const data = await response.json();
+      console.log("Fetched Profile Data (Header):", data);
+      setProfile(data);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 3. Create a handler for mouse enter
   const handleMouseEnter = () => {
@@ -22,6 +59,10 @@ export default function Header() {
     }
     // Show the dropdown
     setDropdownVisible(true);
+    // Trigger fetch if needed
+    if (!profile) {
+      fetchProfile();
+    }
   };
 
   // 4. Create a handler for mouse leave
@@ -75,7 +116,13 @@ export default function Header() {
               <img src={profileIcon} alt="Profile" />
             </button>
 
-            {isDropdownVisible && <ProfileDropdown />}
+            {isDropdownVisible && (
+              <ProfileDropdown 
+                profile={profile} 
+                loading={loading} 
+                error={error} 
+              />
+            )}
           </div>
         </div>
       </div>

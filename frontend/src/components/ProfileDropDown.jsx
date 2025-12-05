@@ -1,44 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Form, Link } from "react-router-dom";
 import classes from "./styles/ProfileDropDown.module.css";
 import profileIcon from "./../assets/profile.svg";
 
-export default function ProfileDropdown() {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
-
-        const response = await fetch("http://localhost:3000/auth/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch profile");
-        }
-
-        const data = await response.json();
-        console.log("Frontend Profile Data:", data);
-        setProfile(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+export default function ProfileDropdown({ profile, loading, error }) {
+  // INTERNAL STATE AND FETCHING LOGIC REMOVED
+  // Props are now received from Header.jsx
 
   if (loading) {
     return (
