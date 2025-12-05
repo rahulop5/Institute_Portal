@@ -27,21 +27,29 @@
 
 .registerContainer {
   display: flex;
-  width: 65%;
+  width: 55%;
+  max-height: 50vh; /* Maximum height constraint */
   border-radius: 20px;
   overflow: hidden; /* removes gap between left and right */
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+  gap: 0; /* Explicitly set no gap */
 }
 
 .registerLeft {
-  flex-basis: 60%;
+  flex: 0 0 60%; /* Exactly 60% width, no grow, no shrink */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 20px 0 0 20px;
+  border-radius: 0; /* Remove border radius to eliminate gap */
+  min-height: 100%; /* Ensure it takes full height */
+  margin: 0;
+  padding: 0;
+  display: block;
+  border: none;
 }
 
 .registerRight {
-  flex-basis: 40%;
+  flex: 0 0 40%; /* Exactly 40% width, no grow, no shrink */
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -49,6 +57,12 @@
   align-items: center; /* centers horizontally */
   background-color: #F8F6FF;
   box-shadow: none;
+  border-radius: 0; /* Remove border radius to eliminate gap */
+  margin: 0;
+  overflow: hidden; /* Prevent content overflow */
+  box-sizing: border-box;
+  border: none;
+  margin-left: -10px;;
 }
 
 
@@ -70,12 +84,14 @@
 }
 
 .inputField {
-   /* full width inside inputGroup */
+  width: 100%; /* full width inside inputGroup */
   padding: 0.8rem 1rem;
   border: 1px solid #000000;
   border-radius: 8px;
   font-size: 1rem;
   background-color: #ffffff;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* keep focus looking the same but keep background white */
@@ -172,15 +188,18 @@ box-shadow: 5px 5px 6px 0 rgba(255, 255, 255, 0.30) inset, -5px -5px 6px 0 rgba(
 .inputGroup {
   display: flex;
   flex-direction: column;
-  width: 100%;       /* each input takes full width inside the 80% wrapper */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form {
-  width: 100%;        /* ← Form area width */
+  width: 90%;        /* Slightly reduced to prevent overflow */
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center; /* center fields */
- justify-content: center;
- /* padding-left: 3rem; */
+  justify-content: center;
+  box-sizing: border-box;
 }
 

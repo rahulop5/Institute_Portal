@@ -45,9 +45,6 @@ export default function Register1() {
           className={styles.registerLeft}
           style={{
             backgroundImage: `url(${loginImage})`,
-            backgroundSize: "37rem", // covers entire div
-            backgroundRepeat: "no-repeat", // prevents repeating
-            backgroundPosition: "center", // centers the image
           }}
         ></div>
 

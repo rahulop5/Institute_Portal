@@ -59,8 +59,8 @@ export default function ProfileDropdown() {
   if (!profile) return null;
 
   const isStudent = ["UGStudentBTP", "UGStudentHonors", "Student"].includes(profile.role);
-  const isFaculty = profile.role === "Faculty";
-  const isAdmin = profile.role === "Admin";
+  const isFaculty = profile.role?.toLowerCase() === "faculty";
+  const isAdmin = profile.role?.toLowerCase() === "admin";
 
   return (
     <div className={classes.dropdown}>

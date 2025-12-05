@@ -2,11 +2,11 @@
   position: absolute;
   top: calc(100% + 10px); /* Position 10px below the header */
   right: 0;
-  width: 320px; /* Width based on the image */
+  width: 360px; /* Width based on the image */
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  padding: 30px;
   z-index: 100;
   display: flex;
   flex-direction: column;
