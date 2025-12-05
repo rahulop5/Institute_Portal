@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
 // CHANGED: Removed unused 'redirect' import, kept 'useSubmit'
-import { useSubmit } from "react-router-dom";
+import { useSubmit, redirect } from "react-router";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 

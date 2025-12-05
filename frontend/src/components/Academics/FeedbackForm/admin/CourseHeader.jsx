@@ -19,8 +19,8 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
   // NEW: State to track the selected batch. "All" is the default.
   const [selectedBatch, setSelectedBatch] = useState("All");
 
-  const handleDeleteCourse = (courseId) => {
-    Swal.fire({
+  const handleDeleteCourse = async (courseId) => {
+    const result = await Swal.fire({
       title: 'Are you sure you want to delete?',
       text: "This action cannot be undone!",
       icon: 'warning',
@@ -29,25 +29,29 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6'
-    }).then((result) => {
-      if (result.isConfirmed) {
+    });
+    
+    if (result.isConfirmed) {
+      // Show toast immediately
+      toast.error("Deleted successfully", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Small delay then submit
+      setTimeout(() => {
         const formData = new FormData();
         formData.append("courseId", courseId);
         
         submit(formData, {
           method: "delete"
         });
-        
-        toast.error("Deleted successfully", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
-    });
+      }, 500);
+    }
   };
 
   const handleSearchChange = useCallback((value) => {
@@ -281,5 +285,6 @@ export async function deleteCourseAction({ request }) {
   }
 
   console.log("Course deleted successfully");
+  
   return null;
 }
