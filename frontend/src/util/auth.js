@@ -42,5 +42,5 @@ export function checkAuthHomeLoader() {
   if (!token) {
     return redirect('/auth');
   }
-  return null;
+  return redirect('/academics/feedback');
 }

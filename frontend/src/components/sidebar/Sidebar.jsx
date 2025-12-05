@@ -47,7 +47,7 @@ export default function Sidebar() {
         
           {/* <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" />
           <SubMenuItem to="/academics/btp" icon={btpIcon} label="BTP" /> */}
-          <SubMenuItem to="/academics/feedback" icon={feedbackIcon} label="Feedback Form" />
+          {/* <SubMenuItem to="/academics/feedback" icon={feedbackIcon} label="Feedback Form" /> */}
       
 
         {/* <DropdownNavItem
