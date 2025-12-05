@@ -1,22 +1,12 @@
 import User from "../models/User.js";
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-
-//ik this is highly unscalable but cant find out a better solution
-// import UGStudent from "../models/UGStudent.js";
-// import Faculty from "../models/Faculty.js";
-// import Staff from "../models/Staff.js";
-// import PrivilegedUser from "../models/PrivilegedUser.js";
-// import Admin from "../models/Admin.js";
-
-// const RoleModelMap = {
-//     UGStudent: UGStudent,
-//     Faculty: Faculty,
-//     Staff: Staff,
-//     PrivilegedUser: PrivilegedUser,
-//     Admin: Admin
-// };
+import Student from "../models/feedback/Student.js";
+import Faculty from "../models/Faculty.js";
+import Staff from "../models/Staff.js";
+import PrivilegedUser from "../models/PrivilegedUser.js";
+import Admin from "../models/Admin.js";
 
 export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -47,7 +37,7 @@ export const authStudentMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!["UGStudentBTP", "Student"].includes(decoded.role)) {
+    if (!["UGStudentBTP", "Student", "UGStudentHonors"].includes(decoded.role)) {
       return res.status(403).json({
         message: "You dont have access to this page",
       });
@@ -221,5 +211,58 @@ export const changePassword = async (req, res) => {
       message: "Error changing password",
       error: err.message,
     });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const user = await User.findOne({ email: userEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let profileData = {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+
+    // console.log("Fetching profile for:", user.email, "Role:", user.role, "RefID:", user.referenceId);
+
+    // Fetch additional details based on role
+    if (user.role === "Admin") {
+        if (user.referenceId) {
+             const adminDetails = await Admin.findById(user.referenceId);
+             if(adminDetails) {
+                 profileData = { ...profileData, ...adminDetails.toObject() };
+             }
+        }
+    } else if (user.role === "Faculty") {
+        if (user.referenceId) {
+            const facultyDetails = await Faculty.findById(user.referenceId);
+            if (facultyDetails) {
+                profileData = { ...profileData, ...facultyDetails.toObject() };
+            }
+        }
+    } else if (["UGStudentBTP", "UGStudentHonors", "Student"].includes(user.role)) {
+         if (user.referenceId) {
+             // Use the single Student model for all student types as requested
+             const studentDetails = await Student.findById(user.referenceId);
+            //  console.log("Found Student details:", studentDetails);
+             if (studentDetails) {
+                 profileData = { ...profileData, ...studentDetails.toObject() };
+             }
+        } else {
+            console.log("No referenceId for student user");
+        }
+    }
+    // Add other roles if necessary (Staff, PrivilegedUser)
+
+    res.status(200).json(profileData);
+  } catch (err) {
+    console.error("Error fetching profile:", err);
+    res.status(500).json({ message: "Error fetching profile" });
   }
 };
