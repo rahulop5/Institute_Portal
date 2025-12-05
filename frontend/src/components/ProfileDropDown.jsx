@@ -27,6 +27,7 @@ export default function ProfileDropdown() {
         }
 
         const data = await response.json();
+        console.log("Frontend Profile Data:", data);
         setProfile(data);
       } catch (err) {
         console.error(err);
@@ -91,6 +92,16 @@ export default function ProfileDropdown() {
             <span className={classes.label}>Batch</span>
             <span className={classes.value}>{profile.batch || "N/A"}</span>
           </div>
+          {profile.courses && profile.courses.length > 0 && (
+            <div className={classes.infoSection}>
+              <span className={classes.label}>Enrolled Courses</span>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                {profile.courses.map((course, index) => (
+                  <li key={index}>{course.name} ({course.code})</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
 
@@ -108,6 +119,16 @@ export default function ProfileDropdown() {
             <span className={classes.label}>Role</span>
             <span className={classes.value}>{profile.role || "N/A"}</span>
           </div>
+          {profile.courses && profile.courses.length > 0 && (
+            <div className={classes.infoSection}>
+              <span className={classes.label}>Teaching Courses</span>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                {profile.courses.map((course, index) => (
+                  <li key={index}>{course.name} ({course.code})</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
 

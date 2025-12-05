@@ -99,6 +99,7 @@ import { addCourseAction } from "./components/Academics/FeedbackForm/admin/AddCo
 import { checkAuthHomeLoader } from "./util/auth.js";
 import ChangePassword from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
 import { action as changePasswordAction } from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
+import OTPVerification from "./components/academics/FeedbackForm/login/OTPVerification.jsx";
 
 const router = createBrowserRouter([
   {
@@ -115,7 +116,7 @@ const router = createBrowserRouter([
       },
       {
         path: "temp",
-        element: <Register1 />,
+        element: <OTPVerification />,
       },
       {
         path: "academics",

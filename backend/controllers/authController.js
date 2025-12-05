@@ -7,6 +7,8 @@ import Faculty from "../models/Faculty.js";
 import Staff from "../models/Staff.js";
 import PrivilegedUser from "../models/PrivilegedUser.js";
 import Admin from "../models/Admin.js";
+import Course from "../models/feedback/Course.js";
+import Enrollment from "../models/feedback/Enrollment.js";
 
 export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -229,7 +231,7 @@ export const getProfile = async (req, res) => {
       role: user.role,
     };
 
-    // console.log("Fetching profile for:", user.email, "Role:", user.role, "RefID:", user.referenceId);
+    console.log("Fetching profile for:", user.email, "Role:", user.role, "RefID:", user.referenceId);
 
     // Fetch additional details based on role
     if (user.role === "Admin") {
@@ -244,15 +246,32 @@ export const getProfile = async (req, res) => {
             const facultyDetails = await Faculty.findById(user.referenceId);
             if (facultyDetails) {
                 profileData = { ...profileData, ...facultyDetails.toObject() };
+                
+                // Fetch teaching courses
+                console.log("Fetching courses for faculty ID:", user.referenceId);
+                const teachingCourses = await Course.find({ faculty: user.referenceId });
+                console.log("Found teaching courses:", teachingCourses);
+                
+                profileData.courses = teachingCourses.map(c => ({
+                    name: c.name,
+                    code: c.code
+                }));
             }
         }
     } else if (["UGStudentBTP", "UGStudentHonors", "Student"].includes(user.role)) {
          if (user.referenceId) {
              // Use the single Student model for all student types as requested
              const studentDetails = await Student.findById(user.referenceId);
-            //  console.log("Found Student details:", studentDetails);
+             console.log("Found Student details:", studentDetails);
              if (studentDetails) {
                  profileData = { ...profileData, ...studentDetails.toObject() };
+                 
+                 // Fetch enrolled courses
+                 const enrollments = await Enrollment.find({ student: user.referenceId }).populate('course');
+                 profileData.courses = enrollments.map(e => ({
+                     name: e.course.name,
+                     code: e.course.code
+                 }));
              }
         } else {
             console.log("No referenceId for student user");

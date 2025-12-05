@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "../styles/OTPVerification.module.css";
 
-export default function Register() {
+export default function OTPVerification() {
   const [otp, setOtp] = useState(Array(6).fill(""));
 
   const handleChange = (e, index) => {
