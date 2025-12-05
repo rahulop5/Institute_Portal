@@ -3,6 +3,9 @@ import courseImg from "../../../../assets/math1.png";
 import facultyImg from "../../../../assets/studenticon.svg";
 import styles from "../styles/formpage.module.css";
 import { useSubmit, redirect } from "react-router";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
 
 export default function FormPage({ feedback }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -145,38 +148,64 @@ export default function FormPage({ feedback }) {
       return;
     }
 
-    // Everything answered → proceed with submission
-    const payload = {
-      currentPage: currentIndex + 1,
-      feedbacks: responses.map((page) => ({
-        courseId: page.courseId,
-        facultyId: page.facultyId,
-        answers: Object.entries(page.answers).map(([question, response]) => ({
-          question,
-          response,
-        })),
-      })),
-    };
+    // Show confirmation dialog before submitting
+    Swal.fire({
+      title: 'Are you sure you want to submit?',
+      text: "You won't be able to change your responses after submission!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Submit',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Everything answered → proceed with submission
+        const payload = {
+          currentPage: currentIndex + 1,
+          feedbacks: responses.map((page) => ({
+            courseId: page.courseId,
+            facultyId: page.facultyId,
+            answers: Object.entries(page.answers).map(([question, response]) => ({
+              question,
+              response,
+            })),
+          })),
+        };
 
-    const formData = new FormData();
-    formData.append("reqData", JSON.stringify(payload));
+        const formData = new FormData();
+        formData.append("reqData", JSON.stringify(payload));
 
-    submit(formData, {
-      method: "post",
-      action: "submitfeedback",
-      encType: "application/x-www-form-urlencoded",
+        submit(formData, {
+          method: "post",
+          action: "submitfeedback",
+          encType: "application/x-www-form-urlencoded",
+        });
+
+        toast.success("Form submitted successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        setSubmitted(false);
+      } else {
+        setSubmitted(false);
+      }
     });
-
-    setSubmitted(false);
   };
 
   const currentResponses = currentPage.answers;
 
   return (
     <div className={styles.maincontainer}>
+      <ToastContainer />
       <h1>Feedback Form</h1>
 
-      {/* --- Course + Faculty Info --- */}
+
       <div className={styles.coursedetails}>
         <div className={styles.description}>
           <p>

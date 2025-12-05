@@ -3,6 +3,7 @@ import styles from "../styles/FacultySelection.module.css";
 import courseImg from "../../../../assets/math1.png";
 import cross from "../../../../assets/cross.png";
 import { redirect, useSubmit } from "react-router";
+import Swal from "sweetalert2";
 
 export default function FacultySelection({data}) {
   // const data = {
@@ -76,16 +77,28 @@ export default function FacultySelection({data}) {
   function handleProceed() {
     if (!allSelected) return;
 
-    const payload = { selections: formattedSelections };
-    // useSubmit automatically calls the matching `action()`
+    Swal.fire({
+      title: 'Do you want to proceed to the next page?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const payload = { selections: formattedSelections };
+        // useSubmit automatically calls the matching `action()`
 
-    const formData = new FormData();
-    formData.append("reqData", JSON.stringify(payload));
+        const formData = new FormData();
+        formData.append("reqData", JSON.stringify(payload));
 
-    submit(formData, {
-      method: "post",
-      action: "selectfaculty",
-      encType: "application/x-www-form-urlencoded",
+        submit(formData, {
+          method: "post",
+          action: "selectfaculty",
+          encType: "application/x-www-form-urlencoded",
+        });
+      }
     });
   }
     //format for sending data
