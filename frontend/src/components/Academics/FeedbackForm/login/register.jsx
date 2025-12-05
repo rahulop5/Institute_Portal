@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { Form, useNavigation } from "react-router";
+import React, { useState, useEffect } from "react";
+import { Form, useNavigation, useActionData } from "react-router";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import styles from "../styles/Register.module.css";
 import loginImage from "../../../../assets/finalimage.png"; // Corrected path
@@ -10,6 +12,20 @@ export default function Register1() {
   const [errors, setErrors] = useState({});
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const actionData = useActionData();
+
+  useEffect(() => {
+    if (actionData?.error) {
+      toast.error(actionData.error, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  }, [actionData]);
 
   const validate = () => {
     const newErrors = {};
@@ -40,6 +56,7 @@ export default function Register1() {
 
   return (
     <div className={styles.pageWrapper}>
+      <ToastContainer />
       <div className={styles.registerContainer}>
         <div
           className={styles.registerLeft}

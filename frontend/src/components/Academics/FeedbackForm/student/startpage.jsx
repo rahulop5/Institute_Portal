@@ -4,14 +4,21 @@ import calendar from "../../../../assets/calendar.png";
 import clock from "../../../../assets/clock.png";
 import styles from "../styles/startpage.module.css";
 
-export default function StartPage() {
+export default function StartPage({ onStart, message }) {
+  
   const feedbackData = {
-    isOpen: false, 
-    isFilled: true,
+    isOpen: !message, // If there's a message, form is closed/submitted
+    isFilled: !!message,
     deadline: {
       date: "March 31, 2023",
       time: "23:59 Hrs (IST)",
     },
+  };
+
+  const handleStartFeedback = () => {
+    if (onStart) {
+      onStart();
+    }
   };
 
   return (
@@ -89,6 +96,7 @@ export default function StartPage() {
           {feedbackData.isOpen ? (
             <button
               disabled={feedbackData.isFilled}
+              onClick={handleStartFeedback}
               className={`${styles.startbutton} ${
                 feedbackData.isFilled ? styles.disabledbutton : ""
               }`}

@@ -2,6 +2,8 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import styles from "../styles/addFacultyModal.module.css"; 
 import { redirect, useSubmit } from "react-router";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 import fileUploadImage from "../../../../assets/uploadfile.png";
@@ -72,6 +74,16 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
    const handleConfirmUpload = () => {
     if (!selectedFile) return;
 
+    // Show toast immediately
+    toast.success("Successfully uploaded data", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+
     const formData = new FormData();
     formData.append("file", selectedFile); // send actual file
 
@@ -82,7 +94,10 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
     });
 
     setShowPreview(false);
-    onClose();
+    // Don't close the modal immediately to let the toast show
+    setTimeout(() => {
+      onClose();
+    }, 500);
   };
 
 
@@ -91,6 +106,7 @@ export default function AddFacultyFileModal({ onClose, onConfirm }) {
   return (
     // 1. Structure from AddFacultyModal
     <div className={styles.modalOverlay}>
+      <ToastContainer />
       <div className={styles.modalContainer}>
         
         {/* 2. Header from AddFacultyModal */}

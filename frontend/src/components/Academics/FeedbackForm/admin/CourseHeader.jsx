@@ -1,19 +1,54 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Form } from "react-router-dom";
+import { Form, useSubmit } from "react-router-dom";
 import AddCourseModal from "./AddCourseModal";
 import styles from "../styles/CourseHeader.module.css";
 import bookIcon from "../../../../assets/books.png";
 import trashcan from "../../../../assets/trashcan.png";
 import edit from "../../../../assets/edit .png";
 import SearchContainer from "./Searchcontainer.jsx";
+import Swal from "sweetalert2";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Added default value for batchWiseCourses
 export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const submit = useSubmit();
 
   // NEW: State to track the selected batch. "All" is the default.
   const [selectedBatch, setSelectedBatch] = useState("All");
+
+  const handleDeleteCourse = (courseId) => {
+    Swal.fire({
+      title: 'Are you sure you want to delete?',
+      text: "This action cannot be undone!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const formData = new FormData();
+        formData.append("courseId", courseId);
+        
+        submit(formData, {
+          method: "delete"
+        });
+        
+        toast.error("Deleted successfully", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    });
+  };
 
   const handleSearchChange = useCallback((value) => {
     setSearchTerm(value);
@@ -69,6 +104,7 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
 
   return (
     <div className={styles.container}>
+      <ToastContainer />
       
         <div className={styles.header}>
           <h2 className={styles.subHeading}>Courses Overview</h2>
@@ -130,34 +166,17 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
                             </div>
                           </div>
                           <div className={styles.actions}>
-                            <Form
-                              method="delete"
-                              onSubmit={(event) => {
-                                if (
-                                  !confirm(
-                                    "Are you sure you want to delete this course?"
-                                  )
-                                ) {
-                                  event.preventDefault();
-                                }
-                              }}
+                            <button
+                              type="button"
+                              className={styles.deleteButton}
+                              onClick={() => handleDeleteCourse(course.id)}
                             >
-                              <input
-                                type="hidden"
-                                name="courseId"
-                                value={course.id}
+                              <img
+                                src={trashcan}
+                                alt="Delete"
+                                className={styles.icon}
                               />
-                              <button
-                                type="submit"
-                                className={styles.deleteButton}
-                              >
-                                <img
-                                  src={trashcan}
-                                  alt="Delete"
-                                  className={styles.icon}
-                                />
-                              </button>
-                            </Form>
+                            </button>
                             {/* <button className={styles.editButton}>
                           <img src={edit} alt="Edit" className={styles.iconedit} />
                         </button> */}

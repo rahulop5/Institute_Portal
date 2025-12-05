@@ -1,4 +1,5 @@
 import { useLoaderData } from "react-router";
+import { useState } from "react";
 // import { useLoaderData } from "react-router-dom";
 import FacultySelection from "./Facultyselection";
 import FormPage from "./formpage";
@@ -6,6 +7,7 @@ import StartPage from "./startpage";
 
 export default function FeedbackDashboardStudent() {
   const data=useLoaderData();
+  const [showFacultySelection, setShowFacultySelection] = useState(false);
   
   // Sample data for demonstration
   // const data = {
@@ -17,11 +19,18 @@ export default function FeedbackDashboardStudent() {
 
   console.log(data);
 
+  const handleStartFeedback = () => {
+    setShowFacultySelection(true);
+  };
+
   return (
     <div>
-      {!data.started && !data.submitted && (
+      {!data.started && !data.submitted && !showFacultySelection && (
+        <StartPage onStart={handleStartFeedback} />
+      )}
+
+      {!data.started && !data.submitted && showFacultySelection && (
         <FacultySelection data={data} />
-        // <FacultySelection courses={data.courses} />
       )}
 
       {data.started && !data.submitted && (

@@ -3,6 +3,8 @@ import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
 // CHANGED: Removed unused 'redirect' import, kept 'useSubmit'
 import { useSubmit } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AddCourseModal({ onClose, faculty }) {
   const [showFacultyModal, setShowFacultyModal] = useState(false);
@@ -101,16 +103,31 @@ export default function AddCourseModal({ onClose, faculty }) {
     );
     formDataToSend.append("file", formData.students);
 
+    // Show toast immediately
+    toast.success("Successfully uploaded data", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+
     submit(formDataToSend, {
       method: "post",
       action: "/academics/feedback/admin/addcourse",
       encType: "multipart/form-data",
     });
-    onClose();
+    
+    // Don't close the modal immediately to let the toast show
+    setTimeout(() => {
+      onClose();
+    }, 500);
   };
 
   return (
     <>
+      <ToastContainer />
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <button className={styles.closeBtn} onClick={onClose}>

@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import AuthForm from "../components/AuthForm";
 import Register1 from "../components/academics/FeedbackForm/login/register";
+import { toast } from "react-toastify";
 
 export default function Authentication(){
     // return <AuthForm />;
@@ -26,9 +27,7 @@ export async function action({request}){
     if(!response.ok){
         const temp=await response.json();
         console.log(temp);
-        throw new Response(JSON.stringify({ message: "Error Logging in" }), {
-            status: 500
-        });
+        return { error: "Invalid username or password" };
     }
 
     const resData=await response.json();
