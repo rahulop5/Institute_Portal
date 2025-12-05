@@ -7,6 +7,7 @@ const courseSchema = new mongoose.Schema(
     abbreviation: {type: String, required: true},
     credits: {type: Number, required: true},
     isreset: { type: Boolean, required: true, default: false },
+    department: {type: String, enum: ["CSE", "ECE", "MDS"], required: true },
     coursetype: {
         type: String,
         enum: ["Institute Core", "Program Core", "Institute Elective", "Program Elective", "Elective"],

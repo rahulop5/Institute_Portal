@@ -10,6 +10,7 @@ import Enrollment from "../../models/feedback/Enrollment.js";
 import Question from "../../models/feedback/Question.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Feedback from "../../models/feedback/Feedback.js";
+import Admin from "../../models/Admin.js";
 
 //dashboard
 export const adminDashboardStudent = async (req, res) => {
@@ -60,8 +61,16 @@ export const adminDashboardStudent = async (req, res) => {
 
 export const adminDashboardFaculty = async (req, res) => {
   try {
-    // Get all faculties
-    const faculties = await Faculty.find().lean();
+    // Get logged-in admin details
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+      return res.status(404).json({ message: "Admin profile not found" });
+    }
+    const adminDept = adminFn.departments;
+
+    // Get all faculties of the same department
+    const faculties = await Faculty.find({ dept: adminDept }).lean();
 
     if (!faculties || faculties.length === 0) {
       return res
@@ -143,11 +152,19 @@ export const adminDashboardFaculty = async (req, res) => {
 //update this with the new isreset thingy
 export const adminDashboardCourse = async (req, res) => {
   try {
-    // Fetch all courses
-    const courses = await Course.find().lean();
+    // Get logged-in admin details
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+      return res.status(404).json({ message: "Admin profile not found" });
+    }
+    const adminDept = adminFn.departments;
 
-    
-    const faculties = await Faculty.find().lean();
+    // Fetch all courses for the admin's department
+    const courses = await Course.find({ department: adminDept }).lean();
+
+    // Fetch faculties for the admin's department
+    const faculties = await Faculty.find({ dept: adminDept }).lean();
     if (!faculties || faculties.length === 0) {
       return res
       .status(500)
@@ -228,6 +245,16 @@ export const viewCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (course.department !== adminFn.departments) {
+        return res.status(403).json({ message: "Access denied: Course belongs to another department" });
+    }
+
     // Get enrolled students
     const enrollments = await Enrollment.find({ course: courseId })
       .populate("student", "name email rollNumber")
@@ -271,6 +298,16 @@ export const viewFaculty = async (req, res) => {
     const faculty = await Faculty.findById(facultyId).lean();
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (faculty.dept !== adminFn.departments) {
+        return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
     // Fetch analytics for this faculty
@@ -370,6 +407,22 @@ export const viewFacultyCourseStatistics = async (req, res) => {
         path: "courses.questions.question",
         select: "text order",
       });
+
+    // Check admin department against the requested faculty's department (analytics doesn't store dept, assume facultyId lookup needed or trust calling valid faculty)
+    // Safest is to lookup faculty details:
+    const facultyDoc = await Faculty.findById(facultyId);
+    if (!facultyDoc) {
+         return res.status(404).json({ message: "Faculty not found" });
+    }
+    
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (facultyDoc.dept !== adminFn.departments) {
+        return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+    }
 
     if (!analytics) {
       return res
@@ -481,6 +534,17 @@ export const addCourse = async (req, res) => {
     const { name, code, facultyEmails, abbreviation, credits, coursetype, batch } =
       req.body;
 
+    // Get logged-in admin's department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail }).session(session);
+    if (!adminFn) {
+      // Should ideally not happen if auth middleware is uniform, but safety check
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: "Admin profile not found" });
+    }
+    const adminDept = adminFn.departments;
+
     // Validate required fields
     if (
       !name ||
@@ -544,6 +608,7 @@ export const addCourse = async (req, res) => {
           batch,
           faculty: facultyDocs.map((f) => f._id),
           isreset: false,
+          department: adminDept,
         },
       ],
       { session }
@@ -882,6 +947,16 @@ export const resetCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail }).session(session);
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (course.department !== adminFn.departments) {
+        return res.status(403).json({ message: "Access denied: Course belongs to another department" });
+    }
+
     // Remove all faculty assignments
     course.faculty = [];
     course.isreset = true;
@@ -921,6 +996,16 @@ export const deleteCourse = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (course.department !== adminFn.departments) {
+        return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
     // Delete the course itself
@@ -979,6 +1064,20 @@ export const addFacultyStudentstoCourse = async (req, res) => {
     const course = await Course.findById(courseId).session(session);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail }).session(session);
+    if (!adminFn) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (course.department !== adminFn.departments) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
     // Faculties
