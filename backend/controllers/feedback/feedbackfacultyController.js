@@ -16,9 +16,10 @@ export const facultyDashboard = async (req, res) => {
     }).populate({
       path: "courses.course",
       select: "name code",
+    }).populate({
+        path: "courses.questions.question",
+        select: "type",
     });
-
-    console.log(analytics);
 
     if (!analytics || analytics.courses.length === 0) {
       return res.status(200).json({
@@ -39,7 +40,9 @@ export const facultyDashboard = async (req, res) => {
 
     for (const c of analytics.courses) {
       if (!c.course) continue;
-      const qAverages = c.questions.map((q) => q.average);
+      const qAverages = c.questions
+        .filter((q) => q.question && q.question.type === "rating")
+        .map((q) => q.average);
 
       const validAverages = qAverages.filter((a) => typeof a === "number");
       const courseAvg =
@@ -112,9 +115,9 @@ export const viewCourseStatistics = async (req, res) => {
       return res.status(404).json({ message: "Course analytics not found" });
     }
 
-    // Exclude text-based questions (order 16, 17)
+    // Filter only rating questions
     const ratingQuestions = courseData.questions.filter(
-      (q) => q.question?.order !== 16 && q.question?.order !== 17
+      (q) => q.question && q.question.type === "rating"
     );
 
     // Calculate overall average
@@ -151,11 +154,22 @@ export const viewCourseStatistics = async (req, res) => {
     }
 
     // Extract faculty & course feedbacks (orders 16 & 17)
+    // Extract faculty & course feedbacks (text type)
+    // Assuming distinct text questions for faculty vs course based on text content or order?
+    // Using previous logic of order 16 and 17 is specific. 
+    // Ideally we should find which is which. 
+    // For now, let's keep order based identification for these SPECIFIC text fields 
+    // IF we are sure about it. But user said "fix related files". 
+    // Let's filter by type='text' generally if we can, or stick to order for separation.
+    // The previous code used order 16 and 17. 
+    // `question` model has `text`.
+    // Let's assume order 16 is "Feedback & Suggestions on the Faculty" and 17 is "Course".
+    
     const facultyFeedbackQ = courseData.questions.find(
-      (q) => q.question?.order === 16
+       (q) => q.question && q.question.order === 16
     );
     const courseFeedbackQ = courseData.questions.find(
-      (q) => q.question?.order === 17
+       (q) => q.question && q.question.order === 17
     );
 
     const formattedDate = new Date(courseData.lastUpdated)

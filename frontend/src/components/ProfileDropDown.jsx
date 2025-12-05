@@ -132,6 +132,15 @@ export default function ProfileDropdown() {
         </>
       )}
 
+      {isAdmin && (
+        <>
+          <div className={classes.infoSection}>
+            <span className={classes.label}>Department</span>
+            <span className={classes.value}>{profile.departments || "N/A"}</span>
+          </div>
+        </>
+      )}
+
       <div className={classes.actionButtons}>
         <Link to="/change-password">
           <button className={classes.actionBtn}>Change Password</button>

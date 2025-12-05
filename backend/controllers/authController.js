@@ -285,3 +285,58 @@ export const getProfile = async (req, res) => {
     res.status(500).json({ message: "Error fetching profile" });
   }
 };
+
+export const updateName = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      return res.status(400).json({ message: "Valid name is required" });
+    }
+
+    const userEmail = req.user.email;
+    const user = await User.findOne({ email: userEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update User model
+    user.name = name.trim();
+    await user.save();
+
+    // Update Role specific model
+    if (user.referenceId) {
+      let roleModel;
+      switch (user.role) {
+        case "Admin":
+          roleModel = Admin;
+          break;
+        case "Faculty":
+          roleModel = Faculty;
+          break;
+        case "Student":
+        case "UGStudentBTP":
+        case "UGStudentHonors":
+          roleModel = Student;
+          break;
+        case "Staff":
+          roleModel = Staff;
+          break;
+        default:
+          roleModel = null;
+      }
+
+      if (roleModel) {
+        await roleModel.findByIdAndUpdate(user.referenceId, { name: name.trim() });
+      }
+    }
+
+    return res.status(200).json({ message: "Name updated successfully", name: user.name });
+  } catch (err) {
+    console.error("Error updating name:", err);
+    return res.status(500).json({
+      message: "Error updating name",
+      error: err.message,
+    });
+  }
+};

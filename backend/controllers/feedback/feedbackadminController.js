@@ -87,6 +87,10 @@ export const adminDashboardFaculty = async (req, res) => {
           path: "courses.course",
           select: "name code",
         })
+        .populate({
+          path: "courses.questions.question",
+          select: "type",
+        })
         .lean();
 
       if (!analytics || analytics.courses.length === 0) {
@@ -110,7 +114,9 @@ export const adminDashboardFaculty = async (req, res) => {
       for (const c of analytics.courses) {
         if (!c.course) continue;
 
-        const qAverages = c.questions.map((q) => q.average);
+        const qAverages = c.questions
+          .filter((q) => q.question && q.question.type === "rating")
+          .map((q) => q.average);
         const validAverages = qAverages.filter((a) => typeof a === "number");
         const courseAvg =
           validAverages.length > 0
@@ -135,9 +141,31 @@ export const adminDashboardFaculty = async (req, res) => {
       });
     }
 
+
+
+    // Calculate department stats
+    const totalFacultyScore = result.reduce((sum, f) => sum + f.avgscore, 0);
+    const departmentAverage =
+      result.length > 0
+        ? parseFloat((totalFacultyScore / result.length).toFixed(2))
+        : 0;
+
+    let topFaculty = null;
+    let bottomFaculty = null;
+
+    if (result.length > 0) {
+      // Sort by avgscore descending
+      const sortedFaculty = [...result].sort((a, b) => b.avgscore - a.avgscore);
+      topFaculty = sortedFaculty[0];
+      bottomFaculty = sortedFaculty[sortedFaculty.length - 1];
+    }
+
     // Send final aggregated response
     return res.status(200).json({
       totalFaculties: faculties.length,
+      departmentAverage,
+      topFaculty,
+      bottomFaculty,
       faculties: result,
     });
   } catch (err) {
@@ -316,6 +344,10 @@ export const viewFaculty = async (req, res) => {
         path: "courses.course",
         select: "name code",
       })
+      .populate({
+        path: "courses.questions.question",
+        select: "type",
+      })
       .lean();
 
     if (!analytics || analytics.courses.length === 0) {
@@ -342,6 +374,7 @@ export const viewFaculty = async (req, res) => {
         if (!c.course) return null;
 
         const validAverages = c.questions
+          .filter((q) => q.question && q.question.type === "rating")
           .map((q) => q.average)
           .filter((a) => typeof a === "number");
 
@@ -405,7 +438,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       })
       .populate({
         path: "courses.questions.question",
-        select: "text order",
+        select: "text order type",
       });
 
     // Check admin department against the requested faculty's department (analytics doesn't store dept, assume facultyId lookup needed or trust calling valid faculty)
@@ -438,9 +471,9 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       return res.status(404).json({ message: "Course analytics not found" });
     }
 
-    // Exclude text-based questions (order 16, 17)
+    // Filter only rating questions
     const ratingQuestions = courseData.questions.filter(
-      (q) => q.question?.order !== 16 && q.question?.order !== 17
+      (q) => q.question && q.question.type === "rating"
     );
 
     // Calculate overall average
@@ -966,6 +999,12 @@ export const resetCourse = async (req, res) => {
     // Delete all enrollments for this course
     await Enrollment.deleteMany({ course: courseId }).session(session);
 
+    // Remove this course from all faculty analytics (to ensure fresh start)
+    await Analytics.updateMany(
+      { "courses.course": courseId },
+      { $pull: { courses: { course: courseId } } }
+    ).session(session);
+
     await session.commitTransaction();
     session.endSession();
 
@@ -1104,6 +1143,47 @@ export const addFacultyStudentstoCourse = async (req, res) => {
     course.isreset = false;
 
     await course.save({ session });
+
+    // Initialize Analytics for new faculty
+    const allQuestions = await Question.find().session(session);
+    const questionAnalytics = allQuestions.map((q) => ({
+      question: q._id,
+      average: 0,
+      min: 0,
+      max: 0,
+      textResponses: [],
+    }));
+
+    for (const faculty of facultyDocs) {
+      // Only init for NEWLY added faculty? 
+      // Actually, if we reset, we cleared analytics. So we should init for ALL passed faculty.
+      // But facultyDocs contains ALL requested. newFacultyIds checks dupes.
+      // If course was reset, faculty list was empty, so all are new.
+      // If course was NOT reset (just adding more), we should check.
+      
+      // Safety: check if analytics entry exists.
+      let analytics = await Analytics.findOne({ faculty: faculty._id }).session(session);
+
+      if (!analytics) {
+        analytics = new Analytics({
+          faculty: faculty._id,
+          courses: [],
+        });
+      }
+
+      const alreadyHas = analytics.courses.some(
+        (c) => c.course.toString() === courseId.toString()
+      );
+
+      if (!alreadyHas) {
+        analytics.courses.push({
+          course: courseId,
+          questions: questionAnalytics,
+          totalResponses: 0,
+        });
+        await analytics.save({ session });
+      }
+    }
 
     // Students (CSV)
     const filePath = req.file.path;
