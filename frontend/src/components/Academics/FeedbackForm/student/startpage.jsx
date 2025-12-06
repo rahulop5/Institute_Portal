@@ -58,6 +58,17 @@ export default function StartPage({ onStart, message }) {
               </p>
             </div>
           </div>
+
+          <div className={styles.instruction}>
+            <div>
+              <img src={info} alt="inforbutton" />
+            </div>
+            <div>
+              <p>
+                Please note that each response is <strong>final</strong> and <strong>irreversible</strong> — no additional submissions or refill requests will be accepted.
+              </p>
+            </div>
+          </div>
         </div>
 
       

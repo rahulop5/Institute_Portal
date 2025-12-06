@@ -1,5 +1,6 @@
 .startpage {
   padding: 2.5rem;
+  
 }
 
 .startpage h1 {
@@ -13,6 +14,8 @@
   gap: 4rem;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: center;
+  margin-top: 5rem;
 }
 
 .container {
@@ -23,9 +26,9 @@
   background: #fff;
   box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
   width: 40vw;
-  height: 55vh;
+  height: 50vh;
   flex-shrink: 0;
-  padding: 2rem;
+  padding: 3rem;
 }
 
 .container h1 {
@@ -51,16 +54,17 @@
   font-weight: 500;
   margin-bottom: 1rem;
   line-height: 2rem;
+  margin-top: 2rem;
 }
 
 .instruction {
   display: flex;
-
   justify-content: flex-start;
   align-items: flex-start;
   margin-top: 2rem;
   align-self: flex-end;
   width: 89%;
+  margin-right: 3rem;
 }
 
 .instruction p {

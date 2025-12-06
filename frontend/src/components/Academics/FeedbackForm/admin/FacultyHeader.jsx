@@ -30,7 +30,7 @@ export default function FacultyHeader({ facultyList }) {
   return (
     <div>
       <div className={styles.header}>
-        <h2 className={styles.subHeading}>Faculty Feedback Overview</h2>
+        {/* <h2 className={styles.subHeading}>Faculty Feedback Overview</h2> */}
         <FacultySearch onSearchChange={handleSearchChange} 
           placeholder="Search by Faculty Name" />
       </div>
