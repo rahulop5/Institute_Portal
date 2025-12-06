@@ -165,6 +165,49 @@
   margin-bottom: 1rem;
 }
 
+  /* Filters */
+.filtersRow {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.filterLabel {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+  margin-right: 12px;
+}
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+}
+
+.semesterBtn {
+  background: #ffffff;
+  color: #485290;
+  padding: 8px 24px;
+  border: 2px solid #485290;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+}
+
+.semesterBtn:hover {
+  background: #f0f0f5;
+  color: #485290;
+}
+
+.semesterBtn.activeButton {
+  background: #485290;
+  color: white;
+}
+
 /* === NEW STYLES === */
 
 .batchSection {
@@ -185,9 +228,10 @@
 .batchSelector {
   /* Container for the batch filter buttons */
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 24px; /* Matches .subHeading margin */
+  /* margin-bottom handled by filtersRow if used inside it, otherwise */
 }
 
 .batchSelector button {

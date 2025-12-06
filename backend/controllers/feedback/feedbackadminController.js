@@ -223,15 +223,16 @@ export const adminDashboardCourse = async (req, res) => {
           facultycount: course.faculty?.length || 0,
           strength,
           isreset: course.isreset,
-          batch: course.batch, // include batch
+          ug: course.ug, 
+          semester: course.semester,
         };
       })
     );
 
-    // Group by batch
-    const batchWiseCourses = courseData.reduce((acc, course) => {
-      if (!acc[course.batch]) acc[course.batch] = [];
-      acc[course.batch].push(course);
+    // Group by ug
+    const ugWiseCourses = courseData.reduce((acc, course) => {
+      if (!acc[course.ug]) acc[course.ug] = [];
+      acc[course.ug].push(course);
       return acc;
     }, {});
 
@@ -241,7 +242,7 @@ export const adminDashboardCourse = async (req, res) => {
 
     return res.status(200).json({
       totalCourses: courses.length,
-      batchWiseCourses, // 🆕 send batch-wise grouped data
+      ugWiseCourses, // 🆕 send ug-wise grouped data
       activeCourses,
       resetCourses,
       availableFaculty: facultyEmails,
@@ -564,7 +565,7 @@ export const addCourse = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, code, facultyEmails, abbreviation, credits, coursetype, batch } =
+    const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, semester } =
       req.body;
 
     // Get logged-in admin's department
@@ -585,7 +586,8 @@ export const addCourse = async (req, res) => {
       !facultyEmails ||
       !abbreviation ||
       !credits ||
-      !batch ||
+      !ug ||
+      !semester ||
       !coursetype
     ) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -638,7 +640,8 @@ export const addCourse = async (req, res) => {
           credits,
           coursetype,
           code,
-          batch,
+          ug,
+          semester,
           faculty: facultyDocs.map((f) => f._id),
           isreset: false,
           department: adminDept,

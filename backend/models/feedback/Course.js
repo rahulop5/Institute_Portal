@@ -15,7 +15,8 @@ const courseSchema = new mongoose.Schema(
     },
     code: { type: String, required: true, unique: true }, // CS101wtevr
     faculty: [{ type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }], // multiple faculty allowed
-    batch: { type: String, required: true }, // like "2025", "2026"
+    ug: { type: Number, required: true }, // e.g., 1, 2, 3, 4
+    semester: { type: String, enum: ["Monsoon", "Spring"], required: true },
   },
   { timestamps: true }
 );

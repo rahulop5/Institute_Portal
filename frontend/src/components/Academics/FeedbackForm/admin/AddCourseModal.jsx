@@ -14,8 +14,9 @@ export default function AddCourseModal({ onClose, faculty }) {
     name: "",
     abbreviation: "",
     code: "",
-    // NEW: Added batch to state
-    batch: "", 
+    // NEW: Replaced batch with ug and semester
+    ug: null,
+    semester: "",
     structure: "",
     credits: "",
     faculty: [],
@@ -83,17 +84,18 @@ export default function AddCourseModal({ onClose, faculty }) {
       alert("Please upload a CSV file before submitting.");
       return;
     }
-    // NEW: Added validation for batch
-    if (!formData.batch) {
-      alert("Please enter a batch year before submitting.");
+    // NEW: Added validation for ug and semester
+    if (!formData.ug || !formData.semester) {
+      alert("Please select UG level and Semester before submitting.");
       return;
     }
 
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("code", formData.code);
-    // NEW: Append batch data
-    formDataToSend.append("batch", formData.batch); 
+    // NEW: Append ug and semester data
+    formDataToSend.append("ug", formData.ug); 
+    formDataToSend.append("semester", formData.semester); 
     formDataToSend.append("abbreviation", formData.abbreviation);
     formDataToSend.append("credits", formData.credits);
     formDataToSend.append("coursetype", formData.structure);
@@ -149,17 +151,43 @@ export default function AddCourseModal({ onClose, faculty }) {
                 />
               </label>
 
-              {/* NEW: Batch Input Field */}
-              <label className={styles.label}>
-                Batch:
-                <input
-                  type="text"
-                  name="batch"
-                  placeholder="e.g., 2025"
-                  value={formData.batch}
-                  onChange={handleInputChange}
-                />
-              </label>
+              <div className={styles.twoCol}>
+                <label className={styles.label}>
+                  UG Level:
+                  <div className={styles.btnGroup}>
+                    {[1, 2, 3, 4].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        className={`${styles.optionBtn} ${
+                          formData.ug === level ? styles.active : ""
+                        }`}
+                        onClick={() => setFormData(prev => ({ ...prev, ug: level }))}
+                      >
+                        UG{level}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+
+                <label className={styles.label}>
+                  Semester:
+                  <div className={styles.btnGroup}>
+                    {["Monsoon", "Spring"].map((sem) => (
+                      <button
+                        key={sem}
+                        type="button"
+                        className={`${styles.optionBtn} ${
+                          formData.semester === sem ? styles.active : ""
+                        }`}
+                        onClick={() => setFormData(prev => ({ ...prev, semester: sem }))}
+                      >
+                        {sem}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+              </div>
 
               <div className={styles.twoCol}>
                 <label className={styles.label}>

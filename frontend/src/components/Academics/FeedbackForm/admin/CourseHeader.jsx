@@ -16,8 +16,11 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
   const [searchTerm, setSearchTerm] = useState("");
   const submit = useSubmit();
 
-  // NEW: State to track the selected batch. "All" is the default.
-  const [selectedBatch, setSelectedBatch] = useState("All");
+  // NEW: State for selected Semester
+  const [selectedSemester, setSelectedSemester] = useState("Monsoon");
+  
+  // NEW: State for selected UG Level (default "All" or can be specific) - let's keep it "All" as default top-level
+  const [selectedUG, setSelectedUG] = useState("All");
 
   const handleDeleteCourse = async (courseId) => {
     const result = await Swal.fire({
@@ -58,52 +61,49 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
     setSearchTerm(value);
   }, []);
 
-  // NEW: Get a memoized list of batch years to create the buttons
-  const batchYears = useMemo(() => {
-    return Object.keys(batchWiseCourses).sort((a, b) => b - a); // Sort descending
+  // NEW: Get sorted UG levels
+  const ugLevels = useMemo(() => {
+    return Object.keys(batchWiseCourses).sort((a, b) => a - b); 
   }, [batchWiseCourses]);
 
-  // CHANGED: This memo now *only* filters by the search term
-  const searchedCoursesByBatch = useMemo(() => {
+  // CHANGED: Search + Semester Filter
+  const filteredCourses = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase();
+    
+    // Create deep copy/new object structure
+    const result = {};
 
-    if (!lowerSearch) {
-      return batchWiseCourses;
-    }
+    Object.entries(batchWiseCourses).forEach(([ug, courses]) => {
+      // Filter by Semester AND Search Term
+      const matchingCourses = courses.filter(course => {
+         const matchesSearch = !lowerSearch || 
+                              course.name.toLowerCase().includes(lowerSearch) || 
+                              course.code.toLowerCase().includes(lowerSearch);
+         const matchesSemester = course.semester === selectedSemester;
+         
+         return matchesSearch && matchesSemester;
+      });
 
-    return Object.entries(batchWiseCourses).reduce((acc, [batch, courses]) => {
-      const filteredCoursesInBatch = courses.filter(
-        (course) =>
-          course.name.toLowerCase().includes(lowerSearch) ||
-          course.code.toLowerCase().includes(lowerSearch)
-      );
-
-      if (filteredCoursesInBatch.length > 0) {
-        acc[batch] = filteredCoursesInBatch;
+      if (matchingCourses.length > 0) {
+        result[ug] = matchingCourses;
       }
+    });
 
-      return acc;
-    }, {});
-  }, [batchWiseCourses, searchTerm]);
+    return result;
+  }, [batchWiseCourses, searchTerm, selectedSemester]);
 
-  // NEW: A second memo to filter based on the *selected batch*
+
+  // NEW: Filter by selected UG Level for display
   const coursesToDisplay = useMemo(() => {
-    // If "All" is selected, return all the search results
-    if (selectedBatch === "All") {
-      return searchedCoursesByBatch;
+    if (selectedUG === "All") {
+      return filteredCourses;
     }
-
-    // If a specific batch is selected, check if it exists in the search results
-    if (searchedCoursesByBatch[selectedBatch]) {
-      // Return a new object containing *only* that batch's data
-      return { [selectedBatch]: searchedCoursesByBatch[selectedBatch] };
+    if (filteredCourses[selectedUG]) {
+      return { [selectedUG]: filteredCourses[selectedUG] };
     }
-
-    // Otherwise, return an empty object (no courses for this batch)
     return {};
-  }, [searchedCoursesByBatch, selectedBatch]);
+  }, [filteredCourses, selectedUG]);
 
-  // CHANGED: This now checks the final `coursesToDisplay` object
   const hasCourses = Object.keys(coursesToDisplay).length > 0;
 
   return (
@@ -117,26 +117,43 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
           />
         </div>
 
-        {/* NEW: Batch Selector Buttons */}
-        <div className={styles.batchSelector}>
-          {" "}
-          {/* This comment is fine */}
-          <button
-            onClick={() => setSelectedBatch("All")}
-            // SYNTAX ERROR FIXED on this line:
-            className={selectedBatch === "All" ? styles.activeButton : ""}
-          >
-            All
-          </button>
-          {batchYears.map((year) => (
-            <button
-              key={year}
-              onClick={() => setSelectedBatch(year)}
-              className={selectedBatch === year ? styles.activeButton : ""}
-            >
-              {year}
-            </button>
-          ))}
+        {/* Filters Container */}
+        <div className={styles.filtersRow}>
+            
+            {/* Semester Toggle */}
+            <div className={styles.toggleContainer}>
+               <span className={styles.filterLabel}>Semester:</span>
+               {["Monsoon", "Spring"].map(sem => (
+                   <button
+                       key={sem}
+                       onClick={() => setSelectedSemester(sem)}
+                       className={`${styles.semesterBtn} ${selectedSemester === sem ? styles.activeButton : ""}`}
+                   >
+                       {sem}
+                   </button>
+               ))}
+            </div>
+
+            {/* UG Level Selector */}
+            {/* Note: Reusing batchSelector class which I updated to fit inside filtersRow */}
+            <div className={styles.batchSelector}>
+              <span className={styles.filterLabel}>UG Level:</span>
+              <button
+                onClick={() => setSelectedUG("All")}
+                className={selectedUG === "All" ? styles.activeButton : ""}
+              >
+                All
+              </button>
+              {ugLevels.map((ug) => (
+                <button
+                  key={ug}
+                  onClick={() => setSelectedUG(ug)}
+                  className={selectedUG === ug ? styles.activeButton : ""}
+                >
+                  UG{ug}
+                </button>
+              ))}
+            </div>
         </div>
        <div className={styles.content}>
         {/* CHANGED: This container now renders based on `coursesToDisplay` */}
@@ -146,9 +163,9 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
             Object.entries(coursesToDisplay).map(
               ([batchYear, coursesInBatch]) => (
                 <div key={batchYear} className={styles.batchSection}>
-                  {/* Only show the "Batch XXXX" header if "All" is selected */}
-                  {selectedBatch === "All" && (
-                    <h3 className={styles.batchHeader}>Batch {batchYear}</h3>
+                  {/* Only show the "UG X" header if "All" is selected */}
+                  {selectedUG === "All" && (
+                    <h3 className={styles.batchHeader}>UG {batchYear}</h3>
                   )}
 
                   <div className={styles.grid}>

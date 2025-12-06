@@ -27,7 +27,12 @@ export default function RootLayout() {
     location.pathname === "/auth" || location.pathname === "/logout";
 
   if (hideLayout) {
-    return <Outlet />;
+    return (
+      <>
+        <ProgressBar />
+        <Outlet />
+      </>
+    );
   }
 
   return (
