@@ -106,21 +106,7 @@ export default function Register1() {
               <button type="submit" className={styles.btnContinue}>
                 {isSubmitting ? "Logging In" : "Log In"}
               </button>
-            </Form>
-
-            <div className={styles.divider}>
-              <span className={styles.line}></span>
-              <span className={styles.orText}>or</span>
-              <span className={styles.line}></span>
-            </div>
-
-            <p className={styles.alreadyText}>
-              Don't have an account?{" "}
-              <a href="/register" className={styles.loginLink}>
-                Register
-              </a>
-            </p>
-   
+            </Form> 
         </div>
       </div>
     </div>
