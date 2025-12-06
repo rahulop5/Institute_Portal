@@ -1,11 +1,81 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Link } from "react-router-dom";
 import classes from "./styles/ProfileDropDown.module.css";
 import profileIcon from "./../assets/profile.svg";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-export default function ProfileDropdown({ profile, loading, error }) {
+export default function ProfileDropdown({ profile, loading, error, onNameUpdate }) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [currentName, setCurrentName] = useState("");
+  
+  // Sync currentName with profile.name whenever profile changes
+  useEffect(() => {
+    if (profile?.name) {
+      setCurrentName(profile.name);
+      setEditedName(profile.name);
+    }
+  }, [profile?.name]);
+  
   // INTERNAL STATE AND FETCHING LOGIC REMOVED
   // Props are now received from Header.jsx
+
+  const handleEditName = () => {
+    setIsEditingName(true);
+    setEditedName(currentName);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditedName(currentName);
+  };
+
+  const handleSaveName = async () => {
+    if (!editedName.trim()) {
+      toast.error("Name cannot be empty", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:3000/auth/updateName", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ name: editedName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update name");
+      }
+
+      // Update local state with new name
+      setCurrentName(editedName);
+      setIsEditingName(false);
+      
+      // Trigger profile refetch in Header
+      if (onNameUpdate) {
+        onNameUpdate();
+      }
+      
+      toast.success("Name updated successfully", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (err) {
+      toast.error(err.message || "Failed to update name", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -31,13 +101,37 @@ export default function ProfileDropdown({ profile, loading, error }) {
 
   return (
     <div className={classes.dropdown}>
+      <ToastContainer />
       <div className={classes.profileIcon}>
         <img src={profileIcon} alt="Profile" />
       </div>
 
       <div className={classes.infoSection}>
         <span className={classes.label}>Name</span>
-        <span className={classes.value}>{profile.name}</span>
+        {isEditingName ? (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center", width: "100%" }}>
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              className={classes.editInput}
+              autoFocus
+            />
+            <button onClick={handleSaveName} className={classes.saveBtn}>
+              Save
+            </button>
+            <button onClick={handleCancelEdit} className={classes.cancelBtn}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <span className={classes.value}>{currentName}</span>
+            <button onClick={handleEditName} className={classes.editBtn}>
+              Edit
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={classes.infoSection}>

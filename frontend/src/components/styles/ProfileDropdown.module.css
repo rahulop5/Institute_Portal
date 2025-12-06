@@ -112,3 +112,68 @@
   border-color: #1a1a1a;
   color: #1a1a1a;
 }
+
+.editBtn {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fd7e14;
+  background: #fff;
+  border: 1.5px solid #fd7e14;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editBtn:hover {
+  background: #fd7e14;
+  color: #fff;
+}
+
+.editInput {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.editInput:focus {
+  border-color: #fd7e14;
+}
+
+.saveBtn {
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #28a745;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveBtn:hover {
+  background: #218838;
+}
+
+.cancelBtn {
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #dc3545;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: #c82333;
+}

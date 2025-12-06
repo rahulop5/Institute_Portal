@@ -20,9 +20,6 @@ export default function Header() {
   const closeTimer = useRef(null);
 
   const fetchProfile = async () => {
-    // If we already have profile data or are currently loading, do nothing
-    if (profile || loading) return;
-
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -49,6 +46,12 @@ export default function Header() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refetchProfile = () => {
+    // Force refetch by clearing profile first
+    setProfile(null);
+    fetchProfile();
   };
 
   // 3. Create a handler for mouse enter
@@ -120,7 +123,8 @@ export default function Header() {
               <ProfileDropdown 
                 profile={profile} 
                 loading={loading} 
-                error={error} 
+                error={error}
+                onNameUpdate={refetchProfile}
               />
             )}
           </div>
