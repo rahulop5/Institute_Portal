@@ -7,7 +7,7 @@ import trashcan from "../../../../assets/trashcan.png";
 import edit from "../../../../assets/edit .png";
 import SearchContainer from "./Searchcontainer.jsx";
 import Swal from "sweetalert2";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Added default value for batchWiseCourses
@@ -108,7 +108,6 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
 
   return (
     <div className={styles.container}>
-      <ToastContainer />
       
         <div className={styles.header}>
           <h2 className={styles.subHeading}>Courses Overview</h2>

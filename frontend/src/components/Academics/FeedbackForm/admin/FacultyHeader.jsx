@@ -5,7 +5,7 @@ import styles from "../styles/adminDashboard.module.css";
 import profile from "../../../../assets/studenticon.svg";
 import AddFacultyFileModal from "./AddFacultyFileModal.jsx";
 import FacultySearch from "./Searchcontainer.jsx";
-import { ToastContainer } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 
 export default function FacultyHeader({ facultyList }) {
@@ -29,7 +29,6 @@ export default function FacultyHeader({ facultyList }) {
 
   return (
     <div>
-      <ToastContainer />
       <div className={styles.header}>
         <h2 className={styles.subHeading}>Faculty Feedback Overview</h2>
         <FacultySearch onSearchChange={handleSearchChange} 

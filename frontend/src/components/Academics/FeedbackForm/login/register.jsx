@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, useNavigation, useActionData } from "react-router";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import styles from "../styles/Register.module.css";
@@ -56,7 +56,6 @@ export default function Register1() {
 
   return (
     <div className={styles.pageWrapper}>
-      <ToastContainer />
       <div className={styles.registerContainer}>
         <div
           className={styles.registerLeft}

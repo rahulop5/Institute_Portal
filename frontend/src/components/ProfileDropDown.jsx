@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Link } from "react-router-dom";
 import classes from "./styles/ProfileDropDown.module.css";
 import profileIcon from "./../assets/profile.svg";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function ProfileDropdown({ profile, loading, error, onNameUpdate }) {
@@ -101,7 +101,6 @@ export default function ProfileDropdown({ profile, loading, error, onNameUpdate 
 
   return (
     <div className={classes.dropdown}>
-      <ToastContainer />
       <div className={classes.profileIcon}>
         <img src={profileIcon} alt="Profile" />
       </div>

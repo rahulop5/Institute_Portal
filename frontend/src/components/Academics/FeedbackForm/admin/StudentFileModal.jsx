@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { redirect, useSubmit } from "react-router";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import * as XLSX from "xlsx";
@@ -101,7 +101,6 @@ export default function StudentFileModal({ onClose, onConfirm }) {
   return (
     // 1. Structure from AddFacultyModal
     <div className={styles.modalOverlay}>
-      <ToastContainer />
       <div className={styles.modalContainer}>
         {/* 2. Header from AddFacultyModal */}
         <div className={styles.modalHeader}>

@@ -3,7 +3,7 @@ import courseImg from "../../../../assets/math1.png";
 import facultyImg from "../../../../assets/studenticon.svg";
 import styles from "../styles/formpage.module.css";
 import { useSubmit, redirect } from "react-router";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 
@@ -202,7 +202,6 @@ export default function FormPage({ feedback }) {
 
   return (
     <div className={styles.maincontainer}>
-      <ToastContainer />
       <h1>Feedback Form</h1>
 
 

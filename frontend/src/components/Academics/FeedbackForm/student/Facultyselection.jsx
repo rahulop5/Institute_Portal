@@ -4,6 +4,7 @@ import courseImg from "../../../../assets/math1.png";
 import cross from "../../../../assets/cross.png";
 import { redirect, useSubmit } from "react-router";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 export default function FacultySelection({data}) {
   // const data = {
@@ -87,6 +88,11 @@ export default function FacultySelection({data}) {
       cancelButtonColor: '#d33'
     }).then((result) => {
       if (result.isConfirmed) {
+        toast.success("Faculty details updated successfully", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        
         const payload = { selections: formattedSelections };
         // useSubmit automatically calls the matching `action()`
 

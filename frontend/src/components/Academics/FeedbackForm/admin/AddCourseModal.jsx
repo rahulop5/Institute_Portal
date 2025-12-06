@@ -3,7 +3,7 @@ import styles from "../styles/AddCourseModal.module.css";
 import FacultySelectModal from "./FacultySelectModal";
 // CHANGED: Removed unused 'redirect' import, kept 'useSubmit'
 import { useSubmit, redirect } from "react-router";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function AddCourseModal({ onClose, faculty }) {
@@ -127,7 +127,6 @@ export default function AddCourseModal({ onClose, faculty }) {
 
   return (
     <>
-      <ToastContainer />
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <button className={styles.closeBtn} onClick={onClose}>

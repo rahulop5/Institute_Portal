@@ -1,4 +1,6 @@
 import { createBrowserRouter, RouterProvider, redirect } from "react-router";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Homepage from "./pages/Homepage.jsx";
 import RootLayout from "./pages/Root.jsx";
 import Authentication, {
@@ -376,6 +378,7 @@ function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <ToastContainer />
     </>
   );
 }
