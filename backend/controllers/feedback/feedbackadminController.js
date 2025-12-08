@@ -162,11 +162,14 @@ export const adminDashboardFaculty = async (req, res) => {
 
     // Send final aggregated response
     return res.status(200).json({
+      isStaff: adminFn.isStaff, // Send isStaff flag
       totalFaculties: faculties.length,
-      departmentAverage,
-      topFaculty,
-      bottomFaculty,
-      faculties: result,
+      departmentAverage: adminFn.isStaff ? "N/A" : departmentAverage,
+      topFaculty: adminFn.isStaff ? null : topFaculty,
+      bottomFaculty: adminFn.isStaff ? null : bottomFaculty,
+      faculties: adminFn.isStaff 
+        ? result.map(f => ({ ...f, avgscore: "N/A", impress: "N/A", coursestaught: "N/A" })) 
+        : result,
     });
   } catch (err) {
     console.error("Error fetching admin faculty dashboard:", err);
@@ -400,6 +403,23 @@ export const viewFaculty = async (req, res) => {
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
 
     // Send response
+    const isStaff = adminFn.isStaff;
+
+    // Send response
+    if (isStaff) {
+         return res.status(200).json({
+            faculty: {
+                name: faculty.name,
+                email: faculty.email,
+                department: faculty.dept,
+                avgscore: "N/A",
+                impress: "N/A",
+                coursestaught: "N/A",
+                courses: [], // Or empty array if courses should be hidden too
+            },
+         });
+    }
+
     return res.status(200).json({
       faculty: {
         name: faculty.name,
@@ -456,6 +476,10 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     }
     if (facultyDoc.dept !== adminFn.departments) {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+    }
+
+    if (adminFn.isStaff) {
+        return res.status(403).json({ message: "Access denied: Staff members cannot view detailed statistics." });
     }
 
     if (!analytics) {

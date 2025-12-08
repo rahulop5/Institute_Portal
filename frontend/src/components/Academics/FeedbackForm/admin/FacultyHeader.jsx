@@ -5,10 +5,9 @@ import styles from "../styles/adminDashboard.module.css";
 import profile from "../../../../assets/studenticon.svg";
 import AddFacultyFileModal from "./AddFacultyFileModal.jsx";
 import FacultySearch from "./Searchcontainer.jsx";
-
 import "react-toastify/dist/ReactToastify.css";
 
-export default function FacultyHeader({ facultyList }) {
+export default function FacultyHeader({ facultyList, isStaff }) {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
@@ -69,6 +68,9 @@ export default function FacultyHeader({ facultyList }) {
                 <button
                   className={styles.viewBtn}
                   onClick={() => navigate(faculty.id)}
+                  disabled={isStaff}
+                  style={isStaff ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                  title={isStaff ? "Statistics not available for staff" : ""}
                 >
                   View Statistics
                 </button>
