@@ -585,10 +585,10 @@ export const viewFacultyCourseStatistics = async (req, res) => {
 
 //this entire function is atomic and cant be performed on local mongo server
 export const addCourse = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+  let session;
   try {
+    session = await mongoose.startSession();
+    session.startTransaction();
     const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, semester } =
       req.body;
 
@@ -764,7 +764,7 @@ export const addCourse = async (req, res) => {
     }
 
     // Commit transaction
-    await session.commitTransaction();
+      await session.commitTransaction();
     session.endSession();
 
     // Cleanup uploaded CSV
@@ -778,8 +778,10 @@ export const addCourse = async (req, res) => {
     });
   } catch (err) {
     console.error("Error adding course:", err);
-    await session.abortTransaction();
-    session.endSession();
+    if(session){
+        await session.abortTransaction();
+        session.endSession();
+    }
     return res
       .status(500)
       .json({ message: "Error adding course", error: err.message });
@@ -788,8 +790,9 @@ export const addCourse = async (req, res) => {
 
 //add faculty csv
 export const addFacultyCSV = async (req, res) => {
+  let session;
   try {
-    const session = await mongoose.startSession();
+    session = await mongoose.startSession();
     session.startTransaction();
     if (!req.file) {
       return res.status(400).json({ message: "CSV file is required" });
@@ -877,8 +880,10 @@ export const addFacultyCSV = async (req, res) => {
     });
   } catch (err) {
     console.error("Error adding faculty:", err);
-    await session.abortTransaction();
-    session.endSession();
+    if(session){
+        await session.abortTransaction();
+        session.endSession();
+    }
     return res
       .status(500)
       .json({ message: "Error adding faculty", error: err.message });
@@ -887,8 +892,9 @@ export const addFacultyCSV = async (req, res) => {
 
 //add students
 export const addStudentsCSV = async (req, res) => {
+  let session;
   try {
-    const session = await mongoose.startSession();
+    session = await mongoose.startSession();
     session.startTransaction();
 
     if (!req.file) {
@@ -960,7 +966,7 @@ export const addStudentsCSV = async (req, res) => {
       users.push({
         name: student.name,
         email: student.email,
-        password: hashedPassword,
+        password: hashedPassword, 
         role: "Student",
         referenceId: student._id,
         lastlogin: new Date(),
@@ -982,8 +988,10 @@ export const addStudentsCSV = async (req, res) => {
     });
   } catch (err) {
     console.error("Error adding students:", err);
-    await session.abortTransaction();
-    session.endSession();
+    if(session){
+        await session.abortTransaction();
+        session.endSession();
+    }
     fs.unlink(req.file?.path || "", () => {});
     return res
       .status(500)
@@ -993,9 +1001,10 @@ export const addStudentsCSV = async (req, res) => {
 
 //clear students and faculty to that course
 export const resetCourse = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  let session;
   try {
+    session = await mongoose.startSession();
+    session.startTransaction();
     const { courseId } = req.query;
 
     if (!courseId) {
@@ -1041,8 +1050,10 @@ export const resetCourse = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in resetCourse:", err);
-    await session.abortTransaction();
-    session.endSession();
+    if (session) {
+        await session.abortTransaction();
+        session.endSession();
+    }
     return res
       .status(500)
       .json({ message: "Error resetting course", error: err.message });
@@ -1101,9 +1112,10 @@ export const deleteCourse = async (req, res) => {
 
 //add faculty and students to a reset course
 export const addFacultyStudentstoCourse = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  let session;
   try {
+    session = await mongoose.startSession();
+    session.startTransaction();
     const { courseId, facultyEmails } = req.body;
 
     if (!courseId || !facultyEmails) {
@@ -1271,8 +1283,10 @@ export const addFacultyStudentstoCourse = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in addFacultyStudentstoCourse:", err);
-    await session.abortTransaction();
-    session.endSession();
+    if(session){
+        await session.abortTransaction();
+        session.endSession();
+    }
     return res
       .status(500)
       .json({ message: "Error adding faculty/students", error: err.message });
