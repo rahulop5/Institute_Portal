@@ -196,7 +196,11 @@ export default function ProfileDropdown({ profile, loading, error, onNameUpdate 
         <>
           <div className={classes.infoSection}>
             <span className={classes.label}>Department</span>
-            <span className={classes.value}>{profile.departments || "N/A"}</span>
+            <span className={classes.value}>
+              {Array.isArray(profile.departments)
+                ? profile.departments.join(", ")
+                : profile.departments || "N/A"}
+            </span>
           </div>
         </>
       )}

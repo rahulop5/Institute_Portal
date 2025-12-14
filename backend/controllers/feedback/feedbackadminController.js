@@ -70,7 +70,8 @@ export const adminDashboardFaculty = async (req, res) => {
     const adminDept = adminFn.departments;
 
     // Get all faculties of the same department
-    const faculties = await Faculty.find({ dept: adminDept }).lean();
+    // Use $in operator to match any of the admin's departments
+    const faculties = await Faculty.find({ dept: { $in: adminDept } }).lean();
 
     if (!faculties || faculties.length === 0) {
       return res
@@ -192,10 +193,10 @@ export const adminDashboardCourse = async (req, res) => {
     const adminDept = adminFn.departments;
 
     // Fetch all courses for the admin's department
-    const courses = await Course.find({ department: adminDept }).lean();
+    const courses = await Course.find({ department: { $in: adminDept } }).lean();
 
     // Fetch faculties for the admin's department
-    const faculties = await Faculty.find({ dept: adminDept }).lean();
+    const faculties = await Faculty.find({ dept: { $in: adminDept } }).lean();
     if (!faculties || faculties.length === 0) {
       return res
       .status(500)
@@ -249,6 +250,7 @@ export const adminDashboardCourse = async (req, res) => {
       activeCourses,
       resetCourses,
       availableFaculty: facultyEmails,
+      adminDepartments: adminDept, // Send admin departments
     });
   } catch (err) {
     console.error("Error fetching admin course dashboard:", err);
@@ -283,7 +285,7 @@ export const viewCourse = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (course.department !== adminFn.departments) {
+    if (!adminFn.departments.includes(course.department)) {
         return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
@@ -338,7 +340,7 @@ export const viewFaculty = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (faculty.dept !== adminFn.departments) {
+    if (!adminFn.departments.includes(faculty.dept)) {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
@@ -474,7 +476,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (facultyDoc.dept !== adminFn.departments) {
+    if (!adminFn.departments.includes(facultyDoc.dept)) {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
@@ -589,7 +591,7 @@ export const addCourse = async (req, res) => {
   try {
     session = await mongoose.startSession();
     session.startTransaction();
-    const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, semester } =
+    const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, semester, department } =
       req.body;
 
     // Get logged-in admin's department
@@ -612,9 +614,17 @@ export const addCourse = async (req, res) => {
       !credits ||
       !ug ||
       !semester ||
-      !coursetype
+      !coursetype ||
+      !department
     ) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Verify admin has access to create course for this department
+    if (!adminFn.departments.includes(department)) {
+         await session.abortTransaction();
+         session.endSession();
+         return res.status(403).json({ message: "You are not authorized to create courses for this department." });
     }
 
     if (!req.file) {
@@ -668,7 +678,8 @@ export const addCourse = async (req, res) => {
           semester,
           faculty: facultyDocs.map((f) => f._id),
           isreset: false,
-          department: adminDept,
+          isreset: false,
+          department: department, // Use the selected department
         },
       ],
       { session }

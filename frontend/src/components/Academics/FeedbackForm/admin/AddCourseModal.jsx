@@ -6,21 +6,18 @@ import { useSubmit, redirect } from "react-router";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function AddCourseModal({ onClose, faculty }) {
+export default function AddCourseModal({ onClose, faculty, adminDepartments }) {
   const [showFacultyModal, setShowFacultyModal] = useState(false);
   const submit = useSubmit();
 
   const [formData, setFormData] = useState({
-    name: "",
-    abbreviation: "",
-    code: "",
-    // NEW: Replaced batch with ug and semester
     ug: null,
     semester: "",
     structure: "",
     credits: "",
     faculty: [],
     students: null,
+    department: adminDepartments?.length === 1 ? adminDepartments[0] : "",
   });
 
   // Handle text inputs
@@ -85,8 +82,8 @@ export default function AddCourseModal({ onClose, faculty }) {
       return;
     }
     // NEW: Added validation for ug and semester
-    if (!formData.ug || !formData.semester) {
-      alert("Please select UG level and Semester before submitting.");
+    if (!formData.ug || !formData.semester || !formData.department) {
+      alert("Please select UG level, Semester, and Department before submitting.");
       return;
     }
 
@@ -96,6 +93,7 @@ export default function AddCourseModal({ onClose, faculty }) {
     // NEW: Append ug and semester data
     formDataToSend.append("ug", formData.ug); 
     formDataToSend.append("semester", formData.semester); 
+    formDataToSend.append("department", formData.department);
     formDataToSend.append("abbreviation", formData.abbreviation);
     formDataToSend.append("credits", formData.credits);
     formDataToSend.append("coursetype", formData.structure);
@@ -140,6 +138,31 @@ export default function AddCourseModal({ onClose, faculty }) {
           <div className={styles.formGrid}>
             {/* Left column */}
             <div className={styles.leftColumn}>
+               <label className={styles.label}>
+                Department:
+                {adminDepartments?.length > 1 ? (
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    className={styles.pilledInput} // Assuming there is a class or I'll style it similarly to input
+                    style={{ padding: "8px", borderRadius: "5px", border: "1px solid #ccc", width: "100%" }}
+                  >
+                    <option value="" disabled>Select Department</option>
+                    {adminDepartments.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={adminDepartments?.[0] || ""}
+                    disabled
+                    style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                  />
+                )}
+              </label>
+
               <label className={styles.label}>
                 Name:
                 <input

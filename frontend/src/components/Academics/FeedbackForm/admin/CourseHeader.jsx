@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Added default value for batchWiseCourses
-export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
+export default function CoursesHeader({ batchWiseCourses = {}, faculty, adminDepartments }) {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const submit = useSubmit();
@@ -243,7 +243,7 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty }) {
       </div>
 
       {showModal && (
-        <AddCourseModal onClose={() => setShowModal(false)} faculty={faculty} />
+        <AddCourseModal onClose={() => setShowModal(false)} faculty={faculty} adminDepartments={adminDepartments} />
       )}
     </div>
   );

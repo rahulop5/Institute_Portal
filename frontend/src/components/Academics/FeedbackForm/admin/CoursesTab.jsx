@@ -7,6 +7,7 @@ export default function CoursesTab() {
   console.log("Loader Data in CoursesTab:", data);  
   const courseList = data?.ugWiseCourses || [];
   const facultyList = data?.availableFaculty || [];
+  const adminDepartments = data?.adminDepartments || [];
 
-  return <CoursesHeader batchWiseCourses={courseList} faculty={facultyList} />;
+  return <CoursesHeader batchWiseCourses={courseList} faculty={facultyList} adminDepartments={adminDepartments} />;
 }
