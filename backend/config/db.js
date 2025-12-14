@@ -5,8 +5,7 @@ env.config();
 
 async function connectDB(){
     try{
-        await mongoose.connect(process.env.MONGO_URI||"mongodb+srv://venkatrahulxyz:HeheheHaw@instituteportal.n7vdpal.mongodb.net/?retryWrites=true&w=majority&appName=InstitutePortal", {
-        // await mongoose.connect("mongodb://localhost:27017/clgproject", {
+        await mongoose.connect(process.env.MONGO_URI, {
             dbName: "clgproject",
         });
         console.log("DB connected");
