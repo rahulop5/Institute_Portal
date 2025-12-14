@@ -4,6 +4,8 @@ import { Form, useNavigation, redirect } from "react-router-dom";
 import styles from "../styles/ChangePassword.module.css";
 import loginImage from "../../../../assets/finalimage.png";
 
+import { API_HOST } from "../../../../config";
+
 export async function action({ request }) {
   const formData = await request.formData();
   const oldPassword = formData.get("oldPassword");
@@ -11,7 +13,7 @@ export async function action({ request }) {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:3000/auth/changepassword", {
+    const response = await fetch(API_HOST + "/auth/changepassword", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

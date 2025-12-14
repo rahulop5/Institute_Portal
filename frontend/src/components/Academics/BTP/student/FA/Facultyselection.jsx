@@ -9,6 +9,7 @@ import FSTeamthere from "./FSTeamshow";
 import classes from "../../../../styles/FacultySelection.module.css";
 import PreferenceOrder from "./PreferenceOrder";
 import TFTeamthereBin1 from "../TF/TFTeamthereBin1";
+import { API_HOST } from "../../../../../config";
 
 export default function FacultySelection({ data }) {
   const [selectedFaculty, setSelectedFaculty] = useState(null);
@@ -174,7 +175,7 @@ export async function action({ request }) {
   };
 
   const response = await fetch(
-    "http://localhost:3000/student/btp/requestfaculty",
+    API_HOST + "/student/btp/requestfaculty",
     {
       method: "POST",
       headers: {
@@ -211,7 +212,7 @@ export async function setPreferencesAction({ request }) {
   const token = localStorage.getItem("token");
 
   const response = await fetch(
-    "http://localhost:3000/student/btp/setpreferences",
+    API_HOST + "/student/btp/setpreferences",
     {
       method: "POST",
       headers: {

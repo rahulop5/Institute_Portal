@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, use } from "react";
 import styles from "../../../styles/Topicslist.module.css";
 import { Form, redirect, useNavigation, useSubmit } from "react-router";
+import { API_HOST } from "../../../../config";
 
 function TopicList({ topics, onDelete, actid }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -163,7 +164,7 @@ export async function action({ request }) {
     about: about,
   };
 
-  const response = await fetch("http://localhost:3000/faculty/btp/addtopic", {
+  const response = await fetch(API_HOST + "/faculty/btp/addtopic", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -195,7 +196,7 @@ export async function action2({request}){
   const formData = await request.formData();
   const reqdata=formData.get("topicData");
 
-  const response = await fetch("http://localhost:3000/faculty/btp/deletetopic", {
+  const response = await fetch(API_HOST + "/faculty/btp/deletetopic", {
     method: "delete",
     headers: {
       Authorization: "Bearer " + token,

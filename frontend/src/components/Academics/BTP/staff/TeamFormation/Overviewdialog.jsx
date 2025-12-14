@@ -4,6 +4,7 @@ import styles from "../styles/Overviewdialog.module.css";
 import TeamMemberCard from "./TeamMemberCard";
 import UnallocatedStudents from "./UnallocatedStudents";
 import { useSubmit, redirect } from "react-router";
+import { API_HOST } from "../../../../../config";
 
 export default function OverviewDialog({
   isOpen,
@@ -409,7 +410,7 @@ export async function updateTeamAction({ request }) {
   console.log("Transformed request data:", reqData);
 
   const response = await fetch(
-    "http://localhost:3000/staff/btp/updateteam?batch=2022",
+    API_HOST + "/staff/btp/updateteam?batch=2022",
     {
       method: "post",
       headers: {
@@ -456,7 +457,7 @@ export async function deleteTeamAction({ request }) {
   const batch = "2022"; // or derive from loader/context if dynamic
 
   const response = await fetch(
-    `http://localhost:3000/staff/btp/deleteteam?batch=${batch}`,
+    API_HOST + `/staff/btp/deleteteam?batch=${batch}`,
     {
       method: "delete",
       headers: {

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import classes from "../../../../styles/AddStudentModal.module.css";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";
+import { API_HOST } from "../../../../../config";
 
 export default function AddStudentModal({
   isOpen,
@@ -169,7 +170,7 @@ export async function action({ request }) {
   const token = localStorage.getItem("token");
 
   const response = await fetch(
-    "http://localhost:3000/student/btp/addteammember",
+    API_HOST + "/student/btp/addteammember",
     {
       method: "POST",
       headers: {

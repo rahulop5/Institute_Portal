@@ -5,6 +5,7 @@ import studentIcon from "../../../../../assets/studenticon.svg";
 import TFBin1TeamSelection from "./TFBin1TeamSelection";
 import TFTeamthereBin1 from "./TFTeamthereBin1";
 import classes from "../../../../styles/TeamSelectionbin1.module.css";
+import { API_HOST } from "../../../../../config";
 
 export default function BTPTeamselection_bin1({ data }) {
   const [selectedBin, setSelectedBin] = useState(2);
@@ -86,7 +87,7 @@ export async function action({ request }) {
     bin3email: teamData[3].email,
   };
 
-  const response = await fetch("http://localhost:3000/student/btp/createteam", {
+  const response = await fetch(API_HOST + "/student/btp/createteam", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

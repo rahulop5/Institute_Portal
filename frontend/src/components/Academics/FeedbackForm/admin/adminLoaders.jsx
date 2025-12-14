@@ -1,4 +1,5 @@
 import { redirect } from "react-router-dom";
+import { API_HOST } from "../../../../config";
 
 async function loadData(type) { 
   const token = localStorage.getItem("token");
@@ -10,7 +11,7 @@ async function loadData(type) {
   if (!token || role !== "Admin") return redirect("/login");
 
   const response = await fetch(
-    `http://localhost:3000/puser/feedback/dashboard/${type}`,
+    API_HOST + `/puser/feedback/dashboard/${type}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }

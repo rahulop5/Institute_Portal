@@ -12,6 +12,8 @@ import xmark from "../../../../assets/xmark.png";
 
 import PreviewModal from "./PreviewModal.jsx";
 
+import { API_HOST } from "../../../../config";
+
 export default function StudentFileModal({ onClose, onConfirm }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
@@ -201,7 +203,7 @@ export async function addStudentsAction({ request }) {
   const backendFormData = new FormData();
   backendFormData.append("file", file);
 
-  const response = await fetch("http://localhost:3000/puser/feedback/addStudentsCSV", {
+  const response = await fetch(API_HOST + "/puser/feedback/addStudentsCSV", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

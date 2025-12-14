@@ -6,6 +6,8 @@ import FeedbackSection from "./FeedbackSection";
 
 import { useLoaderData, useNavigate,useParams } from "react-router";
 
+import { API_HOST } from "../../../../config";
+
 export default function AdminFacultyStatistics() {
   const data = useLoaderData();
   const navigate = useNavigate(); // 2. Get the navigate function
@@ -84,7 +86,7 @@ export async function adminCourseStatisticsLoader({ params }) {
 
   // Call your admin endpoint
   const response = await fetch(
-    `http://localhost:3000/puser/feedback/viewFacultyCourseStatistics?facultyId=${facultyId}&courseId=${courseId}`,
+    API_HOST + `/puser/feedback/viewFacultyCourseStatistics?facultyId=${facultyId}&courseId=${courseId}`,
     {
       headers: {
         Authorization: "Bearer " + token,

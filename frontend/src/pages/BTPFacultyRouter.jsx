@@ -3,6 +3,9 @@ import ErrorPage from "./Error";
 import TopicAddtion from "../components/academics/btp/faculty/TopicAddition";
 import EvaluationPage from "../components/academics/btp/faculty/EvaluationPage";
 
+import { API_HOST } from "../config";
+
+
 export default function BTPFacultyRouter() {
   const data = useLoaderData();
   const phase = data.phase;
@@ -38,7 +41,7 @@ export async function loader(){
     switch (role) {
         case "Faculty":
             //add custom logic for batch later using URL
-            const response=await fetch("http://localhost:3000/faculty/btp?batch=2022", {
+            const response=await fetch(API_HOST + "/faculty/btp?batch=2022", {
                 headers: {
                     "Authorization": "Bearer "+token
                 }

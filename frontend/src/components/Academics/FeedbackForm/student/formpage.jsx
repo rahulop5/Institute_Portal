@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 
+import { API_HOST } from "../../../../config";
+
 export default function FormPage({ feedback }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const submit = useSubmit();
@@ -350,7 +352,7 @@ export async function nextAction({ request }) {
   // console.log(data);
 
   const response = await fetch(
-    "http://localhost:3000/student/feedback/updatefeedback",
+    API_HOST + "/student/feedback/updatefeedback",
     {
       method: "POST",
       headers: {
@@ -386,7 +388,7 @@ export async function submitAction({ request }) {
   // console.log(data);
 
   const response = await fetch(
-    "http://localhost:3000/student/feedback/submitfeedback",
+    API_HOST + "/student/feedback/submitfeedback",
     {
       method: "POST",
       headers: {

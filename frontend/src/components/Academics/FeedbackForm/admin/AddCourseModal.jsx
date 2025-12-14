@@ -5,6 +5,7 @@ import FacultySelectModal from "./FacultySelectModal";
 import { useSubmit, redirect } from "react-router";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_HOST } from "../../../../config";
 
 export default function AddCourseModal({ onClose, faculty, adminDepartments }) {
   const [showFacultyModal, setShowFacultyModal] = useState(false);
@@ -385,7 +386,7 @@ export async function addCourseAction({ request }) {
   const formData = await request.formData();
 
   const response = await fetch(
-    "http://localhost:3000/puser/feedback/addcourse",
+    API_HOST + "/puser/feedback/addcourse",
     {
       method: "POST",
       headers: {

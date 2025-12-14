@@ -3,6 +3,8 @@ import styles from "../../../styles/Requests.module.css";
 import studentIcon from "../../../../assets/studenticon.svg";
 import { useSubmit, redirect } from "react-router";
 import nothing from "../../../../assets/Group 421.png";
+import { API_HOST } from "../../../../config";
+
 const data2 = {
   topics: {
     _id: "topic123",
@@ -265,7 +267,7 @@ export async function action({ request }) {
   const reqdata = formData.get("reqData");
 
   const response = await fetch(
-    "http://localhost:3000/faculty/btp/approvetopicrequest",
+    API_HOST + "/faculty/btp/approvetopicrequest",
     {
       method: "post",
       headers: {
@@ -299,7 +301,7 @@ export async function action2({ request }) {
   const reqdata = formData.get("reqData");
 
   const response = await fetch(
-    "http://localhost:3000/faculty/btp/rejecttopicreq",
+    API_HOST + "/faculty/btp/rejecttopicreq",
     {
       method: "delete",
       headers: {

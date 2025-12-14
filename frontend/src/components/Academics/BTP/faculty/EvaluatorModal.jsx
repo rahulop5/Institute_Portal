@@ -3,6 +3,7 @@ import styles from "../../../styles/EvaluatorModal.module.css";
 import { FaUserCircle } from "react-icons/fa";
 import idcard from "../../../../assets/idcard.svg";
 import bin from "../../../../assets/bin.svg";
+import { API_HOST } from "../../../../config";
 
 export default function EvaluatorModal({ projid, students, onClose, isEvaluator }) {
   const handleBackdropClick = (e) => {
@@ -139,7 +140,7 @@ export async function evaluateGuideAction({ request }) {
   // console.log(marks);
   // console.log(remark);
 
-  const res = await fetch("http://localhost:3000/faculty/btp/evaluateguide", {
+  const res = await fetch(API_HOST + "/faculty/btp/evaluateguide", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -182,7 +183,7 @@ export async function evaluateEvaluatorAction({ request }) {
   // console.log(marks);
   // console.log(remark);
 
-  const res = await fetch("http://localhost:3000/faculty/btp/evaluateevaluator", {
+  const res = await fetch(API_HOST + "/faculty/btp/evaluateevaluator", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

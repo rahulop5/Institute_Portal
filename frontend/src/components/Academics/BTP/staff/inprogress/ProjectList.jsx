@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 import styles from "../styles/ProjectList.module.css";
 import studentIcon from "../../../../../assets/studenticon.svg";
 import nextpageIcon from "../../../../../assets/nextpage.svg";
+import { API_HOST } from "../../../../../config";
 
 export default function ProjectList({ dataa }) {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export async function loader({ params }) {
   const { projid } = params;
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`http://localhost:3000/staff/btp/viewproject?projid=${projid}`, {
+  const response = await fetch(API_HOST + `/staff/btp/viewproject?projid=${projid}`, {
     headers: {
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",

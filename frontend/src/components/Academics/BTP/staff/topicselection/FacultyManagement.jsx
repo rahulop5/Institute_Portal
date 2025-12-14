@@ -5,6 +5,7 @@ import ManualtopicAllocation from "./ManualtopicAllocation";
 import { useSubmit, redirect } from "react-router";
 import TabsHeader from "./TabsHeader";
 import FacultyList from "./FSlist";
+import { API_HOST } from "../../../../../config";
 
 //dummy data
 export const data = [
@@ -436,7 +437,7 @@ export async function advancePreferenceAction({ request }) {
   const batch = "2022"; // hardcoded like your deleteTeamAction
 
   const response = await fetch(
-    `http://localhost:3000/staff/btp/advancepreferencernd?batch=${batch}`,
+    API_HOST + `/staff/btp/advancepreferencernd?batch=${batch}`,
     {
       method: "post",
       headers: {
@@ -481,7 +482,7 @@ export async function assignGuideAction({ request }) {
   // const batch = "2022"; // adjust if dynamic
 
   const response = await fetch(
-    `http://localhost:3000/staff/btp/allocatefaculty`,
+    API_HOST + `/staff/btp/allocatefaculty`,
     {
       method: "post",
       headers: {

@@ -6,6 +6,9 @@ import BTPTeamselection_bin23 from "../components/academics/btp/student/TF/Teams
 import FacultySelection from "../components/academics/btp/student/FA/Facultyselection";
 import Inprogress from "../components/academics/btp/student/IP/Inprogress";
 
+import { API_HOST } from "../config";
+
+
 export default function BTPStudentRouter(){
     const data=useLoaderData();
     const phase=data.phase;
@@ -41,7 +44,7 @@ export async function loader(){
     const token=localStorage.getItem("token");
     switch (role) {
         case "UGStudentBTP":
-            const response=await fetch("http://localhost:3000/student/btp", {
+            const response=await fetch(API_HOST + "/student/btp", {
                 headers: {
                     "Authorization": "Bearer "+token
                 }

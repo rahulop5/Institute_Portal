@@ -5,6 +5,8 @@ import FacultySelection from "./Facultyselection";
 import FormPage from "./formpage";
 import StartPage from "./startpage";
 
+import { API_HOST } from "../../../../config";
+
 export default function FeedbackDashboardStudent() {
   const data=useLoaderData();
   const [showFacultySelection, setShowFacultySelection] = useState(false);
@@ -49,7 +51,7 @@ export async function loader() {
     case "Student":
       //add custom logic for batch later using URL
       const response = await fetch(
-        "http://localhost:3000/student/feedback",
+        API_HOST + "/student/feedback",
         {
           headers: {
             Authorization: "Bearer " + token,

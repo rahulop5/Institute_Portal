@@ -4,6 +4,7 @@ import TFBin23Requests from "./TFBin23Requests";
 import classes from "../../../../styles/TeamSelectionbin1.module.css";
 import warning from "../../../../../assets/warning.png";
 import TFTeamthereBin1 from "./TFTeamthereBin1";
+import { API_HOST } from "../../../../../config";
 
 // Dummy incoming request data (replace with actual backend data later)
 const incomingRequests = [
@@ -208,7 +209,7 @@ export async function action({ request }) {
   };
 
   const response = await fetch(
-    "http://localhost:3000/student/btp/approverequest",
+    API_HOST + "/student/btp/approverequest",
     {
       method: "POST",
       headers: {
@@ -246,7 +247,7 @@ export async function action2({ request }) {
   };
 
   const response = await fetch(
-    "http://localhost:3000/student/btp/rejectrequest",
+    API_HOST + "/student/btp/rejectrequest",
     {
       method: "DELETE",
       headers: {

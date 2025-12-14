@@ -10,6 +10,8 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { API_HOST } from "../../../../config";
+
 // Added default value for batchWiseCourses
 export default function CoursesHeader({ batchWiseCourses = {}, faculty, adminDepartments }) {
   const [showModal, setShowModal] = useState(false);
@@ -271,7 +273,7 @@ export async function deleteCourseAction({ request }) {
   let response;
   try {
     response = await fetch(
-      `http://localhost:3000/puser/feedback/deletecourse?courseId=${courseId}`,
+      API_HOST + `/puser/feedback/deletecourse?courseId=${courseId}`,
       {
         method: "DELETE",
         headers: {

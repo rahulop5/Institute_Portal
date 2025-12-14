@@ -3,6 +3,8 @@
 import { useLoaderData, useNavigate } from "react-router-dom";
 import FacultyDashboard from "../faculty/facultyDashboard.jsx"; 
 
+import { API_HOST } from "../../../../config";
+
 
 export async function loader({ params }) {
   const token = localStorage.getItem("token"); // Get token for auth
@@ -10,7 +12,7 @@ export async function loader({ params }) {
 
   // Call your new API endpoint
   const response = await fetch(
-    `http://localhost:3000/puser/feedback/viewFaculty/?facultyId=${facultyId}`, {
+    API_HOST + `/puser/feedback/viewFaculty/?facultyId=${facultyId}`, {
       headers: {
         Authorization: "Bearer " + token,
       },

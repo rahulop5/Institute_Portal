@@ -16,6 +16,7 @@ import Updatelist from "../../faculty/UpdateList";
 import completedIcon from "../../../../../assets/completed.svg";
 import pendingIcon from "../../../../../assets/pendingsvg.svg";
 import studenitcon from "../../../../../assets/studenticon.svg";
+import { API_HOST } from "../../../../../config";
 
 export default function Inprogress({ data }) {
   const today = new Date();
@@ -222,7 +223,7 @@ export async function action({ request }) {
     update: updateDataJSON,
   };
 
-  const response = await fetch("http://localhost:3000/student/btp/addupdate", {
+  const response = await fetch(API_HOST + "/student/btp/addupdate", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

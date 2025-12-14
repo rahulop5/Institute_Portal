@@ -7,6 +7,9 @@ import profileIcon from "./../assets/profile.svg";
 import classes from "./styles/Header.module.css";
 import ProfileDropdown from "./ProfileDropdown.jsx";
 
+import { API_HOST } from "../config";
+
+
 export default function Header() {
   const name = localStorage.getItem("name");
   const [isDropdownVisible, setDropdownVisible] = useState(false);
@@ -27,7 +30,7 @@ export default function Header() {
         throw new Error("No token found");
       }
 
-      const response = await fetch("http://localhost:3000/auth/profile", {
+      const response = await fetch(API_HOST + "/auth/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

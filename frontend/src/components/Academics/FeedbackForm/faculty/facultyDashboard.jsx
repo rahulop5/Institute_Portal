@@ -3,6 +3,9 @@ import profile from "../../../../assets/studenticon.svg";
 import courseImg from "../../../../assets/math1.png";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 
+import { API_HOST } from "../../../../config";
+
+
 export default function FacultyDashboard({
   facultyData,
   onBack,
@@ -110,7 +113,7 @@ export async function loader() {
     throw new Response(JSON.stringify({ message: "Access denied" }), { status: 403 });
   }
 
-  const response = await fetch("http://localhost:3000/faculty/feedback/dashboard", {
+  const response = await fetch(API_HOST + "/faculty/feedback/dashboard", {
     headers: {
       Authorization: "Bearer " + token,
     },

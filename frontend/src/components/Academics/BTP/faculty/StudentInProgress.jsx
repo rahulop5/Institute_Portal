@@ -4,6 +4,7 @@ import Updatelist from "./UpdateList";
 import completedIcon from "../../../../assets/completed.svg";
 import pendingIcon from "../../../../assets/pendingsvg.svg";
 import studenitcon from "../../../../assets/studenticon.svg";
+import { API_HOST } from "../../../../config";
 
 export default function StudentInProgress() {
   const data = useLoaderData();
@@ -184,7 +185,7 @@ export async function loader({ params }) {
   const { projid } = params;
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`http://localhost:3000/faculty/btp/viewproject?projid=${projid}`, {
+  const response = await fetch(API_HOST + `/faculty/btp/viewproject?projid=${projid}`, {
     headers: {
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",

@@ -6,6 +6,8 @@ import { redirect, useSubmit } from "react-router";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 
+import { API_HOST } from "../../../../config";
+
 export default function FacultySelection({data}) {
   // const data = {
   //   email: "ananya.g25@iiits.in",
@@ -264,7 +266,7 @@ export async function action({ request }) {
   // console.log(data);
 
   const response = await fetch(
-    "http://localhost:3000/student/feedback/selectfaculty",
+    API_HOST + "/student/feedback/selectfaculty",
     {
       method: "POST",
       headers: {

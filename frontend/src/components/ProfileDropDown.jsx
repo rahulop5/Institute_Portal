@@ -5,6 +5,8 @@ import profileIcon from "./../assets/profile.svg";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { API_HOST } from "../config";
+
 export default function ProfileDropdown({ profile, loading, error, onNameUpdate }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -42,7 +44,7 @@ export default function ProfileDropdown({ profile, loading, error, onNameUpdate 
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3000/auth/updateName", {
+      const response = await fetch(API_HOST + "/auth/updateName", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

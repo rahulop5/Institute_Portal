@@ -6,6 +6,9 @@ import FeedbackSection from "./FeedbackSection";
 // 1. Import useNavigate
 import { useLoaderData, useNavigate } from "react-router";
 
+import { API_HOST } from "../../../../config";
+
+
 // ... (dummy data is commented out, which is fine) ...
 
 export default function FacultyStatistics() {
@@ -88,7 +91,7 @@ export async function loader({ params }) {
     case "Faculty":
       //add custom logic for batch later using URL
       const response = await fetch(
-        `http://localhost:3000/faculty/feedback/course?courseId=${params.courseId}`,
+        API_HOST + `/faculty/feedback/course?courseId=${params.courseId}`,
         {
           method: "GET",
           headers: {

@@ -7,6 +7,9 @@ import Temp from "./Lemp";
 import Inprogressstaff from "../components/Academics/BTP/staff/inprogress/Inprogress";
 import ProjectList from "../components/academics/btp/staff/inprogress/ProjectList";
 
+import { API_HOST } from "../config";
+
+
 const normalizeBackendData = (backend) => {
   const { project, ...rest } = backend;
 
@@ -55,7 +58,7 @@ export async function loader(){
     const token=localStorage.getItem("token");
     switch (role) {
         case "Staff":
-            const response=await fetch("http://localhost:3000/staff/btp?batch=2022", {
+            const response=await fetch(API_HOST + "/staff/btp?batch=2022", {
                 headers: {
                     "Authorization": "Bearer "+token
                 }
