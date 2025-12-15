@@ -10,22 +10,22 @@ import ErrorPage from "./pages/Error.jsx";
 import {
   action as acceptTRAction,
   action2 as rejectTRAction,
-} from "./components/Academics/btp/student/TF/Teamselection_bin23.jsx";
+} from "./components/Academics/BTP/student/TF/Teamselection_bin23.jsx";
 import { checkAuthLoader, tokenLoader } from "./util/auth.js";
 import Temp from "./pages/Lemp.jsx";
 import { action as logoutAction } from "./pages/Logout.jsx";
-import { action as sendTRAction } from "./components/Academics/btp/student/TF/Teamselection_bin1.jsx";
+import { action as sendTRAction } from "./components/Academics/BTP/student/TF/Teamselection_bin1.jsx";
 import BTPStudentRouter, {
   loader as btpLoader,
 } from "./pages/BTPStudentRouter.jsx";
 import {
   action as applytotopicAction,
   setPreferencesAction,
-} from "./components/Academics/btp/student/FA/Facultyselection.jsx";
+} from "./components/Academics/BTP/student/FA/Facultyselection.jsx";
 import Inprogress, {
   action as addUpdateAction,
-} from "./components/Academics/btp/student/IP/Inprogress.jsx";
-import TopicAddition from "./components/Academics/btp/faculty/TopicAddition.jsx";
+} from "./components/Academics/BTP/student/IP/Inprogress.jsx";
+import TopicAddition from "./components/Academics/BTP/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, {
   loader as btpFacultyRouter,
 } from "./pages/BTPFacultyRouter.jsx";
@@ -33,41 +33,41 @@ import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import {
   action as addTopicAction,
   action2 as deleteTopicAction,
-} from "./components/Academics/btp/faculty/Topicslist.jsx";
+} from "./components/Academics/BTP/faculty/Topicslist.jsx";
 import {
   action as acceptReqAction,
   action2 as rejectReqAction,
-} from "./components/Academics/btp/faculty/Requests.jsx";
+} from "./components/Academics/BTP/faculty/Requests.jsx";
 import StudentInProgress, {
   loader as projectLoader,
-} from "./components/Academics/btp/faculty/StudentInProgress.jsx";
+} from "./components/Academics/BTP/faculty/StudentInProgress.jsx";
 import {
   evaluateEvaluatorAction,
   evaluateGuideAction,
-} from "./components/Academics/btp/faculty/EvaluatorModal.jsx";
+} from "./components/Academics/BTP/faculty/EvaluatorModal.jsx";
 import ViewProjEvaluator, {
   evaluatorProjLoader,
-} from "./components/Academics/btp/faculty/ViewProjEvaluator.jsx";
+} from "./components/Academics/BTP/faculty/ViewProjEvaluator.jsx";
 import {
   advancePreferenceAction,
   assignGuideAction,
-} from "./components/Academics/btp/staff/topicselection/FacultyManagement.jsx";
+} from "./components/Academics/BTP/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, {
   loader as btpStaffLoader,
 } from "./pages/BTPStaffRouter.jsx";
 import {
   deleteTeamAction,
   updateTeamAction,
-} from "./components/Academics/btp/staff/TeamFormation/Overviewdialog.jsx";
-import { action as addStudentAction } from "./components/Academics/btp/student/TF/AddStudentmodal.jsx";
-import Inprogressstaff from "./components/Academics/btp/staff/inprogress/Inprogress.jsx";
+} from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
+import { action as addStudentAction } from "./components/Academics/BTP/student/TF/AddStudentmodal.jsx";
+import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {
   adminDashboardFacultyLoader,
   adminDashboardStudentsLoader,
   adminDashboardCoursesLoader,
 } from "./components/Academics/FeedbackForm/admin/adminLoaders.jsx";
-import { loader as projectListLoader } from "./components/Academics/btp/staff/inprogress/ProjectList.jsx";
+import { loader as projectListLoader } from "./components/Academics/BTP/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
 import FacultyDashboard, {
   loader as facultyFeedbackLoader,
