@@ -23,8 +23,7 @@ export default function StartPage({ onStart, message }) {
 
   return (
     <div className={styles.startpage}>
-      <h1>Feedback Form</h1>
-
+  
       <div className={styles.total}>
        
         <div className={styles.container}>

@@ -12,10 +12,11 @@
 .total {
   display: flex;
   gap: 4rem;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: flex-end;
   justify-content: center;
-  margin-top: 5rem;
+  /* margin-top: 5rem; */
 }
 
 .container {
@@ -26,7 +27,7 @@
   background: #fff;
   box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
   width: 40vw;
-  height: 50vh;
+  /* height: 50vh; */
   flex-shrink: 0;
   padding: 3rem;
 }
@@ -108,7 +109,7 @@
 
 .startbutton {
   font-size: 1rem;
-  padding: 1.2rem 7.5rem;
+  padding: 1.2rem 6rem;
   margin-top: 3rem;
   flex-shrink: 0;
   border-radius: 200px;

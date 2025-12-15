@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "../styles/FacultySelection.module.css";
 import courseImg from "../../../../assets/math1.png";
 import cross from "../../../../assets/cross.png";
@@ -49,11 +49,35 @@ export default function FacultySelection({data}) {
   const [openModal, setOpenModal] = useState(null);
   const submit=useSubmit();
 
+  // Disable background scroll when modal is open
+  useEffect(() => {
+    if (openModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [openModal]);
+
   const handleSelectFaculty = (courseId, faculty) => {
     setSelectedFaculties((prev) => {
       const current = prev[courseId] || [];
-      if (current.some((f) => f.facultyId === faculty.facultyId)) return prev;
-      return { ...prev, [courseId]: [...current, faculty] };
+      const isSelected = current.some((f) => f.facultyId === faculty.facultyId);
+      
+      if (isSelected) {
+        // Unselect if already selected
+        return {
+          ...prev,
+          [courseId]: current.filter((f) => f.facultyId !== faculty.facultyId),
+        };
+      } else {
+        // Select if not selected
+        return { ...prev, [courseId]: [...current, faculty] };
+      }
     });
   };
 
@@ -125,7 +149,7 @@ export default function FacultySelection({data}) {
 
   return (
     <div className={styles.facultyselectionpage}>
-      <h1 className={styles.heading}>Feedback Form</h1>
+      {/* <h1 className={styles.heading}>Feedback Form</h1> */}
 
       <div className={styles.facultyselectioncontainer}>
         <h2 className={styles.subheading}>Select your faculty for all courses:</h2>
@@ -237,7 +261,7 @@ export default function FacultySelection({data}) {
                           {selectedFaculties[openModal]?.some(
                             (sel) => sel.facultyId === f.facultyId
                           )
-                            ? "Selected"
+                            ? "Unselect"
                             : "Select"}
                         </button>
                       </td>
