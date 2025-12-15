@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import styles from "../styles/StudentHeader.module.css";
 import download from "../../../../assets/studenticon.svg";
-import SearchContainer from "./SearchContainer";
+import SearchContainer from "./Searchcontainer";
 import StudentFileModal from "./StudentFileModal";
 
 export default function StudentHeader({ students }) {
