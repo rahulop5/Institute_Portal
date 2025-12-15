@@ -10,22 +10,22 @@ import ErrorPage from "./pages/Error.jsx";
 import {
   action as acceptTRAction,
   action2 as rejectTRAction,
-} from "./components/academics/btp/student/TF/Teamselection_bin23.jsx";
+} from "./components/Academics/btp/student/TF/Teamselection_bin23.jsx";
 import { checkAuthLoader, tokenLoader } from "./util/auth.js";
 import Temp from "./pages/Lemp.jsx";
 import { action as logoutAction } from "./pages/Logout.jsx";
-import { action as sendTRAction } from "./components/academics/btp/student/TF/Teamselection_bin1.jsx";
+import { action as sendTRAction } from "./components/Academics/btp/student/TF/Teamselection_bin1.jsx";
 import BTPStudentRouter, {
   loader as btpLoader,
 } from "./pages/BTPStudentRouter.jsx";
 import {
   action as applytotopicAction,
   setPreferencesAction,
-} from "./components/academics/btp/student/FA/Facultyselection.jsx";
+} from "./components/Academics/btp/student/FA/Facultyselection.jsx";
 import Inprogress, {
   action as addUpdateAction,
-} from "./components/academics/btp/student/IP/Inprogress.jsx";
-import TopicAddition from "./components/academics/btp/faculty/TopicAddition.jsx";
+} from "./components/Academics/btp/student/IP/Inprogress.jsx";
+import TopicAddition from "./components/Academics/btp/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, {
   loader as btpFacultyRouter,
 } from "./pages/BTPFacultyRouter.jsx";
@@ -33,75 +33,75 @@ import { loader as btpRouterLoader } from "./pages/BTPRouter.jsx";
 import {
   action as addTopicAction,
   action2 as deleteTopicAction,
-} from "./components/academics/btp/faculty/Topicslist.jsx";
+} from "./components/Academics/btp/faculty/Topicslist.jsx";
 import {
   action as acceptReqAction,
   action2 as rejectReqAction,
-} from "./components/academics/btp/faculty/Requests.jsx";
+} from "./components/Academics/btp/faculty/Requests.jsx";
 import StudentInProgress, {
   loader as projectLoader,
-} from "./components/academics/btp/faculty/StudentInProgress.jsx";
+} from "./components/Academics/btp/faculty/StudentInProgress.jsx";
 import {
   evaluateEvaluatorAction,
   evaluateGuideAction,
-} from "./components/academics/btp/faculty/EvaluatorModal.jsx";
+} from "./components/Academics/btp/faculty/EvaluatorModal.jsx";
 import ViewProjEvaluator, {
   evaluatorProjLoader,
-} from "./components/academics/btp/faculty/ViewProjEvaluator.jsx";
+} from "./components/Academics/btp/faculty/ViewProjEvaluator.jsx";
 import {
   advancePreferenceAction,
   assignGuideAction,
-} from "./components/academics/btp/staff/topicselection/FacultyManagement.jsx";
+} from "./components/Academics/btp/staff/topicselection/FacultyManagement.jsx";
 import BTPStaffRouter, {
   loader as btpStaffLoader,
 } from "./pages/BTPStaffRouter.jsx";
 import {
   deleteTeamAction,
   updateTeamAction,
-} from "./components/academics/btp/staff/TeamFormation/Overviewdialog.jsx";
-import { action as addStudentAction } from "./components/academics/btp/student/TF/AddStudentmodal.jsx";
-import Inprogressstaff from "./components/academics/btp/staff/inprogress/Inprogress.jsx";
-import AdminDashboard from "./components/academics/FeedbackForm/admin/adminDashboard.jsx";
+} from "./components/Academics/btp/staff/TeamFormation/Overviewdialog.jsx";
+import { action as addStudentAction } from "./components/Academics/btp/student/TF/AddStudentmodal.jsx";
+import Inprogressstaff from "./components/Academics/btp/staff/inprogress/Inprogress.jsx";
+import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {
   adminDashboardFacultyLoader,
   adminDashboardStudentsLoader,
   adminDashboardCoursesLoader,
-} from "./components/academics/FeedbackForm/admin/adminLoaders.jsx";
-import { loader as projectListLoader } from "./components/academics/btp/staff/inprogress/ProjectList.jsx";
+} from "./components/Academics/FeedbackForm/admin/adminLoaders.jsx";
+import { loader as projectListLoader } from "./components/Academics/btp/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
 import FacultyDashboard, {
   loader as facultyFeedbackLoader,
-} from "./components/academics/FeedbackForm/faculty/facultyDashboard.jsx";
+} from "./components/Academics/FeedbackForm/faculty/facultyDashboard.jsx";
 import FacultyStatistics, {
   loader as facultyViewStatsLoader,
-} from "./components/academics/FeedbackForm/faculty/facultyStats.jsx";
+} from "./components/Academics/FeedbackForm/faculty/facultyStats.jsx";
 import AcademicsLayout from "./pages/AcademicsLayout.jsx";
-import { action as selectFacultyAction } from "./components/academics/FeedbackForm/student/Facultyselection.jsx";
+import { action as selectFacultyAction } from "./components/Academics/FeedbackForm/student/Facultyselection.jsx";
 import FormPage, {
   nextAction,
   submitAction,
-} from "./components/academics/FeedbackForm/student/formpage.jsx";
+} from "./components/Academics/FeedbackForm/student/formpage.jsx";
 import FeedbackDashboardStudent, {
   loader as studentFeedbackDashboardLoader,
-} from "./components/academics/FeedbackForm/student/feedbackDashboard.jsx";
-import FacultyTab from "./components/academics/FeedbackForm/admin/FacultyTab.jsx";
-import StudentsTab from "./components/academics/FeedbackForm/admin/StudentsTab.jsx";
-import CoursesTab from "./components/academics/FeedbackForm/admin/CoursesTab.jsx";
+} from "./components/Academics/FeedbackForm/student/feedbackDashboard.jsx";
+import FacultyTab from "./components/Academics/FeedbackForm/admin/FacultyTab.jsx";
+import StudentsTab from "./components/Academics/FeedbackForm/admin/StudentsTab.jsx";
+import CoursesTab from "./components/Academics/FeedbackForm/admin/CoursesTab.jsx";
 import AdminFacultyDetailPage, {
   loader as facultyDetailLoader,
-} from "./components/academics/FeedbackForm/admin/AdminFacultyDetailPage.jsx";
+} from "./components/Academics/FeedbackForm/admin/AdminFacultyDetailPage.jsx";
 import AdminFacultyStatistics, {
   adminCourseStatisticsLoader,
-} from "./components/academics/FeedbackForm/admin/AdminFacultyStatistics.jsx";
-import { addStudentsAction } from "./components/academics/FeedbackForm/admin/StudentFileModal.jsx";
-import { addFacultyAction } from "./components/academics/FeedbackForm/admin/AddFacultyFileModal.jsx";
-import { deleteCourseAction } from "./components/academics/FeedbackForm/admin/CourseHeader.jsx";
-import Register1 from "./components/academics/FeedbackForm/login/register.jsx";
-import { addCourseAction } from "./components/academics/FeedbackForm/admin/AddCourseModal.jsx";
+} from "./components/Academics/FeedbackForm/admin/AdminFacultyStatistics.jsx";
+import { addStudentsAction } from "./components/Academics/FeedbackForm/admin/StudentFileModal.jsx";
+import { addFacultyAction } from "./components/Academics/FeedbackForm/admin/AddFacultyFileModal.jsx";
+import { deleteCourseAction } from "./components/Academics/FeedbackForm/admin/CourseHeader.jsx";
+import Register1 from "./components/Academics/FeedbackForm/login/register.jsx";
+import { addCourseAction } from "./components/Academics/FeedbackForm/admin/AddCourseModal.jsx";
 import { checkAuthHomeLoader } from "./util/auth.js";
-import ChangePassword from "./components/academics/FeedbackForm/login/ChangePassword.jsx";
-import { action as changePasswordAction } from "./components/academics/FeedbackForm/login/ChangePassword.jsx";
-import OTPVerification from "./components/academics/FeedbackForm/login/OTPVerification.jsx";
+import ChangePassword from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
+import { action as changePasswordAction } from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
+import OTPVerification from "./components/Academics/FeedbackForm/login/OTPVerification.jsx";
 
 const router = createBrowserRouter([
   {
