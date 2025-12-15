@@ -5,7 +5,7 @@ import SearchIcon from "./../assets/search.svg";
 import notificationIcon from "./../assets/notification.png";
 import profileIcon from "./../assets/profile.svg";
 import classes from "./styles/Header.module.css";
-import ProfileDropdown from "./ProfileDropdown.jsx";
+import ProfileDropdown from "./ProfileDropDown";
 
 import { API_HOST } from "../config";
 
