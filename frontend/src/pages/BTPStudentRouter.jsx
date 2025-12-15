@@ -1,10 +1,10 @@
 import { useLoaderData } from "react-router";
-import NotStarted from "../components/academics/btp/NotStarted";
+import NotStarted from "../components/Academics/BTP/NotStarted";
 import ErrorPage from "./Error";
-import BTPTeamselection_bin1 from "../components/academics/btp/student/TF/Teamselection_bin1";
-import BTPTeamselection_bin23 from "../components/academics/btp/student/TF/Teamselection_bin23";
-import FacultySelection from "../components/academics/btp/student/FA/Facultyselection";
-import Inprogress from "../components/academics/btp/student/IP/Inprogress";
+import BTPTeamselection_bin1 from "../components/Academics/BTP/student/TF/Teamselection_bin1";
+import BTPTeamselection_bin23 from "../components/Academics/BTP/student/TF/Teamselection_bin23";
+import FacultySelection from "../components/Academics/BTP/student/FA/Facultyselection";
+import Inprogress from "../components/Academics/BTP/student/IP/Inprogress";
 
 import { API_HOST } from "../config";
 

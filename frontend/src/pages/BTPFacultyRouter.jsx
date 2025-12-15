@@ -1,7 +1,7 @@
 import { Outlet, useMatch, useLoaderData } from "react-router";
 import ErrorPage from "./Error";
-import TopicAddtion from "../components/academics/btp/faculty/TopicAddition";
-import EvaluationPage from "../components/academics/btp/faculty/EvaluationPage";
+import TopicAddtion from "../components/Academics/BTP/faculty/TopicAddition";
+import EvaluationPage from "../components/Academics/BTP/faculty/EvaluationPage";
 
 import { API_HOST } from "../config";
 
