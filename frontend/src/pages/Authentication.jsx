@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import AuthForm from "../components/AuthForm";
-import Register1 from "../components/academics/FeedbackForm/login/register";
+import Register1 from "../components/Academics/FeedbackForm/login/register";
 import { toast } from "react-toastify";
 
 import { API_HOST } from "../config";
