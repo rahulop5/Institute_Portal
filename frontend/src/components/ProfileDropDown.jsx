@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, Link } from "react-router-dom";
-import classes from "./styles/ProfileDropDown.module.css";
+import classes from "./styles/ProfileDropdown.module.css";
 import profileIcon from "./../assets/profile.svg";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
