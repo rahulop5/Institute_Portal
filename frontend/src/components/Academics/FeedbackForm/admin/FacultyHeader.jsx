@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import AddFacultyModal from "./AddFacultymodal.jsx";
+import AddFacultyModal from "./AddFacultyModal.jsx";
 import styles from "../styles/adminDashboard.module.css";
 import profile from "../../../../assets/studenticon.svg";
 import AddFacultyFileModal from "./AddFacultyFileModal.jsx";
