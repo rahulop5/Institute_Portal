@@ -1,10 +1,10 @@
 import { useLoaderData } from "react-router";
 import NotStarted from "../components/academics/btp/NotStarted";
 import ErrorPage from "./Error";
-import TeamListPage from "../components/Academics/BTP/staff/TeamFormation/Teamlistpage";
+import TeamListPage from "../components/academics/btp/staff/TeamFormation/Teamlistpage";
 import FacultyManagement from "../components/academics/btp/staff/topicselection/FacultyManagement";
 import Temp from "./Lemp";
-import Inprogressstaff from "../components/Academics/BTP/staff/inprogress/Inprogress";
+import Inprogressstaff from "../components/academics/btp/staff/inprogress/Inprogress";
 import ProjectList from "../components/academics/btp/staff/inprogress/ProjectList";
 
 import { API_HOST } from "../config";
