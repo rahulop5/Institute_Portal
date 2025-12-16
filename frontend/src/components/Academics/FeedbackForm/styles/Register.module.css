@@ -27,8 +27,8 @@
 
 .registerContainer {
   display: flex;
-  width: 55%;
-  max-height: 50vh; /* Maximum height constraint */
+  width: clamp(900px, 55vw, 1100px);
+  max-height: none; /* Avoid squishing on shorter laptop screens */
   border-radius: 20px;
   overflow: hidden; /* removes gap between left and right */
   /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */

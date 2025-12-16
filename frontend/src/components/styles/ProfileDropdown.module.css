@@ -12,6 +12,8 @@
   flex-direction: column;
   gap: 16px;
   border: 1px solid #f0f0f0;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .profileIcon {

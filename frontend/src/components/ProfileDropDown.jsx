@@ -157,11 +157,13 @@ export default function ProfileDropdown({ profile, loading, error, onNameUpdate 
           {profile.courses && profile.courses.length > 0 && (
             <div className={classes.infoSection}>
               <span className={classes.label}>Enrolled Courses</span>
-              <ul className="list-disc pl-5 text-sm text-gray-600">
+              <div className={classes.courseGrid}>
                 {profile.courses.map((course, index) => (
-                  <li key={index}>{course.name} ({course.code})</li>
+                  <span key={index} className={classes.courseTag}>
+                    {course.code}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </>
@@ -184,11 +186,13 @@ export default function ProfileDropdown({ profile, loading, error, onNameUpdate 
           {profile.courses && profile.courses.length > 0 && (
             <div className={classes.infoSection}>
               <span className={classes.label}>Teaching Courses</span>
-              <ul className="list-disc pl-5 text-sm text-gray-600">
+              <div className={classes.courseGrid}>
                 {profile.courses.map((course, index) => (
-                  <li key={index}>{course.name} ({course.code})</li>
+                  <span key={index} className={classes.courseTag}>
+                    {course.code}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </>

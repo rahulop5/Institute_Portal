@@ -1,5 +1,5 @@
-// 1. Import useState AND useRef
-import { useState, useRef } from "react"; 
+// 1. Import useState, useRef AND useEffect
+import { useState, useRef, useEffect } from "react"; 
 import CollegeIcon from "./../assets/college_logo.svg";
 import SearchIcon from "./../assets/search.svg";
 import notificationIcon from "./../assets/notification.png";

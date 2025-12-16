@@ -5,6 +5,7 @@
   background-color: #f7f5ff;
   min-height: 100vh;
   padding: 3rem 2rem;
+  padding-top: 2rem;
   font-family: "Inter", sans-serif;
   color: #1a1a1a;
 }
@@ -31,6 +32,20 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 1.5rem;
+}
+
+/* Force two columns on typical laptop/desktop widths */
+@media (min-width: 1024px) {
+  .courseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Keep two columns even on large monitors for consistency */
+@media (min-width: 1600px) {
+  .courseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .courseCard {
