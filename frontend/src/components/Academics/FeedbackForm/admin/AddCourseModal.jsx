@@ -401,7 +401,7 @@ export async function addCourseAction({ request }) {
     console.log(err)
     throw new Response(
       JSON.stringify({
-        message: err.message || "Failed to upload student file",
+        message: err.error || "Failed to upload student file",
       }),
       { status: response.status || 500 }
     );
