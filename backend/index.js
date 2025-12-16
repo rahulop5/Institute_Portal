@@ -13,7 +13,7 @@ import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
 
 const app=express();
 app.use(cors({
-    origin: "http://localhost:5173"
+    origin: "https://institute-portal-nu.vercel.app"
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -45,4 +45,6 @@ app.get("/test", (req, res)=>{
 //add the page not found thing
 
 //add to env later
-app.listen(3000);
+app.listen(3000, "0.0.0.0", ()=>{
+    console.log("Server Running on port 3000")
+});
