@@ -55,14 +55,14 @@
   font-weight: 500;
   margin-bottom: 1rem;
   line-height: 2rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 .instruction {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: 2rem;
+  margin-top: 1rem;
   align-self: flex-end;
   width: 89%;
   margin-right: 3rem;
