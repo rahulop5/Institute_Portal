@@ -114,9 +114,9 @@ export const viewCourseStatistics = async (req, res) => {
       return res.status(404).json({ message: "Course analytics not found" });
     }
 
-    // Filter only rating questions
+    // Exclude text-based questions (order 16, 17)
     const ratingQuestions = courseData.questions.filter(
-      (q) => q.question && q.question.type === "rating"
+      (q) => q.question?.order !== 16 && q.question?.order !== 17
     );
 
     // Calculate overall average
@@ -153,22 +153,11 @@ export const viewCourseStatistics = async (req, res) => {
     }
 
     // Extract faculty & course feedbacks (orders 16 & 17)
-    // Extract faculty & course feedbacks (text type)
-    // Assuming distinct text questions for faculty vs course based on text content or order?
-    // Using previous logic of order 16 and 17 is specific. 
-    // Ideally we should find which is which. 
-    // For now, let's keep order based identification for these SPECIFIC text fields 
-    // IF we are sure about it. But user said "fix related files". 
-    // Let's filter by type='text' generally if we can, or stick to order for separation.
-    // The previous code used order 16 and 17. 
-    // `question` model has `text`.
-    // Let's assume order 16 is "Feedback & Suggestions on the Faculty" and 17 is "Course".
-    
     const facultyFeedbackQ = courseData.questions.find(
-       (q) => q.question && q.question.order === 16
+      (q) => q.question?.order === 16
     );
     const courseFeedbackQ = courseData.questions.find(
-       (q) => q.question && q.question.order === 17
+      (q) => q.question?.order === 17
     );
 
     const formattedDate = new Date(courseData.lastUpdated)
