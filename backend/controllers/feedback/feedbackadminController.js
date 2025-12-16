@@ -544,16 +544,20 @@ export const viewFacultyCourseStatistics = async (req, res) => {
       (q) => q.question?.order === 17
     );
 
+    const formattedDate = new Date(courseData.lastUpdated)
+      .toISOString()
+      .split("T")[0];
+
     const feedback = {
       faculty: (facultyFeedbackQ?.textResponses || []).map((resp) => ({
         text: resp.text,
         score: resp.score ?? null,
-        date: courseData.lastUpdated,
+        date: formattedDate,
       })),
       course: (courseFeedbackQ?.textResponses || []).map((resp) => ({
         text: resp.text,
         score: resp.score ?? null,
-        date: courseData.lastUpdated,
+        date: formattedDate,
       })),
     };
 
