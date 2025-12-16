@@ -11,8 +11,6 @@ const matchFacultyStats = useMatch("/academics/feedback/admin/faculty/:facultyId
 
   
   // This console log will now show an object
-  console.log("faculty", matchFacultyDetail);
-  console.log("stats", matchFacultyStats);
 
   const isFacultyDashboard = matchFacultyDetail || matchFacultyStats;
 

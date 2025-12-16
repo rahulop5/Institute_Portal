@@ -222,11 +222,9 @@ export const getBTPDashboard = async (req, res) => {
               }
 
               const binkey = `bin${user.bin}`;
-              console.log(teams[0][binkey].approved);
               if (teams.length === 1 && teams[0][binkey].approved) {
                 const team = teams[0];
                 const simplifiedTeam = buildSimplifiedTeam(team);
-                console.log(simplifiedTeam);
                 if (team.isteamformed) {
                   return res.status(200).json({
                     email: user.email,
@@ -407,13 +405,11 @@ export const getBTPDashboard = async (req, res) => {
             .populate("guide")
             .populate("evaluators.evaluator");
           if (projectarr.length !== 1) {
-            console.log(projectarr.length);
             return res.status(404).json({
               message: "Either no project found or too many projects found",
             });
           }
           const project = projectarr[0];
-          console.log(project);
           const evaluations = await BTPEvaluation.find({
             projectRef: project._id,
           }).sort({ time: 1 });
@@ -757,7 +753,6 @@ export const rejectTeamRequest = async (req, res) => {
 
 export const addTeamMember = async (req, res) => {
   try {
-    console.log(req.user);
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -837,7 +832,6 @@ export const addTeamMember = async (req, res) => {
 
 export const setTeamPreferences = async (req, res) => {
   try {
-    console.log(req.body);
     const { teamId, preferences } = req.body;
     // preferences: [{ topicDoc, topicId }, ...] length must be 4
 

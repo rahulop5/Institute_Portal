@@ -5,8 +5,6 @@ async function loadData(type) {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   
-  console.log("Token being sent:", token);
-  console.log("Role:", role);
 
   if (!token || role !== "Admin") return redirect("/login");
 

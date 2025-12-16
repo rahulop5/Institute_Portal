@@ -62,7 +62,6 @@ export const facultyDashboard = async (req, res) => {
     }
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
-    console.log(totalCourses);
 
     // Send response
     return res.status(200).json({

@@ -920,7 +920,6 @@ export const addStudentsCSV = async (req, res) => {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (row) => {
-          console.log(row)
           if (row.email && row.name && row.rollNumber && row.department && row.batch) {
             studentsData.push({
               name: row.name.trim(),

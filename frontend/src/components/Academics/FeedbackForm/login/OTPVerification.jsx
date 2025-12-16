@@ -21,7 +21,6 @@ export default function OTPVerification() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
-    console.log("OTP:", enteredOtp);
   };
 
   return (

@@ -136,7 +136,6 @@ export async function evaluateGuideAction({ request }) {
     });
     index++;
   }
-  console.log(projid);
   // console.log(marks);
   // console.log(remark);
 
@@ -150,11 +149,9 @@ export async function evaluateGuideAction({ request }) {
   });
 
   const popo=await res.json()
-  console.log(popo);
 
   if (!res.ok) {
     const popo=await res.json()
-    console.log(popo);
     console.error("Evaluation failed:", await res.json());
     throw new Error("Failed to submit evaluation");
   }
@@ -179,7 +176,6 @@ export async function evaluateEvaluatorAction({ request }) {
     });
     index++;
   }
-  console.log(projid);
   // console.log(marks);
   // console.log(remark);
 
@@ -193,11 +189,9 @@ export async function evaluateEvaluatorAction({ request }) {
   });
 
   const popo=await res.json()
-  console.log(popo);
 
   if (!res.ok) {
     const popo=await res.json()
-    console.log(popo);
     console.error("Evaluation failed:", await res.json());
     throw new Error("Failed to submit evaluation");
   }

@@ -13,7 +13,6 @@ export default function FacultyHeader({ facultyList, isStaff }) {
   const navigate = useNavigate();
 
   const handleAddFaculty = (facultyData) => {
-    console.log("New Faculty Added:", facultyData);
   };
 
   const handleSearchChange = useCallback((value) => {

@@ -916,7 +916,6 @@ export const approveFacultyToTeam = async (req, res) => {
 
 export const assignGuideToTeam = async (req, res) => {
   try {
-    console.log(req.body);
     const { teamid, facultyId, topicid } = req.body;
 
     if (!teamid || !facultyId || !topicid) {

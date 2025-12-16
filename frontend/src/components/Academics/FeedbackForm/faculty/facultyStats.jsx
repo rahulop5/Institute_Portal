@@ -14,7 +14,6 @@ import { API_HOST } from "../../../../config";
 export default function FacultyStatistics() {
   const data = useLoaderData();
   const navigate = useNavigate(); // 2. Get the navigate function
-  console.log(data);
   const [activeTab, setActiveTab] = useState("course");
   const {
     name,
@@ -103,7 +102,6 @@ export async function loader({ params }) {
 
       if (!response.ok) {
         const result = await response.json();
-        console.log(result);
         throw new Response(
           JSON.stringify({
             message: "Error adding the topic",

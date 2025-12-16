@@ -11,7 +11,6 @@ import { API_HOST } from "../../../../config";
 export default function AdminFacultyStatistics() {
   const data = useLoaderData();
   const navigate = useNavigate(); // 2. Get the navigate function
-  console.log(data);
   const [activeTab, setActiveTab] = useState("course");
   const {
     name,

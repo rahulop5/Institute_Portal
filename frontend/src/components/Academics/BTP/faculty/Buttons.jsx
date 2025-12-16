@@ -32,7 +32,6 @@ export default function Buttons({ projid, team, isEvaluator }) {
   const handleCloseModal = () => setShowModal(false);
 
   const handleSubmit = (data) => {
-    console.log("Form submitted:", data);
     setShowModal(false);
   };
 

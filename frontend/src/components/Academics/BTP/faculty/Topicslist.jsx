@@ -175,7 +175,6 @@ export async function action({ request }) {
 
   if (!response.ok) {
     const result = await response.json();
-    console.log(result);
     throw new Response(
       JSON.stringify({
         message: "Error adding the topic",
@@ -207,7 +206,6 @@ export async function action2({request}){
 
   if (!response.ok) {
     const result = await response.json();
-    console.log(result);
     throw new Response(
       JSON.stringify({
         message: "Error adding the topic",

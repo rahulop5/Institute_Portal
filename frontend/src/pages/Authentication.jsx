@@ -12,7 +12,6 @@ export default function Authentication(){
 }
 
 export async function action({request}){
-    console.log("hi")
     const formData=await request.formData();
     const authData={
         email: formData.get("email"),
@@ -29,7 +28,6 @@ export async function action({request}){
     //could add custom shit
     if(!response.ok){
         const temp=await response.json();
-        console.log(temp);
         return { error: "Invalid username or password" };
     }
 

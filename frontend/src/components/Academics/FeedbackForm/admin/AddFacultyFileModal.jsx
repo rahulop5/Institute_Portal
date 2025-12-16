@@ -226,7 +226,6 @@ export async function addFacultyAction({ request }) {
   }
 
   const res = await response.json();
-  console.log(res);
 
   return redirect("/academics/feedback/admin/faculty");
 }

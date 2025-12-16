@@ -365,7 +365,6 @@ export async function nextAction({ request }) {
 
   if (!response.ok) {
     const err = await response.json();
-    console.log(err);
 
     throw new Response(
       JSON.stringify({
@@ -375,7 +374,6 @@ export async function nextAction({ request }) {
     );
   }
   const res = await response.json();
-  console.log(res);
 
   return redirect("/academics/feedback/student"); // adjust as needed
 }
@@ -401,7 +399,6 @@ export async function submitAction({ request }) {
 
   if (!response.ok) {
     const err = await response.json();
-    console.log(err);
 
     throw new Response(
       JSON.stringify({
@@ -411,7 +408,6 @@ export async function submitAction({ request }) {
     );
   }
   const res = await response.json();
-  console.log(res);
 
   return redirect("/academics/feedback/student"); // adjust as needed
 }

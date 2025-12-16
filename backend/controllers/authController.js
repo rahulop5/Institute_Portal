@@ -231,7 +231,7 @@ export const getProfile = async (req, res) => {
       role: user.role,
     };
 
-    console.log("Fetching profile for:", user.email, "Role:", user.role, "RefID:", user.referenceId);
+    // console.log("Fetching profile for:", user.email, "Role:", user.role, "RefID:", user.referenceId);
 
     // Fetch additional details based on role
     if (user.role === "Admin") {
@@ -248,9 +248,9 @@ export const getProfile = async (req, res) => {
                 profileData = { ...profileData, ...facultyDetails.toObject() };
                 
                 // Fetch teaching courses
-                console.log("Fetching courses for faculty ID:", user.referenceId);
+                // console.log("Fetching courses for faculty ID:", user.referenceId);
                 const teachingCourses = await Course.find({ faculty: user.referenceId });
-                console.log("Found teaching courses:", teachingCourses);
+                // console.log("Found teaching courses:", teachingCourses);
                 
                 profileData.courses = teachingCourses.map(c => ({
                     name: c.name,
@@ -262,7 +262,7 @@ export const getProfile = async (req, res) => {
          if (user.referenceId) {
              // Use the single Student model for all student types as requested
              const studentDetails = await Student.findById(user.referenceId);
-             console.log("Found Student details:", studentDetails);
+             // console.log("Found Student details:", studentDetails);
              if (studentDetails) {
                  profileData = { ...profileData, ...studentDetails.toObject() };
                  
@@ -274,7 +274,7 @@ export const getProfile = async (req, res) => {
                  }));
              }
         } else {
-            console.log("No referenceId for student user");
+            // console.log("No referenceId for student user");
         }
     }
     // Add other roles if necessary (Staff, PrivilegedUser)

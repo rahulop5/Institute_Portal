@@ -302,7 +302,6 @@ export async function deleteCourseAction({ request }) {
     throw new Error(errorData.message || "Could not delete the course.");
   }
 
-  console.log("Course deleted successfully");
   
   return null;
 }

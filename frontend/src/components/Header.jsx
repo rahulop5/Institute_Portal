@@ -41,7 +41,6 @@ export default function Header() {
       }
 
       const data = await response.json();
-      console.log("Fetched Profile Data (Header):", data);
       setProfile(data);
     } catch (err) {
       console.error(err);

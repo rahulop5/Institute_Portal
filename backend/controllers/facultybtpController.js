@@ -662,7 +662,6 @@ export const rejectTopicRequest = async (req, res) => {
 //itll be changed later...
 export const evaluateProjectasGuide = async (req, res) => {
   try {
-    console.log(req.body)
     const { projid, remark, marks } = req.body;
 
     if (!projid || !remark || !Array.isArray(marks)) {
@@ -749,7 +748,6 @@ export const evaluateProjectasGuide = async (req, res) => {
 
 export const evaluateProjectasEval = async (req, res) => {
   try {
-    console.log(req.body);
     const { projid, panelmarks, remark } = req.body;
 
     if (!projid || !Array.isArray(panelmarks) || !remark) {

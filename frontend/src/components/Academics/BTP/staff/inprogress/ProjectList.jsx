@@ -6,7 +6,6 @@ import { API_HOST } from "../../../../../config";
 
 export default function ProjectList({ dataa }) {
   const navigate = useNavigate();
-  console.log(dataa)
 
   // normalize backend response
   const projects = dataa?.projects || [];

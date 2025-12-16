@@ -62,7 +62,6 @@ export default function OverviewDialog({
 
   const handleDelete = () => {
     if (!team.teamid) {
-      console.log("Skipping delete, no teamid (not yet saved)");
       return;
     }
 
