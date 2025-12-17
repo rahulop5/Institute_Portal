@@ -1036,7 +1036,7 @@ export const resetCourse = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (course.department !== adminFn.departments) {
+    if (!adminFn.departments.includes(course.department)) {
         return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
@@ -1095,7 +1095,7 @@ export const deleteCourse = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (course.department !== adminFn.departments) {
+    if (!adminFn.departments.includes(course.department)) {
         return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
@@ -1166,7 +1166,7 @@ export const addFacultyStudentstoCourse = async (req, res) => {
         session.endSession();
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (course.department !== adminFn.departments) {
+    if (!adminFn.departments.includes(course.department)) {
         await session.abortTransaction();
         session.endSession();
         return res.status(403).json({ message: "Access denied: Course belongs to another department" });
