@@ -56,6 +56,13 @@ export default function Header() {
     fetchProfile();
   };
 
+  // Fetch profile on mount so greeting has the user name immediately
+  useEffect(() => {
+    if (!profile) {
+      fetchProfile();
+    }
+  }, []);
+
   // 3. Create a handler for mouse enter
   const handleMouseEnter = () => {
     // If there's a pending timer to close, cancel it
@@ -103,12 +110,16 @@ export default function Header() {
         </div>
 
         <div className={classes["header-right"]}>
-          <button className={classes["icon-button"]}>
+          {/* <button className={classes["icon-button"]}>
             <img src={notificationIcon} alt="notifications" />
-          </button>
+          </button> */}
 
           <div className={classes["greeting"]}>
-            <h3>Hello, {name ? name : "noname"} <br />Have a great day!</h3>
+            <h3>
+              Hello, {profile?.name || name || "User"}
+              <br />
+              Have a great day!
+            </h3>
           </div>
 
           {/* 5. Apply the new handlers to the container */}
