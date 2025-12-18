@@ -743,6 +743,7 @@ export const addCourse = async (req, res) => {
       average: 0,
       min: 0,
       max: 0,
+      responseCount: 0,
       textResponses: [],
     }));
 

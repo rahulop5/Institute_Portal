@@ -11,6 +11,7 @@ const questionAnalyticsSchema = new mongoose.Schema({
   average: { type: Number, default: 0 },
   min: { type: Number, default: 0 },
   max: { type: Number, default: 0 },
+  responseCount: { type: Number, default: 0 }, // Track individual question responses
   textResponses: [textResponseSchema], // <-- Now holds objects with text + score
 });
 

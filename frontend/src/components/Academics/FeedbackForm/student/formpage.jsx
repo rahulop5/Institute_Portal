@@ -69,7 +69,11 @@ export default function FormPage({ feedback }) {
 
     const currentResponses = currentPage.answers;
     const unanswered = questions.filter(
-      (q) => !currentResponses[q._id] && q.type === "rating"
+      (q) =>
+        !currentResponses[q._id] &&
+        q.type === "rating" &&
+        q.order !== 14 &&
+        q.order !== 15
     );
 
     // Scroll to first unanswered rating
@@ -128,7 +132,11 @@ export default function FormPage({ feedback }) {
       const page = responses[i];
       const fb = feedback.feedbacks[i];
       const unanswered = fb.answers.filter(
-        (a) => !page.answers[a.question._id] && a.question.type === "rating"
+        (a) =>
+          !page.answers[a.question._id] &&
+          a.question.type === "rating" &&
+          a.question.order !== 14 &&
+          a.question.order !== 15
       );
 
       if (unanswered.length > 0) {
