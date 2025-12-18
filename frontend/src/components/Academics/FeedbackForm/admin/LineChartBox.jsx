@@ -12,12 +12,15 @@ import styles from "../styles/facultyStats.module.css";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
 export default function LineChartBox({ questions }) {
+  // Sort questions by order before displaying
+  const sortedQuestions = [...questions].sort((a, b) => a.order - b.order);
+
   const data = {
-    labels: questions.map((q) => `Q${q.qno}`),
+    labels: sortedQuestions.map((q) => `Q${q.qno}`),
     datasets: [
       {
         label: "Average Score",
-        data: questions.map((q) => q.avgscore),
+        data: sortedQuestions.map((q) => q.avgscore),
         borderColor: "#AFB3FF",
         backgroundColor: "rgba(27, 20, 20, 0.1)",
         tension: 0,

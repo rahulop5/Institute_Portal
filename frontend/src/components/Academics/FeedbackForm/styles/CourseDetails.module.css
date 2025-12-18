@@ -1,0 +1,474 @@
+.container {
+  padding: 20px 30px;
+  background-color: #f8f6ff;
+  min-height: 100vh;
+}
+
+/* Header Row */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #1f1f1f;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #6092ff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  color: #4070dd;
+}
+
+.backIcon {
+  font-size: 1.2rem;
+}
+
+/* Course Info Card */
+.courseInfoCard {
+  background: transparent;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  margin-bottom: 30px;
+  gap: 16px;
+}
+
+.courseMainInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  flex: 1;
+}
+
+.courseIcon {
+  width: 56px;
+  height: 56px;
+  padding: 12px;
+  background: #f0f0ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.courseIcon img {
+  width: 100%;
+  height: 100%;
+}
+
+.courseNameSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.courseName {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.courseCode {
+  font-size: 0.85rem;
+  color: #6b7aff;
+  font-weight: 500;
+}
+
+.courseNameInput {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 12px;
+  width: 300px;
+}
+
+.courseCodeInput {
+  font-size: 0.9rem;
+  color: #6f6f6f;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 10px;
+  width: 150px;
+}
+
+/* Stats Cards */
+.statsContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  flex: 1;
+}
+
+.statsRow {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+}
+
+.statCard {
+  background: transparent;
+  padding: 14px 24px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-right: 1px solid #e8e8e8;
+}
+
+.statsRow:first-child .statCard {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.statsRow .statCard:last-child {
+  border-right: none;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: #6f6f6f;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.statValue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: right;
+}
+
+.statInput {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: right;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 8px;
+  width: 60px;
+}
+
+.statSelect {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  text-align: right;
+}
+
+/* Course Participants Section */
+.participantsSection {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #1f1f1f;
+  margin-bottom: 20px;
+}
+
+/* Tabs and Controls */
+.tabsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tabButton {
+  padding: 10px 28px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:first-child {
+  border-radius: 25px 0 0 25px;
+}
+
+.tabButton:last-child {
+  border-radius: 0 25px 25px 0;
+}
+
+.tabButtonActive {
+  background: #fff;
+  color: #6092ff;
+  border-color: #6092ff;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.editButton {
+  padding: 10px 28px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton:hover {
+  border-color: #6092ff;
+  color: #6092ff;
+}
+
+.searchInput {
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  width: 200px;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: #6092ff;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 60px 1fr 200px;
+  padding: 12px 16px;
+  background: #f9f9fb;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+}
+
+.tableBody {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 60px 1fr 200px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #fafafa;
+}
+
+.rowNumber {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.personInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.6;
+}
+
+.personDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.personName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.personEmail {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.rollNumber {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  text-align: right;
+}
+
+.department {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  text-align: right;
+}
+
+/* Edit Course Info Button */
+.editCourseInfoRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.editCourseInfoButton {
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid #6092ff;
+  border-radius: 25px;
+  color: #6092ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editCourseInfoButton:hover {
+  background: #6092ff;
+  color: #fff;
+}
+
+/* Remove Button */
+.removeButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.removeButton img {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+}
+
+.removeButton:hover img {
+  opacity: 1;
+}
+
+/* Save Button */
+.saveButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.saveButton {
+  padding: 12px 40px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #6092ff;
+  border: none;
+  border-radius: 25px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(96, 146, 255, 0.3);
+}
+
+.saveButton:hover {
+  background: #4a7de6;
+  box-shadow: 0 4px 12px rgba(96, 146, 255, 0.4);
+}
+
+.saveButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .courseInfoCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statsContainer {
+    width: 100%;
+  }
+
+  .statCard {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 40px 1fr 120px;
+  }
+
+  .searchInput {
+    width: 150px;
+  }
+}

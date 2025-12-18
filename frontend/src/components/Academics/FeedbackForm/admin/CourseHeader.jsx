@@ -199,9 +199,9 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty, adminDep
                                 className={styles.icon}
                               />
                             </button>
-                            {/* <button className={styles.editButton}>
+                            { <button className={styles.editButton}>
                           <img src={edit} alt="Edit" className={styles.iconedit} />
-                        </button> */}
+                        </button> }
                           </div>
                         </div>
 

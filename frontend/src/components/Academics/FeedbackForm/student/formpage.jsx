@@ -30,7 +30,9 @@ export default function FormPage({ feedback }) {
   const currentFeedback = feedback.feedbacks[currentIndex];
   const course = currentFeedback.course;
   const faculty = currentFeedback.faculty;
-  const questions = currentFeedback.answers.map((a) => a.question);
+  const questions = currentFeedback.answers
+    .map((a) => a.question)
+    .sort((a, b) => a.order - b.order);
 
   const handleRatingClick = (qId, value) => {
     setResponses((prev) =>
