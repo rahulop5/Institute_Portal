@@ -103,6 +103,8 @@ import ChangePassword from "./components/Academics/FeedbackForm/login/ChangePass
 import { action as changePasswordAction } from "./components/Academics/FeedbackForm/login/ChangePassword.jsx";
 import OTPVerification from "./components/Academics/FeedbackForm/login/OTPVerification.jsx";
 import CourseDetails from "./components/Academics/FeedbackForm/admin/CourseDetails.jsx";
+import ForgotPassword from "./components/Academics/FeedbackForm/login/ForgotPassword.jsx";
+import ResetPassword from "./components/Academics/FeedbackForm/login/ResetPassword.jsx";
 
 const router = createBrowserRouter([
   {
@@ -370,6 +372,18 @@ const router = createBrowserRouter([
         element: <ChangePassword />,
         action: changePasswordAction,
         loader: checkAuthLoader,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "verify-otp",
+        element: <OTPVerification />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPassword />,
       }
     ],
   },

@@ -15,6 +15,10 @@ const userschema=new mongoose.Schema({
         refPath: "role",
     },
     lastlogin: {type: Date, required: true},
+    resetOtp: { type: String },
+    resetOtpExpire: { type: Date },
+    lastOtpSentAt: { type: Date },
+    otpAttemptCount: { type: Number, default: 0 },
 });
 
 export default mongoose.model("User", userschema);

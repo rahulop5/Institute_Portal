@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, useNavigation, useActionData } from "react-router";
+import { Form, useNavigation, useActionData, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -100,6 +100,9 @@ export default function Register1() {
                 {errors.password && (
                   <p className={styles.error}>{errors.password}</p>
                 )}
+                 <div style={{width: '100%', textAlign: 'right', marginTop: '0.5rem'}}>
+                    <Link to="/forgot-password" style={{color: '#007bff', textDecoration: 'none', fontSize: '0.9rem'}}>Forgot Password?</Link>
+                 </div>
               </div>
 
               <button type="submit" className={styles.btnContinue}>

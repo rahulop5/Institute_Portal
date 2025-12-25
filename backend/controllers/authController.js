@@ -9,6 +9,7 @@ import PrivilegedUser from "../models/PrivilegedUser.js";
 import Admin from "../models/Admin.js";
 import Course from "../models/feedback/Course.js";
 import Enrollment from "../models/feedback/Enrollment.js";
+import nodemailer from "nodemailer";
 
 export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -338,5 +339,129 @@ export const updateName = async (req, res) => {
       message: "Error updating name",
       error: err.message,
     });
+  }
+};
+
+// --- Forgot Password Logic ---
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Rate Limiting: Max 3 emails per 24 hours
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+
+    // Reset count if last attempt was more than 24 hours ago
+    if (user.lastOtpSentAt && user.lastOtpSentAt < oneDayAgo) {
+      user.otpAttemptCount = 0;
+    }
+
+    if (user.otpAttemptCount >= 3) {
+      return res.status(429).json({ message: "Limit exceeded. Try again tomorrow." });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP to DB (valid for 10 minutes)
+    user.resetOtp = otp;
+    user.resetOtpExpire = new Date(now.getTime() + 10 * 60 * 1000); // 10 mins
+    user.lastOtpSentAt = now;
+    user.otpAttemptCount += 1;
+    await user.save();
+
+    // Send Email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP for password reset is: ${otp}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Error sending email" });
+      } else {
+        return res.status(200).json({ message: "OTP sent successfully" });
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.resetOtp || user.resetOtp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (user.resetOtpExpire < new Date()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+
+    return res.status(200).json({ message: "OTP verified successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Double check OTP just in case (though frontend should have verified)
+    if (!user.resetOtp || user.resetOtp !== otp) {
+        return res.status(400).json({ message: "Invalid OTP" });
+    }
+  
+    if (user.resetOtpExpire < new Date()) {
+        return res.status(400).json({ message: "OTP has expired" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashed;
+    // Clear OTP fields
+    user.resetOtp = undefined;
+    user.resetOtpExpire = undefined;
+    
+    await user.save();
+
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
