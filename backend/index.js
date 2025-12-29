@@ -13,7 +13,7 @@ import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
 
 const app=express();
 app.use(cors({
-    origin: "https://feedback-frontend-uk6j.vercel.app"
+    origin: ["https://feedback-frontend-uk6j.vercel.app", "https://feedback.iiits.ac.in"]
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
