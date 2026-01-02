@@ -10,6 +10,7 @@ import ugstudenthonorsroutes from "./routes/ugstudenthonorsRoutes.js"
 import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
 import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
 import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
+import questionsRoutes from "./routes/feedback/questionsRoutes.js";
 
 const app=express();
 app.use(cors({
@@ -34,6 +35,7 @@ app.use("/student/honors", ugstudenthonorsroutes);
 app.use("/student/feedback", feedbackstudentRoutes);
 app.use("/faculty/feedback", feedbackfacultyRoutes);
 app.use("/puser/feedback", feedbackadminRoutes);
+app.use("/questions", questionsRoutes);
 
 
 app.get("/test", (req, res)=>{
