@@ -251,7 +251,7 @@ export const updateFeedback = async (req, res) => {
           });
         }
 
-        const question = await Question.findById(ans.question).select("type");
+        const question = await Question.findById(ans.question).select("type order");
         if (!question) {
           return res.status(400).json({
             message: `Question ${ans.question} not found in database`,
@@ -260,20 +260,30 @@ export const updateFeedback = async (req, res) => {
 
         // Validate response type
         if (question.type === "rating") {
-          const val = Number(ans.response);
-          if (!Number.isInteger(val) || val < 1 || val > 10) {
-            return res.status(400).json({
-              message: `Invalid rating (${ans.response}) for question ${question._id}. Expected 1–10.`,
-            });
+          // Optional questions 14 and 15
+          if ((question.order === 14 || question.order === 15) && (ans.response === null || ans.response === "")) {
+            existingAns.response = null;
+          } else {
+            const val = Number(ans.response);
+            if (!Number.isInteger(val) || val < 1 || val > 10) {
+              return res.status(400).json({
+                message: `Invalid rating (${ans.response}) for question ${question._id}. Expected 1–10.`,
+              });
+            }
+            existingAns.response = val;
           }
-          existingAns.response = val;
         } else if (question.type === "text") {
-          if (typeof ans.response !== "string" || ans.response.trim() === "") {
-            return res.status(400).json({
-              message: `Invalid text response for question ${question._id}`,
-            });
+          // Optional questions 16 and 17
+          if ((question.order === 16 || question.order === 17) && (typeof ans.response !== "string" || ans.response.trim() === "")) {
+             existingAns.response = "";
+          } else {
+            if (typeof ans.response !== "string" || ans.response.trim() === "") {
+              return res.status(400).json({
+                message: `Invalid text response for question ${question._id}`,
+              });
+            }
+            existingAns.response = ans.response.trim();
           }
-          existingAns.response = ans.response.trim();
         }
       }
 
@@ -369,7 +379,7 @@ export const submitFeedback = async (req, res) => {
           });
         }
 
-        const question = await Question.findById(ans.question).select("type").session(session);
+        const question = await Question.findById(ans.question).select("type order").session(session);
         if (!question) {
           await session.abortTransaction();
           session.endSession();
@@ -379,15 +389,20 @@ export const submitFeedback = async (req, res) => {
         }
 
         if (question.type === "rating") {
-          const val = Number(ans.response);
-          if (!Number.isInteger(val) || val < 1 || val > 10) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({
-              message: `Invalid rating (${ans.response}) for question ${question._id}. Expected 1–10.`,
-            });
+          // Optional questions 14 and 15
+          if ((question.order === 14 || question.order === 15) && (ans.response === null || ans.response === "")) {
+             existingAns.response = null;
+          } else {
+            const val = Number(ans.response);
+            if (!Number.isInteger(val) || val < 1 || val > 10) {
+              await session.abortTransaction();
+              session.endSession();
+              return res.status(400).json({
+                message: `Invalid rating (${ans.response}) for question ${question._id}. Expected 1–10.`,
+              });
+            }
+            existingAns.response = val;
           }
-          existingAns.response = val;
         } else if (question.type === "text") {
           //  Text is now optional — only store if provided
           if (typeof ans.response === "string" && ans.response.trim() !== "") {
