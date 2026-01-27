@@ -56,6 +56,9 @@ export default function CourseDetails() {
   // Separate editing states
   const [isEditingCourseInfo, setIsEditingCourseInfo] = useState(false);
   
+  // Custom dropdown state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   // Modal states
   const [showStudentModal, setShowStudentModal] = useState(false);
   const [showFacultyModal, setShowFacultyModal] = useState(false);
@@ -168,29 +171,52 @@ export default function CourseDetails() {
         </div>
 
         <div className={styles.statsContainer}>
-          <div className={styles.statsRow}>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Course Type</span>
-              {isEditingCourseInfo ? (
-                <select
-                  className={styles.statSelect}
-                  value={courseData.courseType}
-                  onChange={(e) => handleInputChange("courseType", e.target.value)}
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Course Type</span>
+            {isEditingCourseInfo ? (
+              <div className={styles.customDropdown}>
+                <button
+                  type="button"
+                  className={styles.dropdownTrigger}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 >
-                  {courseTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className={styles.statValue}>{courseData.courseType}</span>
-              )}
-            </div>
+                  <span>{courseData.courseType}</span>
+                  <span className={`${styles.dropdownArrow} ${isDropdownOpen ? styles.dropdownArrowOpen : ''}`}>▾</span>
+                </button>
+                {isDropdownOpen && (
+                  <div className={styles.dropdownMenu}>
+                    {courseTypes.map((type) => (
+                      <div
+                        key={type}
+                        className={`${styles.dropdownItem} ${courseData.courseType === type ? styles.dropdownItemSelected : ''}`}
+                        onClick={() => {
+                          handleInputChange("courseType", type);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        {type}
+                        {courseData.courseType === type && <span className={styles.checkmark}>✓</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span className={styles.statValue}>{courseData.courseType}</span>
+            )}
+          </div>
 
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Credits</span>
-              {isEditingCourseInfo ? (
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Credits</span>
+            {isEditingCourseInfo ? (
+              <div className={styles.creditInputWrapper}>
+                <button
+                  type="button"
+                  className={styles.creditBtn}
+                  onClick={() => handleInputChange("credits", Math.max(1, courseData.credits - 1))}
+                >
+                  −
+                </button>
                 <input
                   type="number"
                   className={styles.statInput}
@@ -199,22 +225,27 @@ export default function CourseDetails() {
                   min="1"
                   max="10"
                 />
-              ) : (
-                <span className={styles.statValue}>{courseData.credits}</span>
-              )}
-            </div>
+                <button
+                  type="button"
+                  className={styles.creditBtn}
+                  onClick={() => handleInputChange("credits", Math.min(10, courseData.credits + 1))}
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <span className={styles.statValue}>{courseData.credits}</span>
+            )}
           </div>
 
-          <div className={styles.statsRow}>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>No. of Students</span>
-              <span className={styles.statValue}>{courseData.students.length}</span>
-            </div>
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>No. of Students</span>
+            <span className={styles.statValue}>{courseData.students.length}</span>
+          </div>
 
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Faculty Count</span>
-              <span className={styles.statValue}>{courseData.faculty.length}</span>
-            </div>
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Faculty Count</span>
+            <span className={styles.statValue}>{courseData.faculty.length}</span>
           </div>
         </div>
       </div>
@@ -252,7 +283,7 @@ export default function CourseDetails() {
 
           <div className={styles.controls}>
             <button className={styles.editButton} onClick={handleEditClick}>
-              {activeTab === "students" ? "Edit Students" : "Edit Faculty"}
+              Edit
             </button>
             <input
               type="text"
@@ -265,30 +296,32 @@ export default function CourseDetails() {
         </div>
 
         {/* Table */}
-        <div className={styles.tableHeader}>
-          <span></span>
-          <span>Name</span>
-          <span>{activeTab === "students" ? "Roll No." : "Department"}</span>
-        </div>
+        <div className={styles.tableWrapper}>
+          <div className={styles.tableHeader}>
+            <span></span>
+            <span>Name</span>
+            <span>{activeTab === "students" ? "Roll No." : "Department"}</span>
+          </div>
 
-        <div className={styles.tableBody}>
-          {filteredParticipants.map((person, index) => (
-            <div key={person.id} className={styles.tableRow}>
-              <span className={styles.rowNumber}>{index + 1}</span>
-              <div className={styles.personInfo}>
-                <div className={styles.avatar}>
-                  <img src={profileIcon} alt="Avatar" />
+          <div className={styles.tableBody}>
+            {filteredParticipants.map((person, index) => (
+              <div key={person.id} className={styles.tableRow}>
+                <span className={styles.rowNumber}>{index + 1}</span>
+                <div className={styles.personInfo}>
+                  <div className={styles.avatar}>
+                    <img src={profileIcon} alt="Avatar" />
+                  </div>
+                  <div className={styles.personDetails}>
+                    <span className={styles.personName}>{person.name}</span>
+                    <span className={styles.personEmail}>{person.email}</span>
+                  </div>
                 </div>
-                <div className={styles.personDetails}>
-                  <span className={styles.personName}>{person.name}</span>
-                  <span className={styles.personEmail}>{person.email}</span>
-                </div>
+                <span className={activeTab === "students" ? styles.rollNumber : styles.department}>
+                  {activeTab === "students" ? person.rollNumber : person.department}
+                </span>
               </div>
-              <span className={activeTab === "students" ? styles.rollNumber : styles.department}>
-                {activeTab === "students" ? person.rollNumber : person.department}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
