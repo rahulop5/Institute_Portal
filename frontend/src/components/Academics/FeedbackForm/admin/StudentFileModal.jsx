@@ -14,7 +14,7 @@ import PreviewModal from "./PreviewModal.jsx";
 
 import { API_HOST } from "../../../../config";
 
-export default function StudentFileModal({ onClose, onConfirm }) {
+export default function StudentFileModal({ onClose, onConfirm, apiAction, extraData }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -86,18 +86,49 @@ export default function StudentFileModal({ onClose, onConfirm }) {
 
     const formData = new FormData();
     formData.append("file", selectedFile); // send actual file
+    
+    // Check if handling via passed API action prop or default router action
+    if (apiAction) {
+       // Append extra data if any
+       if (extraData) {
+         Object.keys(extraData).forEach(key => {
+            formData.append(key, extraData[key]);
+         });
+       }
 
-    submit(formData, {
-      method: "post",
-      action: "/academics/feedback/admin/addStudentsCSV", // route pointing to addStudentsAction
-      encType: "multipart/form-data",
-    });
+       // Manual Fetch
+       const token = localStorage.getItem("token");
+       fetch(API_HOST + apiAction, {
+           method: "POST",
+           headers: { "Authorization": "Bearer " + token },
+           body: formData
+       })
+       .then(async res => {
+           if (!res.ok) throw new Error("Upload failed");
+           // Success
+           if (onConfirm) onConfirm(); // Trigger callback
+           onClose();
+       })
+       .catch(err => {
+           toast.error("Upload failed: " + err.message);
+           console.error(err);
+       });
 
+    } else {
+        // Default Router Action Behavior
+        submit(formData, {
+          method: "post",
+          action: "/academics/feedback/admin/addStudentsCSV", // route pointing to addStudentsAction
+          encType: "multipart/form-data",
+        });
+        
+        // Don't close the modal immediately to let the toast show
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+    }
+    
     setShowPreview(false);
-    // Don't close the modal immediately to let the toast show
-    setTimeout(() => {
-      onClose();
-    }, 2000);
   };
 
   return (

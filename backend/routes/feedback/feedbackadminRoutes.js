@@ -11,7 +11,9 @@ import {
     resetCourse,
     viewCourse,
     viewFaculty,
-    viewFacultyCourseStatistics
+    viewFacultyCourseStatistics,
+    updateCourseDetails,
+    updateCourseStudents
 } from "../../controllers/feedback/feedbackadminController.js";
 import upload from "../../config/multer.js";
 import { authAdminMiddleware } from "../../controllers/authController.js";
@@ -32,9 +34,15 @@ router.post("/addFacultyCSV", authAdminMiddleware, upload.single("file"), addFac
 router.post("/addStudentsCSV", authAdminMiddleware, upload.single("file"), addStudentsCSV);
 
 //course actions
+router.get("/viewCourse", authAdminMiddleware, viewCourse);
 router.get("/resetcourse", authAdminMiddleware, resetCourse);
 router.delete("/deletecourse", authAdminMiddleware, deleteCourse);
 router.post("/addFacultyStudentstoCourse", authAdminMiddleware, upload.single("file"), addFacultyStudentstoCourse);
+
+// Update course details
+router.post("/updateCourseDetails", authAdminMiddleware, updateCourseDetails);
+// Update course students (CSV)
+router.post("/updateCourseStudents", authAdminMiddleware, upload.single("file"), updateCourseStudents);
 
 //faculty actions(only viewing)
 router.get("/viewFaculty", authAdminMiddleware, viewFaculty);

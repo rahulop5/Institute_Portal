@@ -13,10 +13,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { API_HOST } from "../../../../config";
 
 // Added default value for batchWiseCourses
+import { useNavigate } from "react-router-dom";
+
 export default function CoursesHeader({ batchWiseCourses = {}, faculty, adminDepartments }) {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const submit = useSubmit();
+  const navigate = useNavigate();
 
   // NEW: State for selected Semester
   const [selectedSemester, setSelectedSemester] = useState("Monsoon");
@@ -172,7 +175,12 @@ export default function CoursesHeader({ batchWiseCourses = {}, faculty, adminDep
 
                   <div className={styles.grid}>
                     {coursesInBatch.map((course) => (
-                      <div key={course.id} className={styles.card}>
+                      <div 
+                        key={course.id} 
+                        className={styles.card} 
+                        onClick={() => navigate(`${course.id}`)}
+                        style={{ cursor: "pointer" }}
+                      >
                         <div className={styles.topRow}>
                           <div className={styles.courseInfo}>
                             <img

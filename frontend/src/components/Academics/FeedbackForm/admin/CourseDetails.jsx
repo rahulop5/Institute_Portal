@@ -1,55 +1,40 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLoaderData } from "react-router-dom";
 import styles from "../styles/CourseDetails.module.css";
 import courseIcon from "../../../../assets/math1.png";
 import profileIcon from "../../../../assets/studenticon.svg";
 import StudentFileModal from "./StudentFileModal";
 import FacultySelectModal from "./FacultySelectModal";
-
-// Dummy data for all available faculty - will come from API
-const allAvailableFaculty = [
-  { id: 1, name: "Dr. Ramesh Kumar", email: "ramesh.k@iiits.in", department: "CSE" },
-  { id: 2, name: "Dr. Priya Sharma", email: "priya.s@iiits.in", department: "CSE" },
-  { id: 3, name: "Dr. Anil Verma", email: "anil.v@iiits.in", department: "CSE" },
-  { id: 4, name: "Dr. Sneha Gupta", email: "sneha.g@iiits.in", department: "ECE" },
-  { id: 5, name: "Dr. Vikram Singh", email: "vikram.s@iiits.in", department: "ECE" },
-  { id: 6, name: "Dr. Kavya Nair", email: "kavya.n@iiits.in", department: "MDS" },
-  { id: 7, name: "Dr. Rajesh Menon", email: "rajesh.m@iiits.in", department: "CSE" },
-  { id: 8, name: "Dr. Lakshmi Iyer", email: "lakshmi.i@iiits.in", department: "MDS" },
-];
-
-// Dummy data - will be replaced with API data later
-const dummyCourseData = {
-  courseId: "CS2018",
-  courseName: "Theory of Computation",
-  courseCode: "CS2018",
-  courseType: "Program Elective",
-  credits: 4,
-  studentCount: 243,
-  facultyCount: 3,
-  students: [
-    { id: 1, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 2, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 3, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 4, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 5, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 6, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-    { id: 7, name: "Sahal Ansar Theparambil", email: "sahalansar.t23@iiits.in", rollNumber: "S20230010210" },
-  ],
-  faculty: [
-    { id: 1, name: "Dr. Ramesh Kumar", email: "ramesh.k@iiits.in", department: "CSE" },
-    { id: 2, name: "Dr. Priya Sharma", email: "priya.s@iiits.in", department: "CSE" },
-    { id: 3, name: "Dr. Anil Verma", email: "anil.v@iiits.in", department: "CSE" },
-  ],
-};
+import { API_HOST } from "../../../../config"; // Ensure this is imported
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const courseTypes = ["Core", "Program Elective", "Open Elective", "Lab"];
 
 export default function CourseDetails() {
   const navigate = useNavigate();
+  const { course, students, allAvailableFaculty } = useLoaderData();
   
+  // Transform backend data to expected state format
+  const initialCourseData = {
+    courseId: course._id,
+    courseName: course.name,
+    courseCode: course.code,
+    courseType: course.coursetype,
+    credits: course.credits,
+    studentCount: students.length,
+    facultyCount: course.faculty.length,
+    // Map _id to id for Students
+    students: students.map(s => ({ ...s, id: s._id })),
+    // Map _id to id for Faculty (course.faculty populated)
+    faculty: course.faculty.map(f => ({ ...f, id: f._id })),
+  };
+
+  // Map allAvailableFaculty _id to id for Modal
+  const mappedAvailableFaculty = allAvailableFaculty.map(f => ({ ...f, id: f._id }));
+
   // Course data state
-  const [courseData, setCourseData] = useState(dummyCourseData);
+  const [courseData, setCourseData] = useState(initialCourseData);
   const [activeTab, setActiveTab] = useState("students"); // "students" or "faculty"
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -109,18 +94,48 @@ export default function CourseDetails() {
           f.department.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  // Handle save - will be connected to API later
+  // Handle save - send to backend
   const handleSave = async () => {
-    console.log("Saving course data:", courseData);
-    // TODO: Send data to backend
-    // const response = await fetch(API_HOST + "/admin/feedback/updateCourse", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    //   body: JSON.stringify(courseData),
-    // });
-    alert("Course data saved! (API integration pending)");
-    setIsEditingCourseInfo(false);
-    setHasChanges(false);
+    try {
+        const token = localStorage.getItem("token");
+        const payload = {
+            courseId: courseData.courseId,
+            name: courseData.courseName,
+            code: courseData.courseCode,
+            coursetype: courseData.courseType,
+            credits: courseData.credits,
+            faculty: courseData.faculty,
+            // ug and semester not editable here currently, but if needed add to state
+        };
+
+        const response = await fetch(API_HOST + "/puser/feedback/updateCourseDetails", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": "Bearer " + token 
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || "Failed to update course");
+        }
+
+        toast.success("Course details saved successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+
+        setIsEditingCourseInfo(false);
+        setHasChanges(false);
+        // Optionally reload page to ensure sync
+        navigate(0); 
+
+    } catch (err) {
+        console.error("Save failed:", err);
+        toast.error("Failed to save changes: " + err.message);
+    }
   };
 
   // Handle back navigation
@@ -338,9 +353,11 @@ export default function CourseDetails() {
       {showStudentModal && (
         <StudentFileModal
           onClose={() => setShowStudentModal(false)}
+          apiAction="/puser/feedback/updateCourseStudents"
+          extraData={{ courseId: courseData.courseId }}
           onConfirm={() => {
-            setHasChanges(true);
-            setShowStudentModal(false);
+            // Reload page to fetch updated students
+             setTimeout(() => navigate(0), 1000);
           }}
         />
       )}
@@ -348,7 +365,7 @@ export default function CourseDetails() {
       {/* Faculty Select Modal */}
       {showFacultyModal && (
         <FacultySelectModal
-          allFaculty={allAvailableFaculty}
+          allFaculty={mappedAvailableFaculty}
           currentlySelected={courseData.faculty.map((f) => f.id)}
           onClose={() => setShowFacultyModal(false)}
           onConfirm={(selectedFacultyList) => {

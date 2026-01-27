@@ -66,6 +66,7 @@ import {
   adminDashboardFacultyLoader,
   adminDashboardStudentsLoader,
   adminDashboardCoursesLoader,
+  courseDetailsLoader,
 } from "./components/Academics/FeedbackForm/admin/adminLoaders.jsx";
 import { loader as projectListLoader } from "./components/Academics/BTP/staff/inprogress/ProjectList.jsx";
 import { loader as feedbackRouter } from "./pages/feedback/FeedbackRouter.jsx";
@@ -312,7 +313,13 @@ const router = createBrowserRouter([
                     path: "courses",
                     element: <CoursesTab />,
                     loader: adminDashboardCoursesLoader,
+                    loader: adminDashboardCoursesLoader,
                     action: deleteCourseAction
+                  },
+                  {
+                    path: "courses/:courseId",
+                    element: <CourseDetails />,
+                    loader: courseDetailsLoader, // Import this!
                   },
                   {
                     path: "faculty/:facultyId",

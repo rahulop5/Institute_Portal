@@ -33,3 +33,29 @@ export async function adminDashboardStudentsLoader() {
 export async function adminDashboardCoursesLoader() {
   return await loadData("courses");
 }
+
+export async function courseDetailsLoader({ params }) {
+  const token = localStorage.getItem("token");
+  const courseId = params.courseId;
+  
+  if (!token) return redirect("/login");
+
+  const response = await fetch(
+    API_HOST + `/puser/feedback/viewCourse?courseId=${courseId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!response.ok) {
+    const hehe=await response.json();
+    console.log(hehe.message);
+    if (response.status === 403 || response.status === 404) {
+      const err = await response.json();
+      throw new Error(err.message || "Could not fetch course details");
+    }
+    throw new Response("Failed to fetch course details", { status: 500 });
+  }
+
+  return await response.json();
+}
