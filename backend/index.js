@@ -14,7 +14,7 @@ import questionsRoutes from "./routes/feedback/questionsRoutes.js";
 
 const app=express();
 app.use(cors({
-    origin: ["https://feedback-frontend-uk6j.vercel.app", "https://feedback.iiits.ac.in"],
+    origin: ["https://feedback-frontend-uk6j.vercel.app", "https://feedback.iiits.ac.in", "http://localhost:5173"],
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));

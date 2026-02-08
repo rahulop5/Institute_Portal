@@ -1,16 +1,18 @@
 import mongoose from "mongoose";
 
 const stuschema=new mongoose.Schema({
-    name: {type: String, required: true},
-    email: {type: String, required: true, unique: true},
-    dept: {type: String, enum: ["CSE", "ECE", "MDS"], required: true},
-    batch: {type: String, required: true},//2022, 2023 etc the year they joined
-    rollno: {type: String, required: true, unique: true},
-    phone: {type: String, required: false},
-    ug: {type: String, required: true},
-    section: {type: String, required: false},
-    bin: {type: Number, required: false, default: 3},
-    isBTP: {type: Boolean, required: false, default: true}
+    student: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, unique: true },
+    project: { type: mongoose.Schema.Types.ObjectId, ref: "BTP", default: null },
+    //make sure 2 way binding is done as requests are stored in both this and btptopic.js
+    requests: [
+        {
+            _id: false,
+            topic: { type: mongoose.Schema.Types.ObjectId, ref: "BTPTopic", required: true },
+            subTopicId: { type: mongoose.Schema.Types.ObjectId, required: true },
+            status: { type: String, enum: ["Pending", "Rejected"], default: "Pending" },
+            preference: { type: Number, required: true }
+        }
+    ]
 });
 
 export default mongoose.model("UGStudentBTP", stuschema);

@@ -31,6 +31,7 @@ export const authMiddleware = async (req, res, next) => {
 };
 
 export const authStudentMiddleware = async (req, res, next) => {
+  console.log("authStudentMiddleware");
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({

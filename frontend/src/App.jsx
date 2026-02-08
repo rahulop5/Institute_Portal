@@ -313,7 +313,6 @@ const router = createBrowserRouter([
                     path: "courses",
                     element: <CoursesTab />,
                     loader: adminDashboardCoursesLoader,
-                    loader: adminDashboardCoursesLoader,
                     action: deleteCourseAction
                   },
                   {

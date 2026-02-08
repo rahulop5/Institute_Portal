@@ -8,6 +8,10 @@ export async function loader(){
     switch (role) {
         case "UGStudentBTP":
             return redirect("/academics/btp/student")
+
+        case "Student":
+            console.log("Student");
+            return redirect("/academics/btp/student")
     
         case "Faculty":
             return redirect("/academics/btp/faculty")

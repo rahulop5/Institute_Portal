@@ -43,6 +43,7 @@ export async function loader(){
     const role=localStorage.getItem("role");
     const token=localStorage.getItem("token");
     switch (role) {
+        case "Student":
         case "UGStudentBTP":
             const response=await fetch(API_HOST + "/student/btp", {
                 headers: {
@@ -51,10 +52,12 @@ export async function loader(){
             });
             //add custom messages for 403 and 404
             if(!response.ok){
+                const error=await response.json();
+                console.log(error.message);
                 throw new Response(JSON.stringify({
-                    message: "Error loading BTP dashboard"
+                    message: error.message
                 }), {
-                    status: 500
+                    status: response.status
                 });
             }
             const resData=await response.json();

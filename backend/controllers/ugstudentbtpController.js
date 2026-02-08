@@ -1,1043 +1,245 @@
 import UGStudentBTP from "../models/UGStudentBTP.js";
-import BTPSystemState from "../models/BTPSystemState.js";
-import BTPTeam from "../models/BTPTeam.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
+import Student from "../models/feedback/Student.js";
 
-function buildSimplifiedTeam(team) {
-  const result = { _id: team._id };
-
-  ["bin1", "bin2", "bin3"].forEach((binKey) => {
-    const bin = team[binKey];
-    if (bin && bin.student) {
-      result[binKey] = {
-        email: bin.student.email,
-        rollno: bin.student.rollno,
-        name: bin.student.name,
-        approved: bin.approved,
-      };
-    }
-  });
-
-  return result;
-}
-
-//sending user details too in the response
 export const getBTPDashboard = async (req, res) => {
-  try {
-    const user = await UGStudentBTP.findOne({
-      email: req.user.email,
-    });
-    if (!user) {
-      return res.status(404).json({
-        message: "Error finding the student",
-      });
-    }
-    const year = user.batch;
-    const currstate = await BTPSystemState.findOne({
-      studentbatch: year,
-    });
-    if (!currstate) {
-      return res.status(404).json({
-        message: `No batch found with the year ${year}`,
-      });
-    }
-    switch (currstate.currentPhase) {
-      case "NOT_STARTED":
-        return res.status(200).json({
-          email: user.email,
-          phase: "NS",
-          message: "BTP Projects did not start yet",
-        });
-
-      case "TEAM_FORMATION":
-        switch (user.bin) {
-          case 1:
-            try {
-              const teams = await BTPTeam.find({
-                "bin1.student": user._id,
-              })
-                .populate("bin1.student")
-                .populate("bin2.student")
-                .populate("bin3.student");
-
-              if (!teams) {
-                return res.status(500).json({
-                  email: user.email,
-                  phase: "TF",
-                  bin: user.bin,
-                  message: "Error finding team",
-                });
-              }
-
-              //precomputing ts
-              //sending the available bin2 and bin3 guys/gals
-              const bin23total = await UGStudentBTP.find({
-                batch: user.batch,
-                bin: { $ne: 1 },
-              });
-              //removed the uk guys who already formed a team
-              const bin2filter = await BTPTeam.find(
-                {
-                  "bin2.approved": true,
-                },
-                "bin2.student"
-              );
-              const formatbin2filter = bin2filter.map((stu) => {
-                return stu.bin2.student.toString();
-              });
-
-              const bin3filter = await BTPTeam.find(
-                {
-                  "bin3.approved": true,
-                },
-                "bin3.student"
-              );
-              const formatbin3filter = bin3filter.map((stu) => {
-                return stu.bin3.student.toString();
-              });
-              //here just formatting the DATA filtering aswell
-              const availablebin2bin3 = bin23total.filter((stu) => {
-                return !(
-                  formatbin2filter.includes(stu._id.toString()) ||
-                  formatbin3filter.includes(stu._id.toString())
-                );
-              });
-              const availablebin2 = availablebin2bin3
-                .filter((stu) => {
-                  return stu.bin === 2;
-                })
-                .map((stu) => {
-                  return {
-                    name: stu.name,
-                    rollno: stu.rollno,
-                    email: stu.email,
-                  };
-                });
-              const availablebin3 = availablebin2bin3
-                .filter((stu) => {
-                  return stu.bin === 3;
-                })
-                .map((stu) => {
-                  return {
-                    name: stu.name,
-                    rollno: stu.rollno,
-                    email: stu.email,
-                  };
-                });
-
-              if (teams.length === 0) {
-                return res.status(200).json({
-                  name: user.name,
-                  email: user.email,
-                  phase: "TF",
-                  inteam: 0,
-                  bin: user.bin,
-                  message:
-                    "You are currently not in any full or partial team. Form a team",
-                  availablebin2: availablebin2,
-                  availablebin3: availablebin3,
-                });
-              }
-              if (teams.length > 1) {
-                return res.status(500).json({
-                  email: user.email,
-                  phase: "TF",
-                  bin: user.bin,
-                  message:
-                    "Bin 1 student cant participate in more than one full or partial team",
-                });
-              }
-              const team = teams[0];
-              const simplifiedTeam = buildSimplifiedTeam(team);
-
-              if (!team.bin2 || !team.bin2.student) {
-                simplifiedTeam.availablebin2 = availablebin2;
-              }
-              if (!team.bin3 || !team.bin3.student) {
-                simplifiedTeam.availablebin3 = availablebin3;
-              }
-
-              //im gonna send team id and student email to frontend
-              if (!team?.bin2?.approved || !team?.bin3?.approved) {
-                return res.status(200).json({
-                  name: user.name,
-                  email: user.email,
-                  phase: "TF",
-                  inteam: 1,
-                  bin: user.bin,
-                  message: "Partial team",
-                  team: simplifiedTeam,
-                });
-              }
-              return res.status(200).json({
-                name: user.name,
-                email: user.email,
-                phase: "TF",
-                inteam: 1,
-                bin: user.bin,
-                message: "Full team",
-                team: simplifiedTeam,
-              });
-            } catch (err) {
-              console.log(err);
-              return res.status(500).json({
-                email: user.email,
-                phase: "TF",
-                bin: user.bin,
-                message: "Error loading the details for bin1 student",
-              });
-            }
-
-          case 2:
-          case 3:
-            try {
-              const querystring = `bin${user.bin}.student`;
-              const teams = await BTPTeam.find({
-                [querystring]: user._id,
-              })
-                .populate("bin1.student")
-                .populate("bin2.student")
-                .populate("bin3.student");
-
-              if (!teams) {
-                return res.status(500).json({
-                  email: user.email,
-                  phase: "TF",
-                  bin: user.bin,
-                  message: "Error finding team",
-                });
-              }
-              if (teams.length === 0) {
-                return res.status(200).json({
-                  email: user.email,
-                  inteam: 0,
-                  phase: "TF",
-                  bin: user.bin,
-                  teams: [],
-                  message:
-                    "You are currently not in any full or partial team. Form a team by finding a bin1 student",
-                });
-              }
-
-              const binkey = `bin${user.bin}`;
-              if (teams.length === 1 && teams[0][binkey].approved) {
-                const team = teams[0];
-                const simplifiedTeam = buildSimplifiedTeam(team);
-                if (team.isteamformed) {
-                  return res.status(200).json({
-                    email: user.email,
-                    inteam: 1,
-                    phase: "TF",
-                    bin: user.bin,
-                    message: "Full team",
-                    team: simplifiedTeam,
-                  });
-                }
-                return res.status(200).json({
-                  email: user.email,
-                  phase: "TF",
-                  inteam: 1,
-                  bin: user.bin,
-                  message: "Partial Team but self approved",
-                  team: simplifiedTeam,
-                });
-              }
-              //handle the case where bin2 approved but length>1
-              else {
-                const newteams = teams.map((team) => {
-                  const simplifiedTeam = buildSimplifiedTeam(team);
-                  return simplifiedTeam;
-                });
-                return res.status(200).json({
-                  email: user.email,
-                  inteam: 0,
-                  phase: "TF",
-                  bin: user.bin,
-                  message: "Partial teams but not self approved",
-                  teams: newteams,
-                });
-              }
-            } catch (err) {
-              return res.status(500).json({
-                email: user.email,
-                phase: "TF",
-                bin: user.bin,
-                message: `Error loading the details for bin${user.bin} student`,
-              });
-            }
-
-          default:
-            return res.status(500).json({
-              phase: "TF",
-              message: "Invalid Bin",
-            });
-        }
-      //send addn details like phase etc
-      //write the case where the faculty accepted the request
-      case "FACULTY_ASSIGNMENT":
-        //where tf is the case where the student sent the request
-        //only limited no of requests can be sent by a team and currently im keeping that limit as 3
-        //i should prolly redo this thing
-        try {
-          const querystring = `bin${user.bin}.student`;
-          const teams = await BTPTeam.find({
-            [querystring]: user._id,
-          })
-            .populate("bin1.student")
-            .populate("bin2.student")
-            .populate("bin3.student");
-          if (teams.length === 0) {
-            return res.status(400).json({
-              phase: "FA",
-              email: user.email,
-              message: "Team not found",
-            });
-          }
-          if (teams.length !== 1) {
-            return res.status(400).json({
-              phase: "FA",
-              email: user.email,
-              message: "More than one team found",
-            });
-          }
-          const team = teams[0];
-          if (!team.isteamformed) {
-            return res.status(400).json({
-              phase: "FA",
-              email: user.email,
-              message:
-                "Not all members have approved the request to join this team",
-            });
-          }
-          const filteredteam = {
-            _id: team._id,
-            bin1: {
-              name: team.bin1.student.name,
-              email: team.bin1.student.email,
-              approved: team?.bin1.approved,
-              rollno: team.bin1.student.rollno,
-            },
-            bin2: {
-              name: team.bin2.student.name,
-              email: team.bin2.student.email,
-              approved: team?.bin2.approved,
-              rollno: team.bin2.student.rollno,
-            },
-            bin3: {
-              name: team.bin3.student.name,
-              email: team.bin3.student.email,
-              approved: team?.bin3.approved,
-              rollno: team.bin3.student.rollno,
-            },
-          };
-          const topics = await BTPTopic.find().populate("faculty");
-          let approvedRequest = null;
-          const outgoingRequests = [];
-          const activePref = team.currentPreference || 1;
-
-          topics.forEach((topic) => {
-            topic.requests.forEach((request) => {
-              if (request.teamid.toString() === team._id.toString()) {
-                const matchedTopic = topic.topics.find(
-                  (t) => t._id.toString() === request.topic.toString()
-                );
-                const requestData = {
-                  topicDocId: topic._id,
-                  faculty: {
-                    name: topic.faculty.name,
-                    email: topic.faculty.email,
-                    dept: topic.faculty.dept,
-                  },
-                  requestedTopic: matchedTopic,
-                  isapproved: request.isapproved,
-                  preference: request.preference,
-                };
-
-                if (request.isapproved) {
-                  approvedRequest = requestData;
-                } else if (request.preference === activePref) {
-                  // only show active round
-                  outgoingRequests.push(requestData);
-                }
-              }
-            });
-          });
-
-          return res.status(200).json({
-            phase: "FA",
-            email: user.email,
-            facultyassigned: approvedRequest ? true : false,
-            bin: user.bin,
-            team: filteredteam,
-            message: "BTP Topics",
-            topics: topics.map((topic) => ({
-              _id: topic._id,
-              faculty: {
-                name: topic.faculty.name,
-                email: topic.faculty.email,
-                dept: topic.faculty.dept,
-                role: topic.faculty.role,
-              },
-              topics: topic.topics,
-              requests: topic.requests,
-            })),
-            outgoingRequests: approvedRequest
-              ? [approvedRequest]
-              : outgoingRequests,
-          });
-        } catch (err) {
-          console.log(err);
-          return res.status(500).json({
-            message: "Error loading the dashboard in Faculty assignment phase",
-          });
-        }
-
-      case "IN_PROGRESS":
-        //redo this too
-        //send bin of the user in the response so that the frontend guy can do conditional rendering of the add update
-        try {
-          const projectarr = await BTP.find({
-            "students.student": user._id,
-          })
-            .populate("students.student")
-            .populate("guide")
-            .populate("evaluators.evaluator");
-          if (projectarr.length !== 1) {
-            return res.status(404).json({
-              message: "Either no project found or too many projects found",
-            });
-          }
-          const project = projectarr[0];
-          const evaluations = await BTPEvaluation.find({
-            projectRef: project._id,
-          }).sort({ time: 1 });
-
-          const updates = project.updates.sort(
-            (a, b) => new Date(a.time) - new Date(b.time)
-          );
-
-          const formattedEvaluations = [];
-          let remainingUpdates = [...updates]; // mutable copy
-
-          for (let i = 0; i < evaluations.length; i++) {
-            const currEval = evaluations[i];
-            const nextEvalTime = evaluations[i + 1]?.time || null;
-
-            // Get updates before the *next* evaluation (or after current if last)
-            const evalUpdates = remainingUpdates.filter((u) => {
-              return u.time < (nextEvalTime || new Date(8640000000000000)); // max date if last
-            });
-
-            // Remove matched updates from remainingUpdates
-            remainingUpdates = remainingUpdates.filter(
-              (u) => !evalUpdates.includes(u)
-            );
-
-            formattedEvaluations.push({
-              _id: currEval._id,
-              time: currEval.time,
-              remark: currEval.remark,
-              resources: currEval.resources,
-              updates: evalUpdates,
-              canstudentsee: currEval.canstudentsee,
-              marksgiven: currEval.canstudentsee
-                ? currEval.marksgiven.filter(
-                    (m) => m.student.toString() === user._id.toString()
-                  )
-                : null,
-            });
-          }
-          return res.status(200).json({
-            email: user.email,
-            bin: user.bin,
-            //hardcoded start
-            nextEvalDate: {
-              month: "March",
-              day: 15,
-            },
-            currentScore: {
-              value: 48,
-              outOf: 50,
-            },
-            //hardcoded end
-            phase: "IP",
-            message: "Student Progress Dashboard",
-            project: {
-              name: project.name,
-              about: project.about,
-              studentbatch: project.studentbatch,
-              guide: {
-                name: project.guide.name,
-                email: project.guide.email,
-              },
-              evaluators: project.evaluators.map((e) => ({
-                name: e.evaluator.name,
-                email: e.evaluator.email,
-              })),
-              team: project.students.map((s) => ({
-                _id: s.student._id,
-                name: s.student.name,
-                email: s.student.email,
-              })),
-              evaluations: formattedEvaluations,
-              latestUpdates: updates, // updates after last evaluation
-            },
-          });
-        } catch (err) {
-          console.log(err);
-          return res.status(500).json({
-            message: "Error loading the BTP dashboard in Progress phase",
-          });
-        }
-
-      case "COMPLETED":
-        break;
-
-      default:
-        return res.status(500).json({
-          message: "Invalid Phase",
-        });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({
-      message: "Error loading the BTP dashboard",
-    });
-  }
-};
-
-export const verifyBinAndPhase = ({ bin, phase }) => {
-  return async (req, res, next) => {
     try {
-      const user = await UGStudentBTP.findOne({
-        email: req.user.email,
-      });
-      if (!bin.includes(user.bin)) {
-        return res.status(403).json({
-          message: "A student in your bin cant access this page",
-        });
-      }
-      const currphase = await BTPSystemState.findOne({
-        studentbatch: user.batch,
-      });
-      if (currphase.currentPhase !== phase) {
-        return res.status(400).json({
-          message: "Cant access this page now",
-        });
-      }
-      req.user = user;
-      next();
-    } catch (err) {
-      return res.status(500).json({
-        message: "Error verifying the bin of student",
-      });
-    }
-  };
-};
-
-//prolly add a feature where the invite expires after smtime
-export const createTeam = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(500).json({
-        message: "No user id found",
-      });
-    }
-    if (!req.body.bin2email || !req.body.bin3email) {
-      return res.status(400).json({
-        message: "No bin2 or bin3 student selected",
-      });
-    }
-    const teams = await BTPTeam.find({
-      "bin1.student": req.user._id,
-    });
-    if (teams.length !== 0) {
-      return res.status(400).json({
-        message: "Cant create team when you are already in one",
-      });
-    }
-    const bin2stu = await UGStudentBTP.findOne({
-      email: req.body.bin2email,
-    });
-    const bin3stu = await UGStudentBTP.findOne({
-      email: req.body.bin3email,
-    });
-    if (!bin2stu || !bin3stu) {
-      return res.status(400).json({
-        message: "Invalid email(s)",
-      });
-    }
-    if (req.user.batch !== bin2stu.batch || req.user.batch !== bin3stu.batch) {
-      return res.status(400).json({
-        message: "Cant form a team with students of different batch",
-      });
-    }
-    //verify bin2 or 3 and see they didnt approve any other team
-    const checkbinandverify = async (stu, bin = -1) => {
-      if (bin === -1) {
-        return res.status(500).json({
-          message: "Error: No bin provided",
-        });
-      }
-      if (!stu) {
-        return res.status(400).json({
-          message: `Invalid email for bin${bin}`,
-        });
-      }
-      if (stu.bin !== bin) {
-        return res.status(400).json({
-          message: `Invalid bin for ${stu.email}`,
-        });
-      }
-      const str = `bin${bin}.student`;
-      const teamss = await BTPTeam.find({
-        [str]: stu._id,
-      });
-      teamss.forEach((team) => {
-        if (team[`bin${bin}`].approved) {
-          throw {
-            status: 400,
-            message: `Can't create team because ${stu.email} is already in another approved team`,
-          };
+        // 1. Find the Student record from feedback DB
+        const student = await Student.findOne({ email: req.user.email });
+        if (!student) {
+            return res.status(404).json({ message: "Student not found in database" });
         }
-      });
-      return true;
-    };
-    const bin2Check = await checkbinandverify(bin2stu, 2);
-    const bin3Check = await checkbinandverify(bin3stu, 3);
-    if (bin2Check && bin3Check) {
-      const newteam = new BTPTeam({
-        batch: req.user.batch,
-        bin1: {
-          student: req.user._id,
-          approved: true,
-        },
-        bin2: {
-          student: bin2stu._id,
-          approved: false,
-        },
-        bin3: {
-          student: bin3stu._id,
-          approved: false,
-        },
-        isteamformed: false,
-      });
-      await newteam.save();
-      return res.status(201).json({
-        message: `Team formation request sent to ${bin2stu.email} and ${bin3stu.email} successfully`,
-      });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error creating team",
-    });
-  }
-};
 
-export const approveTeamRequest = async (req, res) => {
-  try {
-    if (!req.body.teamid) {
-      return res.status(400).json({ message: "No team id found" });
-    }
-    if (!req.user) {
-      return res.status(500).json({ message: "No user found" });
-    }
+        // 2. Try to find the BTP-specific record (read-only, no create)
+        const btpUser = await UGStudentBTP.findOne({ student: student._id })
+            .populate({
+                path: 'project',
+                populate: [
+                    { path: 'guide', select: 'name email dept' },
+                    { path: 'evaluators.evaluator', select: 'name email' },
+                    // Access nested student via population if needed, but we have the IDs
+                ]
+            })
+            // Populate requests to check status
+            .populate({
+                 path: 'requests.topic',
+                 select: 'faculty' 
+            });
 
-    const binstr = `bin${req.user.bin}.student`;
-    const binstrshort = `bin${req.user.bin}`;
+        // 3. Scenario A: Student is already in a Project
+        if (btpUser && btpUser.project) {
+            const project = btpUser.project;
+            
+            // Fetch evaluations
+            const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+            
+            // Format updates and evaluations
+            const updates = project.updates ? project.updates.sort((a, b) => new Date(a.time) - new Date(b.time)) : [];
+            const formattedEvaluations = [];
+            let remainingUpdates = [...updates];
 
-    const teams = await BTPTeam.find({
-      [binstr]: req.user._id,
-    });
+            for (let i = 0; i < evaluations.length; i++) {
+                const currEval = evaluations[i];
+                const nextEvalTime = evaluations[i + 1]?.time || null;
+                const evalUpdates = remainingUpdates.filter((u) => u.time < (nextEvalTime || new Date(8640000000000000)));
+                remainingUpdates = remainingUpdates.filter((u) => !evalUpdates.includes(u));
 
-    teams.forEach((team) => {
-      if (team[binstrshort] && team[binstrshort].approved) {
-        throw {
-          status: 400,
-          message: "Cant be in more than one team",
-        };
-      }
-    });
+                formattedEvaluations.push({
+                    _id: currEval._id,
+                    time: currEval.time,
+                    remark: currEval.remark,
+                    resources: currEval.resources,
+                    updates: evalUpdates,
+                    canstudentsee: currEval.canstudentsee,
+                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === student._id.toString()) : null
+                });
+            }
 
-    const currteam = teams.filter(
-      (team) => team._id.toString() === req.body.teamid
-    );
+            // Re-fetch project to get student names (efficient populate)
+            const projectPopulated = await BTP.findById(project._id)
+                .populate({
+                    path: 'students.student',
+                    populate: { path: 'student', select: 'name email rollNumber' }
+                })
+                .populate('guide', 'name email')
+                .populate('evaluators.evaluator', 'name email');
 
-    if (currteam.length === 0) {
-      return res.status(400).json({
-        message: "Cant approve a request you didnt get",
-      });
-    }
+            return res.status(200).json({
+                email: student.email,
+                phase: "IN_PROGRESS",
+                project: {
+                    _id: projectPopulated._id,
+                    name: projectPopulated.name,
+                    about: projectPopulated.about,
+                    studentbatch: projectPopulated.studentbatch,
+                    guide: projectPopulated.guide,
+                    evaluators: projectPopulated.evaluators.map(e => e.evaluator),
+                    team: projectPopulated.students.map(s => ({
+                        name: s.student?.student?.name || "Unknown",
+                        email: s.student?.student?.email || "",
+                        rollno: s.student?.student?.rollNumber || ""
+                    })),
+                    evaluations: formattedEvaluations,
+                    latestUpdates: remainingUpdates
+                }
+            });
+        }
 
-    if (currteam.length === 1) {
-      const binstrapproved = `${binstrshort}.approved`;
-      let setter = { [binstrapproved]: true };
+        // 4. Scenario B: No Project (or no BTP record yet). Show Topics.
+        const topics = await BTPTopic.find().populate('faculty', 'name email dept');
+        
+        const myRequests = btpUser ? btpUser.requests : [];
 
-      const otherbin = req.user.bin === 2 ? "bin3" : "bin2";
-      // check if other bin exists and is already approved
-      if (currteam[0][otherbin] && currteam[0][otherbin].approved) {
-        setter.isteamformed = true;
-      }
+        const formattedTopics = topics.map(topicDoc => ({
+            _id: topicDoc._id,
+            faculty: topicDoc.faculty,
+            topics: topicDoc.topics.map(t => {
+                // Find status of this specific topic in user's requests
+                // matching logic: request.topic (Doc ID) == topicDoc._id AND request.subTopicId == t._id
+                const req = myRequests.find(r => 
+                    r.topic.toString() === topicDoc._id.toString() && 
+                    r.subTopicId.toString() === t._id.toString()
+                );
+                return {
+                    ...t.toObject(),
+                    requestStatus: req ? req.status : null
+                };
+            })
+        }));
 
-      await BTPTeam.findByIdAndUpdate(
-        currteam[0]._id,
-        { $set: setter },
-        { new: true }
-      );
-
-      // delete any other pending teams for this user
-      await BTPTeam.deleteMany({
-        _id: { $ne: req.body.teamid },
-        [binstr]: { $eq: req.user._id },
-      });
-
-      return res.status(201).json({
-        message: "Approved team request successfully",
-      });
-    } else {
-      throw {
-        status: 500,
-        message: "More than one team found with the same team id",
-      };
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error approving the request",
-    });
-  }
-};
-
-export const rejectTeamRequest = async (req, res) => {
-  try {
-    if (!req.body.teamid) {
-      return res.status(400).json({ message: "No team id found" });
-    }
-    if (!req.user) {
-      return res.status(500).json({ message: "No user found" });
-    }
-
-    const binstr = `bin${req.user.bin}`;
-    const studentField = `${binstr}.student`;
-
-    // Atomic find + update
-    const currteam = await BTPTeam.findOneAndUpdate(
-      {
-        _id: req.body.teamid,
-        [studentField]: req.user._id,
-        [`${binstr}.approved`]: { $ne: true }, // reject only if not approved
-      },
-      { $unset: { [binstr]: "" } }, // wipe just that bin
-      { new: true } // return updated doc if needed
-    );
-
-    if (!currteam) {
-      return res.status(400).json({
-        message: "Cannot reject request (either not found or already approved)",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Successfully rejected the request",
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error rejecting the request",
-    });
-  }
-};
-
-export const addTeamMember = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const { bin, email } = req.body;
-    if (!bin || !email) {
-      return res.status(400).json({ message: "Bin and email are required" });
-    }
-
-    if (![2, 3].includes(Number(bin))) {
-      return res
-        .status(400)
-        .json({ message: "You can only add to bin2 or bin3" });
-    }
-
-    const team = await BTPTeam.findOne({ "bin1.student": req.user._id });
-    if (!team) {
-      return res
-        .status(404)
-        .json({ message: "Team not found for current user" });
-    }
-
-    // Ensure that slot is empty
-    if (team[`bin${bin}`] && team[`bin${bin}`].student) {
-      return res
-        .status(400)
-        .json({ message: `Bin${bin} already has a member` });
-    }
-
-    // Find the student to add
-    const stu = await UGStudentBTP.findOne({ email });
-    if (!stu) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    // Validate batch
-    if (stu.batch !== team.batch) {
-      return res
-        .status(400)
-        .json({ message: "Student batch does not match team batch" });
-    }
-
-    // Validate bin number
-    if (stu.bin !== Number(bin)) {
-      return res.status(400).json({ message: `Student is not from bin${bin}` });
-    }
-
-    // Check if student is already in an approved team
-    const existingTeams = await BTPTeam.find({
-      [`bin${bin}.student`]: stu._id,
-    });
-    for (let t of existingTeams) {
-      if (t[`bin${bin}`].approved) {
-        return res.status(400).json({
-          message: `${stu.email} is already in another approved team`,
+        return res.status(200).json({
+            email: student.email,
+            phase: "TOPIC_SELECTION",
+            message: "Select a topic",
+            topics: formattedTopics,
+            myRequests: myRequests
         });
-      }
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error loading BTP dashboard" });
     }
-    // Add to team
-    team[`bin${bin}`] = {
-      student: stu._id,
-      approved: false,
-    };
-
-    await team.save();
-
-    return res.status(200).json({
-      message: `Added ${stu.email} to bin${bin} successfully. Request pending approval.`,
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error adding team member",
-    });
-  }
 };
 
-export const setTeamPreferences = async (req, res) => {
-  try {
-    const { teamId, preferences } = req.body;
-    // preferences: [{ topicDoc, topicId }, ...] length must be 4
+export const requestTopic = async (req, res) => {
+    try {
+        const { topicDocId, topicId, preference } = req.body; 
+        if (!topicDocId || !topicId) {
+            return res.status(400).json({ message: "Topic details required" });
+        }
 
-    if (!teamId || !Array.isArray(preferences) || preferences.length !== 4) {
-      return res.status(400).json({ message: "Send exactly 4 preferences" });
+        // 1. Get Student
+        const student = await Student.findOne({ email: req.user.email });
+        if (!student) return res.status(404).json({ message: "Student not found" });
+
+        // 2. Find or Create UGStudentBTP (Lazy Creation)
+        let btpUser = await UGStudentBTP.findOne({ student: student._id });
+        if (!btpUser) {
+            btpUser = new UGStudentBTP({ student: student._id });
+            // Don't save yet, valid later
+        }
+
+        // 3. Validation
+        if (btpUser.project) {
+            return res.status(400).json({ message: "You are already in a project" });
+        }
+
+        // Check duplicates
+        const existingReq = btpUser.requests.find(r => 
+            r.topic.toString() === topicDocId && 
+            r.subTopicId.toString() === topicId
+        );
+        if (existingReq) {
+            return res.status(400).json({ message: "Already requested this topic" });
+        }
+
+        // 4. Add Request
+        btpUser.requests.push({
+            topic: topicDocId,
+            subTopicId: topicId,
+            status: "Pending",
+            preference: preference || (btpUser.requests.length + 1)
+        });
+        await btpUser.save(); // Creates the record if it didn't exist
+
+        // 5. Update BTPTopic
+        const topicDoc = await BTPTopic.findById(topicDocId);
+        if (!topicDoc) return res.status(404).json({ message: "Topic document not found" });
+
+        const subTopic = topicDoc.topics.id(topicId);
+        if (!subTopic) return res.status(404).json({ message: "Specific topic not found" });
+
+        topicDoc.requests.push({
+            student: btpUser._id,
+            topic: topicId,
+            isapproved: false,
+            preference: preference || (btpUser.requests.length)
+        });
+        await topicDoc.save();
+
+        return res.status(200).json({ message: "Topic requested successfully" });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error requesting topic" });
     }
-
-    const team = await BTPTeam.findById(teamId);
-    if (!team) return res.status(404).json({ message: "Team not found" });
-    if (!team.isteamformed) {
-      return res.status(400).json({ message: "Team not fully approved yet" });
-    }
-    // Only bin1 can set
-    if (team.bin1.student.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Only bin1 can set preferences" });
-    }
-    if (team.facultyAssigned) {
-      return res.status(400).json({ message: "Faculty already assigned" });
-    }
-
-    // Validate topics exist; also dedupe
-    const seen = new Set();
-    for (let i = 0; i < 4; i++) {
-      const p = preferences[i];
-      if (!p || !p.topicDoc || !p.topicId) {
-        return res
-          .status(400)
-          .json({ message: `Invalid preference at index ${i}` });
-      }
-      const key = `${p.topicDoc}:${p.topicId}`;
-      if (seen.has(key)) {
-        return res
-          .status(400)
-          .json({ message: "Duplicate topics in preferences" });
-      }
-      seen.add(key);
-
-      const doc = await BTPTopic.findById(p.topicDoc);
-      if (!doc)
-        return res
-          .status(400)
-          .json({ message: `Topic doc not found for pref ${i + 1}` });
-      const sub = doc.topics.id(p.topicId);
-      if (!sub)
-        return res
-          .status(400)
-          .json({ message: `Topic not found for pref ${i + 1}` });
-    }
-
-    // Save preferences to team
-    team.preferences = preferences.map((p) => ({
-      topicDoc: p.topicDoc,
-      topicId: p.topicId,
-      order: p.order, 
-    }));
-
-    team.currentPreference = 1;
-    await team.save();
-
-    // Send ONLY round-1 requests to corresponding topic doc
-    const pref1 = team.preferences.find((p) => p.order === 1);
-    const doc1 = await BTPTopic.findById(pref1.topicDoc);
-    // Prevent duplicates if already present
-    const exists = doc1.requests.some(
-      (r) =>
-        r.teamid.toString() === team._id.toString() &&
-        r.topic.toString() === pref1.topicId.toString() &&
-        r.preference === 1
-    );
-    if (!exists) {
-      doc1.requests.push({
-        teamid: team._id,
-        topic: pref1.topicId,
-        isapproved: false,
-        preference: 1,
-      });
-      await doc1.save();
-    }
-
-    return res
-      .status(201)
-      .json({ message: "Preferences saved and Round-1 request sent" });
-  } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error setting preferences",
-    });
-  }
 };
 
-//here if any of the req is already approved then we shouldnt allow them to send the request
-export const facultyAssignmentRequest = async (req, res) => {
-  if (!req.body.docId || !req.body.topicId || !req.body.teamId) {
-    return res.status(400).json({ message: "Invalid details sent" });
-  }
-  try {
-    const { docId, topicId, teamId } = req.body;
+export const withdrawRequest = async (req, res) => {
+    try {
+        const { topicDocId, topicId } = req.body;
+        
+        const student = await Student.findOne({ email: req.user.email });
+        if (!student) return res.status(404).json({ message: "Student not found" });
 
-    const team = await BTPTeam.findById(teamId);
-    if (!team) return res.status(400).json({ message: "Invalid team" });
-    if (team.bin1.student.toString() !== req.user._id.toString()) {
-      return res.status(400).json({ message: "Wrong Team Id" });
+        const btpUser = await UGStudentBTP.findOne({ student: student._id });
+        if (!btpUser) return res.status(404).json({ message: "No requests found" });
+
+        // Remove from UGStudentBTP
+        btpUser.requests = btpUser.requests.filter(r => 
+            !(r.topic.toString() === topicDocId && r.subTopicId.toString() === topicId)
+        );
+        await btpUser.save();
+
+        // Remove from BTPTopic
+        const topicDoc = await BTPTopic.findById(topicDocId);
+        if (topicDoc) {
+            // Request in BTPTopic stores `student: UGStudentBTP_ID` and `topic: subTopicId`
+            topicDoc.requests = topicDoc.requests.filter(r => 
+                !(r.student.toString() === btpUser._id.toString() && r.topic.toString() === topicId)
+            );
+            await topicDoc.save();
+        }
+
+        return res.status(200).json({ message: "Request withdrawn successfully" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error withdrawing request" });
     }
-    if (!team.isteamformed) {
-      return res.status(400).json({ message: "Team not formed" });
-    }
-    if (team.facultyAssigned) {
-      return res.status(400).json({ message: "Faculty already assigned" });
-    }
-    if (team.currentPreference < 1 || team.currentPreference > 4) {
-      return res.status(400).json({ message: "Preferences not initialized" });
-    }
-
-    // Only allow sending request that matches the active preference
-    const active = team.preferences.find(
-      (p) => p.order === team.currentPreference
-    );
-    if (
-      !active ||
-      active.topicDoc.toString() !== docId ||
-      active.topicId.toString() !== topicId
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Can only send active preference request" });
-    }
-
-    const facdoc = await BTPTopic.findById(docId);
-    if (!facdoc)
-      return res
-        .status(400)
-        .json({ message: "No faculty with that topic found" });
-    const topic = facdoc.topics.id(topicId);
-    if (!topic)
-      return res
-        .status(400)
-        .json({ message: "No topic with that faculty found" });
-
-    // Block if already approved elsewhere
-    const alreadyApproved = await BTPTopic.findOne({
-      requests: { $elemMatch: { teamid: teamId, isapproved: true } },
-    });
-    if (alreadyApproved) {
-      return res.status(400).json({ message: "Already approved by a faculty" });
-    }
-
-    // Prevent duplicate request
-    const exists = facdoc.requests.some(
-      (r) =>
-        r.teamid.toString() === teamId &&
-        r.topic.toString() === topicId &&
-        r.preference === team.currentPreference
-    );
-    if (exists)
-      return res
-        .status(400)
-        .json({ message: "Request already sent for this round" });
-
-    facdoc.requests.push({
-      teamid: teamId,
-      topic: topicId,
-      isapproved: false,
-      preference: team.currentPreference,
-    });
-    await facdoc.save();
-
-    return res
-      .status(201)
-      .json({ message: "Request sent for active preference" });
-  } catch (err) {
-    console.log(err);
-    return res.status(err.status || 500).json({
-      message: err.message || "Error sending request",
-    });
-  }
 };
 
 export const addUpdatetoProject = async (req, res) => {
-  try {
-    if (!req.body.update) {
-      return res.status(400).json({
-        message: "Incomplete Request",
-      });
-    }
-    const { update } = req.body;
-    const project = await BTP.findOne({
-      "students.student": req.user._id,
-    });
-    if (!project) {
-      return res.status(404).json({
-        message: "No project found for this student",
-      });
-    }
-    project.updates.push({
-      update,
-      time: new Date(),
-    });
-    await project.save();
+    try {
+        if (!req.body.update) return res.status(400).json({ message: "Incomplete Request" });
+        const { update } = req.body;
+        
+        const student = await Student.findOne({ email: req.user.email });
+        if (!student) return res.status(404).json({ message: "Student not found" });
 
-    return res.status(200).json({
-      message: "Update added successfully",
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({
-      message: "Error adding update",
-    });
-  }
+        const btpUser = await UGStudentBTP.findOne({ student: student._id });
+        if (!btpUser || !btpUser.project) return res.status(400).json({ message: "No project assigned" });
+
+        const project = await BTP.findById(btpUser.project);
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        project.updates.push({ update, time: new Date() });
+        await project.save();
+
+        return res.status(200).json({ message: "Update added successfully" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error adding update" });
+    }
 };
