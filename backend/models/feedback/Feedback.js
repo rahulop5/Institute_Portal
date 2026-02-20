@@ -16,7 +16,7 @@ const facultyFeedbackSchema = new mongoose.Schema({
 const feedbackSchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
-    semester: { type: String, required: true }, // e.g. "Fall-2025"
+    semester: { type: String, required: true }, // e.g. "S26" = Spring 2026, "M25" = Monsoon 2025
     feedbacks: [facultyFeedbackSchema], // one per faculty chosen
     currentPage: { type: Number, default: 0 }, // track progress across faculty pages
     submitted: { type: Boolean, default: false, required: true }

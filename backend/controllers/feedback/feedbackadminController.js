@@ -11,6 +11,7 @@ import Question from "../../models/feedback/Question.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Feedback from "../../models/feedback/Feedback.js";
 import Admin from "../../models/Admin.js";
+import { getCurrentSemester, getPreviousSemester } from "../../utils/semesterUtils.js";
 
 //dashboard
 export const adminDashboardStudent = async (req, res) => {
@@ -81,12 +82,15 @@ export const adminDashboardFaculty = async (req, res) => {
 
     const result = [];
 
+    // Determine semester filter
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
     // For each faculty, gather analytics
     for (const faculty of faculties) {
       const analytics = await Analytics.findOne({ faculty: faculty._id })
         .populate({
           path: "courses.course",
-          select: "name code",
+          select: "name code semester",
         })
         .populate({
           path: "courses.questions.question",
@@ -114,6 +118,8 @@ export const adminDashboardFaculty = async (req, res) => {
 
       for (const c of analytics.courses) {
         if (!c.course) continue;
+        // Filter by semester if the course has semester info
+        if (semesterFilter && c.course.semester && c.course.semester !== semesterFilter) continue;
 
         const qAverages = c.questions
           .filter((q) => q.question && q.question.type === "rating")
@@ -161,9 +167,20 @@ export const adminDashboardFaculty = async (req, res) => {
       bottomFaculty = sortedFaculty[sortedFaculty.length - 1];
     }
 
+    // Fetch available semesters for dropdown
+    const allSemesters = await Course.distinct("semester");
+    allSemesters.sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
     // Send final aggregated response
     return res.status(200).json({
-      isStaff: adminFn.isStaff, // Send isStaff flag
+      isStaff: adminFn.isStaff,
+      currentSemester: semesterFilter,
+      availableSemesters: allSemesters,
       totalFaculties: faculties.length,
       departmentAverage: adminFn.isStaff ? "N/A" : departmentAverage,
       topFaculty: adminFn.isStaff ? null : topFaculty,
@@ -192,8 +209,11 @@ export const adminDashboardCourse = async (req, res) => {
     }
     const adminDept = adminFn.departments;
 
-    // Fetch all courses for the admin's department
-    const courses = await Course.find({ department: { $in: adminDept } }).lean();
+    // Determine semester filter (query param or default to current)
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
+    // Fetch courses for the admin's department filtered by semester
+    const courses = await Course.find({ department: { $in: adminDept }, semester: semesterFilter }).lean();
 
     // Fetch faculties for the admin's department
     const faculties = await Faculty.find({ dept: { $in: adminDept } }).lean();
@@ -209,8 +229,17 @@ export const adminDashboardCourse = async (req, res) => {
       name: fac.name,
     }));
     
+    // Fetch available semesters for dropdown
+    const allSemesters = await Course.distinct("semester");
+    allSemesters.sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
     if (!courses || courses.length === 0) {
-      return res.status(200).json({ message: "No courses found", courses: [], availableFaculty: facultyEmails });
+      return res.status(200).json({ message: "No courses found", courses: [], availableFaculty: facultyEmails, currentSemester: semesterFilter, availableSemesters: allSemesters });
     }
 
     // Compute faculty count & enrollment strength for each course
@@ -246,11 +275,13 @@ export const adminDashboardCourse = async (req, res) => {
 
     return res.status(200).json({
       totalCourses: courses.length,
-      ugWiseCourses, // 🆕 send ug-wise grouped data
+      currentSemester: semesterFilter,
+      availableSemesters: allSemesters,
+      ugWiseCourses,
       activeCourses,
       resetCourses,
       availableFaculty: facultyEmails,
-      adminDepartments: adminDept, // Send admin departments
+      adminDepartments: adminDept,
     });
   } catch (err) {
     console.error("Error fetching admin course dashboard:", err);
@@ -264,7 +295,6 @@ export const adminDashboardCourse = async (req, res) => {
 //view individual course
 export const viewCourse = async (req, res) => {
   try {
-    console.log(req.query);
     const { courseId } = req.query;
 
     if (!courseId) {
@@ -597,8 +627,11 @@ export const addCourse = async (req, res) => {
   try {
     session = await mongoose.startSession();
     session.startTransaction();
-    const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, semester, department } =
+    const { name, code, facultyEmails, abbreviation, credits, coursetype, ug, department } =
       req.body;
+
+    // Auto-set semester to current semester
+    const semester = getCurrentSemester();
 
     // Get logged-in admin's department
     const adminEmail = req.user.email;
@@ -619,7 +652,6 @@ export const addCourse = async (req, res) => {
       !abbreviation ||
       !credits ||
       !ug ||
-      !semester ||
       !coursetype ||
       !department
     ) {
@@ -683,7 +715,6 @@ export const addCourse = async (req, res) => {
           ug,
           semester,
           faculty: facultyDocs.map((f) => f._id),
-          isreset: false,
           isreset: false,
           department: department, // Use the selected department
         },
@@ -1077,9 +1108,13 @@ export const resetCourse = async (req, res) => {
   }
 };
 
-//isnt it obvious
+//delete a course and all related data (transactional)
 export const deleteCourse = async (req, res) => {
+  let session;
   try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+
     const { courseId } = req.query;
 
     if (!courseId) {
@@ -1087,14 +1122,14 @@ export const deleteCourse = async (req, res) => {
     }
 
     // Check if the course exists
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).session(session);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
 
     // Check admin department
     const adminEmail = req.user.email;
-    const adminFn = await Admin.findOne({ email: adminEmail });
+    const adminFn = await Admin.findOne({ email: adminEmail }).session(session);
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
@@ -1102,17 +1137,26 @@ export const deleteCourse = async (req, res) => {
         return res.status(403).json({ message: "Access denied: Course belongs to another department" });
     }
 
-    // Delete the course itself
-    await Course.findByIdAndDelete(courseId);
+    // 1. Delete the course itself
+    await Course.findByIdAndDelete(courseId).session(session);
 
-    // Delete all enrollments of that course
-    await Enrollment.deleteMany({ course: courseId });
+    // 2. Delete all enrollments for this course
+    await Enrollment.deleteMany({ course: courseId }).session(session);
 
-    // Remove this course from all faculty analytics
+    // 3. Remove this course from all faculty analytics
     await Analytics.updateMany(
       { "courses.course": courseId },
       { $pull: { courses: { course: courseId } } }
-    );
+    ).session(session);
+
+    // 4. Clean up feedback entries that reference this course
+    await Feedback.updateMany(
+      { "feedbacks.course": courseId },
+      { $pull: { feedbacks: { course: courseId } } }
+    ).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(200).json({
       message: "Course and related data deleted successfully",
@@ -1120,12 +1164,17 @@ export const deleteCourse = async (req, res) => {
     });
   } catch (err) {
     console.error("Error deleting course:", err);
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     return res.status(500).json({
       message: "Error deleting course",
       error: err.message,
     });
   }
 };
+
 
 //add faculty and students to a reset course
 export const addFacultyStudentstoCourse = async (req, res) => {
@@ -1452,5 +1501,60 @@ export const updateCourseStudents = async (req, res) => {
     if (req.file) fs.unlink(req.file.path, () => {});
     console.error("Error updating course students:", err);
     return res.status(500).json({ message: "Error updating students", error: err.message });
+  }
+};
+
+//Reset the feedback system — deletes feedback for a specific semester
+// If ?semester is provided, deletes that semester's feedback
+// Otherwise deletes the PREVIOUS semester's feedback
+export const resetFeedback = async (req, res) => {
+  try {
+    const targetSemester = req.query.semester || getPreviousSemester();
+
+    // Delete all Feedback documents for the target semester
+    const result = await Feedback.deleteMany({ semester: targetSemester });
+
+    // We do NOT reset analytics.
+    
+    return res.status(200).json({
+      message: `Feedback reset successfully for semester ${targetSemester}.`,
+      semester: targetSemester,
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("Error resetting feedback:", err);
+    return res.status(500).json({
+      message: "Error resetting feedback system",
+      error: err.message,
+    });
+  }
+};
+
+// Get all distinct semesters from Course collection
+export const getAvailableSemesters = async (req, res) => {
+  try {
+    const semesters = await Course.distinct("semester");
+
+    // Sort: newest first (e.g. S26, M25, S25, M24...)
+    semesters.sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      // Same year: S (Spring) comes after M (Monsoon) chronologically
+      // But since Spring starts Jan and Monsoon starts Jul,
+      // within the same year code: M comes after S in chronological time
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
+    return res.status(200).json({
+      currentSemester: getCurrentSemester(),
+      semesters,
+    });
+  } catch (err) {
+    console.error("Error fetching semesters:", err);
+    return res.status(500).json({
+      message: "Error fetching available semesters",
+      error: err.message,
+    });
   }
 };

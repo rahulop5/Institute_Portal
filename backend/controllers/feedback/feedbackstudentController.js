@@ -6,6 +6,7 @@ import Student from "../../models/feedback/Student.js";
 import Faculty from "../../models/Faculty.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Question from "../../models/feedback/Question.js";
+import { getCurrentSemester } from "../../utils/semesterUtils.js";
 
 export const feedbackStudentDashboard = async (req, res) => {
   try {
@@ -19,9 +20,12 @@ export const feedbackStudentDashboard = async (req, res) => {
     }
     const studentId = stu._id;
 
+    const currentSemester = getCurrentSemester();
+
     // 1. Check if feedback instance already exists for this student + semester
     let feedbackInstance = await Feedback.findOne({
       student: studentId,
+      semester: currentSemester,
     })
       .populate({
         path: "feedbacks.course",
@@ -55,19 +59,24 @@ export const feedbackStudentDashboard = async (req, res) => {
     }
 
     // 2. If not started → fetch student’s enrolled courses + assigned faculty
+    // Filter to only include courses from the current semester
     const enrollments = await Enrollment.find({ student: studentId }).populate({
       path: "course",
+      match: { semester: currentSemester },
       populate: { path: "faculty", select: "name email dept" },
     });
 
-    if (!enrollments.length) {
+    // Filter out enrollments where course is null (didn't match semester)
+    const validEnrollments = enrollments.filter((e) => e.course != null);
+
+    if (!validEnrollments.length) {
       return res.status(404).json({
-        message: "Student is not enrolled in any courses",
+        message: "Student is not enrolled in any courses for this semester",
       });
     }
 
     // Format data → courses with faculty
-    const coursesWithFaculty = enrollments.map((enrollment) => ({
+    const coursesWithFaculty = validEnrollments.map((enrollment) => ({
       courseId: enrollment.course._id,
       courseName: enrollment.course.name,
       courseCode: enrollment.course.code,
@@ -106,7 +115,7 @@ export const selectFaculty = async (req, res) => {
     }
 
     const studentId = stu._id;
-    const semester = "Fall-2025"; // later make dynamic
+    const semester = getCurrentSemester();
 
     // Check if feedback already exists
     const existing = await Feedback.findOne({ student: studentId, semester });
@@ -208,8 +217,8 @@ export const updateFeedback = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Find their feedback record
-    const feedback = await Feedback.findOne({ student: student._id });
+    // Find their feedback record for the current semester
+    const feedback = await Feedback.findOne({ student: student._id, semester: getCurrentSemester() });
     if (!feedback) {
       return res.status(404).json({ message: "Feedback record not found" });
     }
@@ -335,7 +344,7 @@ export const submitFeedback = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    const feedback = await Feedback.findOne({ student: student._id }).session(session);
+    const feedback = await Feedback.findOne({ student: student._id, semester: getCurrentSemester() }).session(session);
     if (!feedback) {
       await session.abortTransaction();
       session.endSession();

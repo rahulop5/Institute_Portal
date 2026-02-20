@@ -1,6 +1,8 @@
 import Enrollment from "../../models/feedback/Enrollment.js";
 import Faculty from "../../models/Faculty.js";
 import Analytics from "../../models/feedback/Analytics.js";
+import Course from "../../models/feedback/Course.js";
+import { getCurrentSemester } from "../../utils/semesterUtils.js";
 
 export const facultyDashboard = async (req, res) => {
   try {
@@ -21,10 +23,24 @@ export const facultyDashboard = async (req, res) => {
         select: "type",
     });
 
+    // Determine semester filter
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
+    // Fetch available semesters for dropdown
+    const allSemesters = await Course.distinct("semester");
+    allSemesters.sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
     if (!analytics || analytics.courses.length === 0) {
       return res.status(200).json({
         name: faculty.name,
         department: faculty.dept,
+        currentSemester: semesterFilter,
+        availableSemesters: allSemesters,
         avgscore: 0,
         impress: 0,
         coursestaught: 0,
@@ -32,7 +48,12 @@ export const facultyDashboard = async (req, res) => {
       });
     }
 
-    // Calculate per-course and overall stats
+
+    // Get all Course IDs for the target semester
+    const semesterCourses = await Course.find({ semester: semesterFilter }).select("_id").lean();
+    const semesterCourseIds = new Set(semesterCourses.map((c) => c._id.toString()));
+
+    // Calculate per-course and overall stats (filtered by semester)
     let totalAvg = 0;
     let totalCourses = 0;
     let totalImpressions = 0;
@@ -40,6 +61,9 @@ export const facultyDashboard = async (req, res) => {
 
     for (const c of analytics.courses) {
       if (!c.course) continue;
+      // Only include courses that belong to the requested semester
+      if (!semesterCourseIds.has(c.course._id.toString())) continue;
+
       const qAverages = c.questions
         .filter((q) => q.question && q.question.type === "rating")
         .map((q) => q.average);
@@ -63,10 +87,11 @@ export const facultyDashboard = async (req, res) => {
 
     const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
 
-    // Send response
     return res.status(200).json({
       name: faculty.name,
       department: faculty.dept,
+      currentSemester: semesterFilter,
+      availableSemesters: allSemesters,
       avgscore: parseFloat(overallAvg.toFixed(2)),
       impress: totalImpressions,
       coursestaught: totalCourses,
@@ -202,5 +227,52 @@ export const viewCourseStatistics = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Error fetching course statistics" });
+  }
+};
+
+// Get semesters this faculty has courses in
+export const getAvailableFacultySemesters = async (req, res) => {
+  try {
+    const faculty = await Faculty.findOne({ email: req.user.email });
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    const analytics = await Analytics.findOne({ faculty: faculty._id })
+      .populate({ path: "courses.course", select: "semester" })
+      .lean();
+
+    if (!analytics) {
+      return res.status(200).json({
+        currentSemester: getCurrentSemester(),
+        semesters: [],
+      });
+    }
+
+    // Collect distinct semesters from the faculty's courses
+    const semesterSet = new Set();
+    for (const c of analytics.courses) {
+      if (c.course && c.course.semester) {
+        semesterSet.add(c.course.semester);
+      }
+    }
+
+    const semesters = Array.from(semesterSet).sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
+    return res.status(200).json({
+      currentSemester: getCurrentSemester(),
+      semesters,
+    });
+  } catch (err) {
+    console.error("Error fetching faculty semesters:", err);
+    return res.status(500).json({
+      message: "Error fetching available semesters",
+      error: err.message,
+    });
   }
 };
