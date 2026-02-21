@@ -1,0 +1,24 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production VM
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd Institute_Portal
+            git pull origin prod
+            cd backend
+            npm ci --production
+            pm2 restart backend || pm2 start server.js --name backend
