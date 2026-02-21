@@ -376,6 +376,148 @@ export const viewFaculty = async (req, res) => {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
+    // Determine semester filter
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
+    // Fetch available semesters for dropdown
+    const allSemesters = await Course.distinct("semester");
+    allSemesters.sort((a, b) => {
+      const yearA = parseInt(a.substring(1), 10);
+      const yearB = parseInt(b.substring(1), 10);
+      if (yearA !== yearB) return yearB - yearA;
+      return a.charAt(0) === "M" ? -1 : 1;
+    });
+
+    // Fetch analytics for this faculty
+    const analytics = await Analytics.findOne({ faculty: facultyId })
+      .populate({
+        path: "courses.course",
+        select: "name code semester",
+      })
+      .populate({
+        path: "courses.questions.question",
+        select: "type",
+      })
+      .lean();
+
+    if (!analytics || analytics.courses.length === 0) {
+      return res.status(200).json({
+        message: "No analytics found for this faculty",
+        faculty: {
+          name: faculty.name,
+          email: faculty.email,
+          department: faculty.dept,
+          currentSemester: semesterFilter,
+          availableSemesters: allSemesters,
+          avgscore: 0,
+          impress: 0,
+          coursesTaught: 0,
+          courses: [],
+        },
+      });
+    }
+
+    let totalAvg = 0;
+    let totalCourses = 0;
+    let totalImpressions = 0;
+
+    const courses = analytics.courses
+      .map((c) => {
+        if (!c.course) return null;
+        // Filter by semester
+        if (c.course.semester && c.course.semester !== semesterFilter) return null;
+
+        const validAverages = c.questions
+          .filter((q) => q.question && q.question.type === "rating")
+          .map((q) => q.average)
+          .filter((a) => typeof a === "number");
+
+        const avgscore =
+          validAverages.length > 0
+            ? validAverages.reduce((a, b) => a + b, 0) / validAverages.length
+            : 0;
+
+        totalCourses++;
+        totalAvg += avgscore;
+        totalImpressions += c.totalResponses || 0;
+
+        return {
+          courseId: c.course._id,
+          name: c.course.name,
+          code: c.course.code,
+          avgscore: parseFloat(avgscore.toFixed(2)),
+        };
+      })
+      .filter(Boolean);
+
+    const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
+
+    // Send response
+    const isStaff = adminFn.isStaff;
+
+    if (isStaff) {
+         return res.status(200).json({
+            faculty: {
+                name: faculty.name,
+                email: faculty.email,
+                department: faculty.dept,
+                currentSemester: semesterFilter,
+                availableSemesters: allSemesters,
+                avgscore: "N/A",
+                impress: "N/A",
+                coursestaught: "N/A",
+                courses: [],
+            },
+         });
+    }
+
+    return res.status(200).json({
+      faculty: {
+        name: faculty.name,
+        email: faculty.email,
+        department: faculty.dept,
+        currentSemester: semesterFilter,
+        availableSemesters: allSemesters,
+        avgscore: parseFloat(overallAvg.toFixed(2)),
+        impress: totalImpressions,
+        coursestaught: totalCourses,
+        courses: courses,
+      },
+    });
+  } catch (err) {
+    console.error("Error in viewFaculty:", err);
+    return res.status(500).json({
+      message: "Error fetching faculty details",
+      error: err.message,
+    });
+  }
+};
+
+
+export const viewFaculty2 = async (req, res) => {
+  try {
+    const { facultyId } = req.query;
+
+    if (!facultyId) {
+      return res.status(400).json({ message: "facultyId is required" });
+    }
+
+    // Find faculty
+    const faculty = await Faculty.findById(facultyId).lean();
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    // Check admin department
+    const adminEmail = req.user.email;
+    const adminFn = await Admin.findOne({ email: adminEmail });
+    if (!adminFn) {
+        return res.status(404).json({ message: "Admin profile not found" });
+    }
+    if (!adminFn.departments.includes(faculty.dept)) {
+        return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+    }
+
     // Fetch analytics for this faculty
     const analytics = await Analytics.findOne({ faculty: facultyId })
       .populate({
