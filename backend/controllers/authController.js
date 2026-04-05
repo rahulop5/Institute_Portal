@@ -41,7 +41,7 @@ export const authStudentMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!["UGStudentBTP", "Student", "UGStudentHonors"].includes(decoded.role)) {
+    if (decoded.role !== "Student") {
       return res.status(403).json({
         message: "You dont have access to this page",
       });
@@ -65,7 +65,7 @@ export const authHonorsStudentMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role != "UGStudentHonors") {
+    if (decoded.role !== "Student") {
       return res.status(403).json({
         message: "You dont have access to this page",
       });
@@ -260,7 +260,7 @@ export const getProfile = async (req, res) => {
                 }));
             }
         }
-    } else if (["UGStudentBTP", "UGStudentHonors", "Student"].includes(user.role)) {
+    } else if (user.role === "Student") {
          if (user.referenceId) {
              // Use the single Student model for all student types as requested
              const studentDetails = await Student.findById(user.referenceId);
@@ -317,8 +317,6 @@ export const updateName = async (req, res) => {
           roleModel = Faculty;
           break;
         case "Student":
-        case "UGStudentBTP":
-        case "UGStudentHonors":
           roleModel = Student;
           break;
         case "Staff":

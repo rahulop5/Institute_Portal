@@ -1,21 +1,21 @@
 import Faculty from "../models/Faculty.js";
-import BTPTopic from "../models/BTPTopic.js";
-import BTP from "../models/BTP.js";
-import BTPEvaluation from "../models/BTPEvaluation.js";
-import BTPRegistration from "../models/BTPRegistration.js";
+import HonorsTopic from "../models/HonorsTopic.js";
+import Honors from "../models/Honors.js";
+import HonorsEvaluation from "../models/HonorsEvaluation.js";
 import HonorsRegistration from "../models/HonorsRegistration.js";
+import BTPRegistration from "../models/BTPRegistration.js";
 
-// Max evaluations for BTP: 2 semesters × 2 evals = 4
-const BTP_MAX_EVALUATIONS = 4;
+// Max evaluations for Honors: 4 semesters × 2 evals = 8
+const HONORS_MAX_EVALUATIONS = 8;
 
-// New Dashboard: Just show Topics/Requests and Projects
-export const getFacultyBTPDashboard = async (req, res) => {
+// Dashboard: Show Topics/Requests and Projects
+export const getFacultyHonorsDashboard = async (req, res) => {
   const user = await Faculty.findOne({ email: req.user.email });
   if (!user) return res.status(404).json({ message: "Error finding the faculty" });
 
   try {
     // 1. Fetch Topics and Requests
-    const topics = await BTPTopic.findOne({ faculty: user._id })
+    const topics = await HonorsTopic.findOne({ faculty: user._id })
         .populate({
             path: "requests.student",
             populate: { path: "student", select: "name email rollNumber" }
@@ -37,15 +37,15 @@ export const getFacultyBTPDashboard = async (req, res) => {
 
     // 2. Fetch Projects (Guided and Evaluated)
     const [guideProjects, evalProjects, evalRequestsRaw] = await Promise.all([
-      BTP.find({ guide: user._id }).populate({
+      Honors.find({ guide: user._id }).populate({
           path: "students.student",
           populate: { path: "student", select: "name email" }
       }),
-      BTP.find({ "evaluators.evaluator": user._id }).populate({
+      Honors.find({ "evaluators.evaluator": user._id }).populate({
           path: "students.student",
           populate: { path: "student", select: "name email" }
       }),
-      BTPEvaluation.find({
+      HonorsEvaluation.find({
         panelEvaluations: { $elemMatch: { evaluator: user._id, submitted: false } },
       }).populate({ path: "projectRef", populate: { path: "students.student" } })
     ]);
@@ -69,11 +69,11 @@ export const getFacultyBTPDashboard = async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Error loading dashboard" });
+    return res.status(500).json({ message: "Error loading Honors dashboard" });
   }
 };
 
-export const addTopic = async (req, res) => {
+export const addHonorsTopic = async (req, res) => {
   const user = await Faculty.findOne({ email: req.user.email });
   if (!user) return res.status(404).json({ message: "Error finding the faculty" });
   
@@ -83,53 +83,53 @@ export const addTopic = async (req, res) => {
   const dept = user.dept;
 
   try {
-    const existing = await BTPTopic.findOne({ faculty: user._id });
+    const existing = await HonorsTopic.findOne({ faculty: user._id });
     if (existing) {
       existing.topics.push({ topic, about, dept });
       await existing.save();
     } else {
-      const newtopic = new BTPTopic({
+      const newtopic = new HonorsTopic({
         faculty: user._id,
         topics: [{ topic, about, dept }],
       });
       await newtopic.save();
     }
-    return res.status(201).json({ message: "Topics uploaded successfully" });
+    return res.status(201).json({ message: "Honors topics uploaded successfully" });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Error releasing the topics" });
+    return res.status(500).json({ message: "Error releasing the honors topics" });
   }
 };
 
-export const deleteTopic = async (req, res) => {
+export const deleteHonorsTopic = async (req, res) => {
   try {
     const { topicid, actualtid } = req.body;
     if (!topicid || !actualtid) return res.status(400).json({ message: "Id not mentioned" });
     
-    const result = await BTPTopic.updateOne(
+    const result = await HonorsTopic.updateOne(
       { _id: actualtid },
       { $pull: { topics: { _id: topicid }, requests: { topic: topicid } } }
     );
     
     if (result.matchedCount === 0) return res.status(200).json({ message: "No Topic found" });
-    return res.status(200).json({ message: "Deleted topic and requests successfully" });
+    return res.status(200).json({ message: "Deleted honors topic and requests successfully" });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Error deleting the topic" });
+    return res.status(500).json({ message: "Error deleting the honors topic" });
   }
 };
 
-export const approveTopicRequest = async (req, res) => {
+export const approveHonorsTopicRequest = async (req, res) => {
   try {
     const { studentId, topicId } = req.body; 
-    // studentId here is the BTPRegistration _id
+    // studentId here is the HonorsRegistration _id
     
     if (!studentId || !topicId) return res.status(400).json({ message: "Student and topic required" });
 
     const fac = await Faculty.findOne({ email: req.user.email });
     if (!fac) return res.status(404).json({ message: "Faculty not found" });
 
-    const factopicdoc = await BTPTopic.findOne({ faculty: fac._id, "topics._id": topicId });
+    const factopicdoc = await HonorsTopic.findOne({ faculty: fac._id, "topics._id": topicId });
     if (!factopicdoc) return res.status(400).json({ message: "Topic not found" });
 
     const topicSub = factopicdoc.topics.id(topicId);
@@ -139,18 +139,18 @@ export const approveTopicRequest = async (req, res) => {
     if (requestIndex === -1) return res.status(400).json({ message: "Request not found" });
 
     // Verify student not already in project
-    const studentReg = await BTPRegistration.findById(studentId);
+    const studentReg = await HonorsRegistration.findById(studentId);
     if (!studentReg) return res.status(404).json({ message: "Student record not found" });
     if (studentReg.project) return res.status(400).json({ message: "Student already in a project" });
 
-    // Mutual exclusion: check if student has an active Honors project
-    const honorsReg = await HonorsRegistration.findOne({ student: studentReg.student, project: { $ne: null } });
-    if (honorsReg) {
-      return res.status(400).json({ message: "Student is already enrolled in an Honors project. Cannot approve for BTP." });
+    // Mutual exclusion: check if student has an active BTP project
+    const btpReg = await BTPRegistration.findOne({ student: studentReg.student, project: { $ne: null } });
+    if (btpReg) {
+      return res.status(400).json({ message: "Student is already enrolled in a BTP project. Cannot approve for Honors." });
     }
 
     // Create Project
-    const newbtpproj = new BTP({
+    const newhonorsproj = new Honors({
       name: topicSub.topic,
       about: topicSub.about,
       studentbatch: "2025",
@@ -158,76 +158,75 @@ export const approveTopicRequest = async (req, res) => {
       guide: fac._id,
       status: "active"
     });
-    const savedProj = await newbtpproj.save();
+    const savedProj = await newhonorsproj.save();
 
     // Update Registration
     studentReg.project = savedProj._id;
     studentReg.requests = []; 
     await studentReg.save();
 
-    // Remove request from BTPTopic
+    // Remove request from HonorsTopic
     factopicdoc.requests.splice(requestIndex, 1);
     await factopicdoc.save();
 
-    return res.status(201).json({ message: "Request approved and project created" });
+    return res.status(201).json({ message: "Honors request approved and project created" });
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Error approving request" });
+    return res.status(500).json({ message: "Error approving honors request" });
   }
 };
 
-export const rejectTopicRequest = async (req, res) => {
+export const rejectHonorsTopicRequest = async (req, res) => {
   try {
     const { studentId, topicId, docid } = req.body;
     if (!studentId || !topicId || !docid) return res.status(400).json({ message: "Invalid Request" });
 
-    const topicdoc = await BTPTopic.findOne({ _id: docid }).populate("faculty");
+    const topicdoc = await HonorsTopic.findOne({ _id: docid }).populate("faculty");
     if (req.user.email !== topicdoc.faculty.email) return res.status(403).json({ message: "Unauthorized" });
 
-    // Remove from BTPTopic requests
-    await BTPTopic.updateOne(
+    // Remove from HonorsTopic requests
+    await HonorsTopic.updateOne(
       { _id: docid },
       { $pull: { requests: { student: studentId, topic: topicId } } }
     );
 
-    // Update status in BTPRegistration to 'Rejected'
-    await BTPRegistration.updateOne(
+    // Update status in HonorsRegistration to 'Rejected'
+    await HonorsRegistration.updateOne(
       { _id: studentId, "requests.topic": docid, "requests.subTopicId": topicId },
       { $set: { "requests.$.status": "Rejected" } }
     );
 
-    return res.status(200).json({ message: "Request rejected successfully" });
+    return res.status(200).json({ message: "Honors request rejected successfully" });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Error rejecting request" });
+    return res.status(500).json({ message: "Error rejecting honors request" });
   }
 };
 
 // Evaluation functions
-export const evaluateProjectasGuide = async (req, res) => {
+export const evaluateHonorsProjectasGuide = async (req, res) => {
   try {
     const { projid, remark, marks } = req.body;
     if (!projid || !remark || !Array.isArray(marks)) return res.status(400).json({ message: "Invalid request" });
 
-    const project = await BTP.findById(projid).populate("guide");
+    const project = await Honors.findById(projid).populate("guide");
     if (!project) return res.status(404).json({ message: "Project not found" });
     if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
 
     if (project.status === "completed") {
-      return res.status(400).json({ message: "This BTP project has already been completed. No more evaluations allowed." });
+      return res.status(400).json({ message: "This Honors project has already been completed. No more evaluations allowed." });
     }
 
     // Check if max evaluations already reached
-    const existingEvalCount = await BTPEvaluation.countDocuments({ projectRef: projid });
-    if (existingEvalCount >= BTP_MAX_EVALUATIONS) {
-      // Auto-complete the project
+    const existingEvalCount = await HonorsEvaluation.countDocuments({ projectRef: projid });
+    if (existingEvalCount >= HONORS_MAX_EVALUATIONS) {
       project.status = "completed";
       await project.save();
-      return res.status(400).json({ message: "BTP has reached the maximum number of evaluations (4). Project is now completed." });
+      return res.status(400).json({ message: "Honors has reached the maximum number of evaluations (8). Project is now completed." });
     }
 
-    const newEval = new BTPEvaluation({
+    const newEval = new HonorsEvaluation({
         projectRef: projid,
         time: new Date(),
         canstudentsee: false,
@@ -239,23 +238,23 @@ export const evaluateProjectasGuide = async (req, res) => {
 
     // Check if we've now reached the max evaluations → auto-complete
     const newEvalCount = existingEvalCount + 1;
-    if (newEvalCount >= BTP_MAX_EVALUATIONS) {
+    if (newEvalCount >= HONORS_MAX_EVALUATIONS) {
       project.status = "completed";
       await project.save();
-      return res.status(201).json({ message: `Evaluation submitted. BTP completed after ${newEvalCount} evaluations.` });
+      return res.status(201).json({ message: `Evaluation submitted. Honors completed after ${newEvalCount} evaluations.` });
     }
 
     return res.status(201).json({ message: "Evaluation submitted" });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Error evaluating" });
+    return res.status(500).json({ message: "Error evaluating honors project" });
   }
 };
 
-export const evaluateProjectasEval = async (req, res) => {
+export const evaluateHonorsProjectasEval = async (req, res) => {
     try {
         const { projid, panelmarks, remark } = req.body;
-        const evaluation = await BTPEvaluation.findOne({ projectRef: projid }).populate("panelEvaluations.evaluator");
+        const evaluation = await HonorsEvaluation.findOne({ projectRef: projid }).populate("panelEvaluations.evaluator");
         if (!evaluation) return res.status(404).json({ message: "Evaluation not found" });
 
         const user = await Faculty.findOne({ email: req.user.email });
@@ -267,26 +266,26 @@ export const evaluateProjectasEval = async (req, res) => {
         evaluation.panelEvaluations[evalIndex].submitted = true;
         evaluation.panelEvaluations[evalIndex].remark = remark;
         await evaluation.save();
-        return res.status(200).json({ message: "Evaluation submitted" });
+        return res.status(200).json({ message: "Honors evaluation submitted" });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: "Error evaluating" });
+        return res.status(500).json({ message: "Error evaluating honors project" });
     }
 };
 
-export const viewProject = async (req, res) => {
+export const viewHonorsProject = async (req, res) => {
     try {
         const user = await Faculty.findOne({ email: req.user.email });
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
-        const project = await BTP.findOne({ _id: req.query.projid, guide: user._id })
+        const project = await Honors.findOne({ _id: req.query.projid, guide: user._id })
             .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
         
         if (!project) return res.status(404).json({ message: "Project not found or you are not the guide" });
         
-        const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+        const evaluations = await HonorsEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
 
         return res.status(200).json({
             project: {
@@ -303,23 +302,23 @@ export const viewProject = async (req, res) => {
         });
     } catch(err) {
         console.error(err);
-        return res.status(500).json({ message: "Error viewing project" });
+        return res.status(500).json({ message: "Error viewing honors project" });
     }
 };
 
-export const viewProjectEvaluator = async (req, res) => {
+export const viewHonorsProjectEvaluator = async (req, res) => {
     try {
         const user = await Faculty.findOne({ email: req.user.email });
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
-        const project = await BTP.findOne({ _id: req.query.projid, "evaluators.evaluator": user._id })
+        const project = await Honors.findOne({ _id: req.query.projid, "evaluators.evaluator": user._id })
             .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
 
         if (!project) return res.status(404).json({ message: "Project not found or you are not an evaluator" });
 
-        const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+        const evaluations = await HonorsEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
 
         return res.status(200).json({
             project: {
@@ -336,6 +335,6 @@ export const viewProjectEvaluator = async (req, res) => {
         });
     } catch(err) {
         console.error(err);
-        return res.status(500).json({ message: "Error viewing project as evaluator" });
+        return res.status(500).json({ message: "Error viewing honors project as evaluator" });
     }
 };

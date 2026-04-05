@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 const studentSubSchema = new mongoose.Schema({
-  student: { type: mongoose.Schema.Types.ObjectId, ref: "UGStudentBTP", required: true }
+  student: { type: mongoose.Schema.Types.ObjectId, ref: "BTPRegistration", required: true }
 }, { _id: false });
 
 const btpschema = new mongoose.Schema({
   name: { type: String, required: true },
   about: { type: String, required: false },
   studentbatch: { type: String, required: true },
-  students: [studentSubSchema], // using the subschema here
+  students: [studentSubSchema],
   guide: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true },
   evaluators: [
     {
@@ -18,12 +18,11 @@ const btpschema = new mongoose.Schema({
   updates: [
     {
       update: { type: String, required: true },
-      //guide gicves the remark
       remark: { type: String, required: false },
       time: { type: Date, required: true },
-      //can remove this but let it be for now
     }
-  ]
+  ],
+  status: { type: String, enum: ["active", "completed"], default: "active" }
 });
 
 export default mongoose.model("BTP", btpschema); 

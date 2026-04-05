@@ -19,7 +19,7 @@ const btpevaluationSchema = new mongoose.Schema({
     {
       student: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "UGStudentBTP",
+        ref: "BTPRegistration",
         required: true,
       },
       guidemarks: { type: Number, required: true },
@@ -40,13 +40,13 @@ const btpevaluationSchema = new mongoose.Schema({
         {
           student: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "UGStudentBTP",
+            ref: "BTPRegistration",
             required: true,
           },
           marks: { type: Number, required: true },
         },
       ],
-      remark: { type: String }, 
+      remark: { type: String },
     },
   ],
 });

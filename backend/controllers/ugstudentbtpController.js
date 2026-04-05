@@ -1,39 +1,63 @@
-import UGStudentBTP from "../models/UGStudentBTP.js";
+import BTPRegistration from "../models/BTPRegistration.js";
+import HonorsRegistration from "../models/HonorsRegistration.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
 import Student from "../models/feedback/Student.js";
 
+// Max evaluations for BTP: 2 semesters × 2 evals = 4
+const BTP_MAX_EVALUATIONS = 4;
+
 export const getBTPDashboard = async (req, res) => {
     try {
-        // 1. Find the Student record from feedback DB
+        // 1. Find the Student record
         const student = await Student.findOne({ email: req.user.email });
         if (!student) {
             return res.status(404).json({ message: "Student not found in database" });
         }
 
-        // 2. Try to find the BTP-specific record (read-only, no create)
-        const btpUser = await UGStudentBTP.findOne({ student: student._id })
+        // 2. Mutual exclusion: check if student is enrolled in Honors
+        const honorsReg = await HonorsRegistration.findOne({ student: student._id, project: { $ne: null } });
+        if (honorsReg) {
+            return res.status(400).json({
+                message: "You are already enrolled in an Honors project. You cannot participate in BTP."
+            });
+        }
+
+        // 3. Try to find the BTP registration record
+        const btpUser = await BTPRegistration.findOne({ student: student._id })
             .populate({
                 path: 'project',
                 populate: [
                     { path: 'guide', select: 'name email dept' },
                     { path: 'evaluators.evaluator', select: 'name email' },
-                    // Access nested student via population if needed, but we have the IDs
                 ]
             })
-            // Populate requests to check status
             .populate({
                  path: 'requests.topic',
                  select: 'faculty' 
             });
 
-        // 3. Scenario A: Student is already in a Project
+        // 4. Scenario A: Student is already in a Project
         if (btpUser && btpUser.project) {
             const project = btpUser.project;
-            
-            // Fetch evaluations
+
+            // Check if project is completed
             const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+
+            if (project.status === "completed") {
+                return res.status(200).json({
+                    email: student.email,
+                    phase: "COMPLETED",
+                    message: `BTP completed after ${evaluations.length} evaluations.`,
+                    project: {
+                        _id: project._id,
+                        name: project.name,
+                        about: project.about,
+                        status: "completed"
+                    }
+                });
+            }
             
             // Format updates and evaluations
             const updates = project.updates ? project.updates.sort((a, b) => new Date(a.time) - new Date(b.time)) : [];
@@ -53,11 +77,11 @@ export const getBTPDashboard = async (req, res) => {
                     resources: currEval.resources,
                     updates: evalUpdates,
                     canstudentsee: currEval.canstudentsee,
-                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === student._id.toString()) : null
+                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === btpUser._id.toString()) : null
                 });
             }
 
-            // Re-fetch project to get student names (efficient populate)
+            // Re-fetch project to get student names
             const projectPopulated = await BTP.findById(project._id)
                 .populate({
                     path: 'students.student',
@@ -87,7 +111,7 @@ export const getBTPDashboard = async (req, res) => {
             });
         }
 
-        // 4. Scenario B: No Project (or no BTP record yet). Show Topics.
+        // 5. Scenario B: No Project. Show Topics.
         const topics = await BTPTopic.find().populate('faculty', 'name email dept');
         
         const myRequests = btpUser ? btpUser.requests : [];
@@ -96,8 +120,6 @@ export const getBTPDashboard = async (req, res) => {
             _id: topicDoc._id,
             faculty: topicDoc.faculty,
             topics: topicDoc.topics.map(t => {
-                // Find status of this specific topic in user's requests
-                // matching logic: request.topic (Doc ID) == topicDoc._id AND request.subTopicId == t._id
                 const req = myRequests.find(r => 
                     r.topic.toString() === topicDoc._id.toString() && 
                     r.subTopicId.toString() === t._id.toString()
@@ -134,14 +156,21 @@ export const requestTopic = async (req, res) => {
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
 
-        // 2. Find or Create UGStudentBTP (Lazy Creation)
-        let btpUser = await UGStudentBTP.findOne({ student: student._id });
-        if (!btpUser) {
-            btpUser = new UGStudentBTP({ student: student._id });
-            // Don't save yet, valid later
+        // 2. Mutual exclusion check
+        const honorsReg = await HonorsRegistration.findOne({ student: student._id, project: { $ne: null } });
+        if (honorsReg) {
+            return res.status(400).json({
+                message: "You are already enrolled in an Honors project. You cannot participate in BTP."
+            });
         }
 
-        // 3. Validation
+        // 3. Find or Create BTPRegistration (Lazy Creation)
+        let btpUser = await BTPRegistration.findOne({ student: student._id });
+        if (!btpUser) {
+            btpUser = new BTPRegistration({ student: student._id });
+        }
+
+        // 4. Validation
         if (btpUser.project) {
             return res.status(400).json({ message: "You are already in a project" });
         }
@@ -155,16 +184,16 @@ export const requestTopic = async (req, res) => {
             return res.status(400).json({ message: "Already requested this topic" });
         }
 
-        // 4. Add Request
+        // 5. Add Request
         btpUser.requests.push({
             topic: topicDocId,
             subTopicId: topicId,
             status: "Pending",
             preference: preference || (btpUser.requests.length + 1)
         });
-        await btpUser.save(); // Creates the record if it didn't exist
+        await btpUser.save();
 
-        // 5. Update BTPTopic
+        // 6. Update BTPTopic
         const topicDoc = await BTPTopic.findById(topicDocId);
         if (!topicDoc) return res.status(404).json({ message: "Topic document not found" });
 
@@ -194,10 +223,18 @@ export const withdrawRequest = async (req, res) => {
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
 
-        const btpUser = await UGStudentBTP.findOne({ student: student._id });
+        // Mutual exclusion check
+        const honorsReg = await HonorsRegistration.findOne({ student: student._id, project: { $ne: null } });
+        if (honorsReg) {
+            return res.status(400).json({
+                message: "You are already enrolled in an Honors project. You cannot participate in BTP."
+            });
+        }
+
+        const btpUser = await BTPRegistration.findOne({ student: student._id });
         if (!btpUser) return res.status(404).json({ message: "No requests found" });
 
-        // Remove from UGStudentBTP
+        // Remove from BTPRegistration
         btpUser.requests = btpUser.requests.filter(r => 
             !(r.topic.toString() === topicDocId && r.subTopicId.toString() === topicId)
         );
@@ -206,7 +243,6 @@ export const withdrawRequest = async (req, res) => {
         // Remove from BTPTopic
         const topicDoc = await BTPTopic.findById(topicDocId);
         if (topicDoc) {
-            // Request in BTPTopic stores `student: UGStudentBTP_ID` and `topic: subTopicId`
             topicDoc.requests = topicDoc.requests.filter(r => 
                 !(r.student.toString() === btpUser._id.toString() && r.topic.toString() === topicId)
             );
@@ -228,11 +264,23 @@ export const addUpdatetoProject = async (req, res) => {
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
 
-        const btpUser = await UGStudentBTP.findOne({ student: student._id });
+        // Mutual exclusion check
+        const honorsReg = await HonorsRegistration.findOne({ student: student._id, project: { $ne: null } });
+        if (honorsReg) {
+            return res.status(400).json({
+                message: "You are already enrolled in an Honors project. You cannot participate in BTP."
+            });
+        }
+
+        const btpUser = await BTPRegistration.findOne({ student: student._id });
         if (!btpUser || !btpUser.project) return res.status(400).json({ message: "No project assigned" });
 
         const project = await BTP.findById(btpUser.project);
         if (!project) return res.status(404).json({ message: "Project not found" });
+
+        if (project.status === "completed") {
+            return res.status(400).json({ message: "This BTP project has already been completed" });
+        }
 
         project.updates.push({ update, time: new Date() });
         await project.save();

@@ -1,9 +1,17 @@
 import express from "express";
-import { getHonorsStudentDashboard } from "../controllers/ugstudenthonorsController.js";
-import { authHonorsStudentMiddleware } from "../controllers/authController.js";
+import { authStudentMiddleware } from "../controllers/authController.js";
+import {
+    getHonorsDashboard,
+    requestHonorsTopic,
+    withdrawHonorsRequest,
+    addUpdatetoHonorsProject
+} from "../controllers/ugstudenthonorsController.js";
 
-const router=express.Router();
+const router = express.Router();
 
-router.get("/", authHonorsStudentMiddleware, getHonorsStudentDashboard);
+router.get("/", authStudentMiddleware, getHonorsDashboard);
+router.post("/requesttopic", authStudentMiddleware, requestHonorsTopic);
+router.post("/withdrawrequest", authStudentMiddleware, withdrawHonorsRequest);
+router.post("/addupdate", authStudentMiddleware, addUpdatetoHonorsProject);
 
 export default router;

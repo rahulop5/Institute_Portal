@@ -1,21 +1,54 @@
 import mongoose from "mongoose";
 
-const honorseschema=new mongoose.Schema({
-    projectRef: {type: mongoose.Schema.Types.ObjectId, ref: "BTP", required: true},
-    evaluationno: {type: Number, required: true},
-    time: {type: Date, required: true},
-    canstudentsee: {type: Boolean, required: true},
-    resources: [
+const honorsEvaluationSchema = new mongoose.Schema({
+  projectRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Honors",
+    required: true,
+  },
+  time: { type: Date, required: true },
+  canstudentsee: { type: Boolean, required: true },
+  remark: { type: String, required: false },
+  resources: [
+    {
+      resourceURL: { type: String, required: true },
+    },
+  ],
+  // Guide + evaluator grades per student
+  marksgiven: [
+    {
+      student: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "HonorsRegistration",
+        required: true,
+      },
+      guidemarks: { type: Number, required: true },
+      totalgrade: { type: String },
+    },
+  ],
+  // Panel marks per evaluator
+  panelEvaluations: [
+    {
+      evaluator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Faculty",
+        required: true,
+      },
+      submitted: { type: Boolean, default: false },
+      submittedAt: { type: Date },
+      panelmarks: [
         {
-            resourceURL: {type: String, required: true}
-        }
-    ],
-    marksgiven: {
-        student: {type: mongoose.Schema.Types.ObjectId, ref: "UGStudentHonors", required: true},
-        guidemarks: {type: Number, required: false},
-        panelmarks: {type: Number, required: false},
-        totalgrade: {type: String,  required: false}
-    }
+          student: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "HonorsRegistration",
+            required: true,
+          },
+          marks: { type: Number, required: true },
+        },
+      ],
+      remark: { type: String },
+    },
+  ],
 });
 
-export default mongoose.model("BTPEvaluation", honorseschema);
+export default mongoose.model("HonorsEvaluation", honorsEvaluationSchema);
