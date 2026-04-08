@@ -122,7 +122,7 @@ export const deleteHonorsTopic = async (req, res) => {
 export const approveHonorsTopicRequest = async (req, res) => {
   try {
     const { studentId, topicId } = req.body; 
-    // studentId here is the HonorsRegistration _id
+    // studentId here is the actual Student _id
     
     if (!studentId || !topicId) return res.status(400).json({ message: "Student and topic required" });
 
@@ -134,13 +134,14 @@ export const approveHonorsTopicRequest = async (req, res) => {
 
     const topicSub = factopicdoc.topics.id(topicId);
     
+    const studentReg = await HonorsRegistration.findOne({ student: studentId });
+    if (!studentReg) return res.status(404).json({ message: "Student record not found" });
+
     // Check if request exists
-    const requestIndex = factopicdoc.requests.findIndex(r => r.student.toString() === studentId && r.topic.toString() === topicId);
+    const requestIndex = factopicdoc.requests.findIndex(r => r.student.toString() === studentReg._id.toString() && r.topic.toString() === topicId);
     if (requestIndex === -1) return res.status(400).json({ message: "Request not found" });
 
     // Verify student not already in project
-    const studentReg = await HonorsRegistration.findById(studentId);
-    if (!studentReg) return res.status(404).json({ message: "Student record not found" });
     if (studentReg.project) return res.status(400).json({ message: "Student already in a project" });
 
     // Mutual exclusion: check if student has an active BTP project
@@ -185,15 +186,18 @@ export const rejectHonorsTopicRequest = async (req, res) => {
     const topicdoc = await HonorsTopic.findOne({ _id: docid }).populate("faculty");
     if (req.user.email !== topicdoc.faculty.email) return res.status(403).json({ message: "Unauthorized" });
 
+    const studentReg = await HonorsRegistration.findOne({ student: studentId });
+    if (!studentReg) return res.status(404).json({ message: "Student record not found" });
+
     // Remove from HonorsTopic requests
     await HonorsTopic.updateOne(
       { _id: docid },
-      { $pull: { requests: { student: studentId, topic: topicId } } }
+      { $pull: { requests: { student: studentReg._id, topic: topicId } } }
     );
 
     // Update status in HonorsRegistration to 'Rejected'
     await HonorsRegistration.updateOne(
-      { _id: studentId, "requests.topic": docid, "requests.subTopicId": topicId },
+      { _id: studentReg._id, "requests.topic": docid, "requests.subTopicId": topicId },
       { $set: { "requests.$.status": "Rejected" } }
     );
 
