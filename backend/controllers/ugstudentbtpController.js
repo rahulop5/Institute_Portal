@@ -106,7 +106,7 @@ export const getBTPDashboard = async (req, res) => {
                         rollno: s.student?.student?.rollNumber || ""
                     })),
                     evaluations: formattedEvaluations,
-                    latestUpdates: remainingUpdates
+                    latestUpdates: (projectPopulated.updates || []).sort((a, b) => new Date(b.time) - new Date(a.time))
                 }
             });
         }
