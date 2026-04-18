@@ -468,24 +468,53 @@ export const submitFeedback = async (req, res) => {
       const courseId = f.course;
 
       let analytics = await Analytics.findOne({ faculty: facultyId }).session(session);
+
+      // Auto-create analytics document if missing for this faculty
       if (!analytics) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(500).json({
-          message: "Analytics not found for faculty",
+        const allQuestions = await Question.find().session(session);
+        const questionAnalytics = allQuestions.map((q) => ({
+          question: q._id,
+          average: 0,
+          min: 0,
+          max: 0,
+          responseCount: 0,
+          textResponses: [],
+        }));
+        analytics = new Analytics({
+          faculty: facultyId,
+          courses: [
+            {
+              course: courseId,
+              questions: questionAnalytics,
+              totalResponses: 0,
+            },
+          ],
         });
+        await analytics.save({ session });
       }
 
       let courseEntry = analytics.courses.find(
         (c) => c.course.toString() === courseId.toString()
       );
 
+      // Auto-create course analytics entry if missing
       if (!courseEntry) {
-         await session.abortTransaction();
-         session.endSession();
-        return res.status(500).json({
-          message: "Course analytics not found for faculty",
+        const allQuestions = await Question.find().session(session);
+        const questionAnalytics = allQuestions.map((q) => ({
+          question: q._id,
+          average: 0,
+          min: 0,
+          max: 0,
+          responseCount: 0,
+          textResponses: [],
+        }));
+        analytics.courses.push({
+          course: courseId,
+          questions: questionAnalytics,
+          totalResponses: 0,
         });
+        await analytics.save({ session });
+        courseEntry = analytics.courses[analytics.courses.length - 1];
       }
 
       // --- Compute this student's average rating for the page ---
@@ -510,11 +539,16 @@ export const submitFeedback = async (req, res) => {
         );
 
         if (!qEntry) {
-          await session.abortTransaction();
-          session.endSession();
-          return res.status(500).json({
-            message: `Question ${ans.question} not found in analytics`,
+          // Auto-create question analytics entry if missing
+          courseEntry.questions.push({
+            question: ans.question,
+            average: 0,
+            min: 0,
+            max: 0,
+            responseCount: 0,
+            textResponses: [],
           });
+          qEntry = courseEntry.questions[courseEntry.questions.length - 1];
         }
 
         if (question.type === "rating") {

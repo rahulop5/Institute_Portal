@@ -1537,14 +1537,40 @@ export const updateCourseDetails = async (req, res) => {
         const facultyIds = faculty.map(f => typeof f === 'object' ? f.id || f._id : f);
         course.faculty = facultyIds;
 
-        // Also need to ensure Analytics exists for these faculty for this course?
-        // It's good practice to ensure analytics consistency, but for now let's just update the assignment.
-        // The addCourse logic initializes analytics.
-        // If we add NEW faculty to an existing course, we should probably init analytics for them.
-        
-        // Let's do a quick check to init analytics for any new faculty
-        // This part can be complex, skipping for "save changes" simplicity unless requested.
-        // PROCEEDING with just updating the link as per typical "edit" requirements.
+        // Initialize analytics for any newly assigned faculty
+        const allQuestions = await Question.find();
+        const questionAnalytics = allQuestions.map((q) => ({
+          question: q._id,
+          average: 0,
+          min: 0,
+          max: 0,
+          responseCount: 0,
+          textResponses: [],
+        }));
+
+        for (const facId of facultyIds) {
+          let analytics = await Analytics.findOne({ faculty: facId });
+
+          if (!analytics) {
+            analytics = new Analytics({
+              faculty: facId,
+              courses: [],
+            });
+          }
+
+          const alreadyHas = analytics.courses.some(
+            (c) => c.course.toString() === courseId.toString()
+          );
+
+          if (!alreadyHas) {
+            analytics.courses.push({
+              course: courseId,
+              questions: questionAnalytics,
+              totalResponses: 0,
+            });
+            await analytics.save();
+          }
+        }
     }
 
     await course.save();
