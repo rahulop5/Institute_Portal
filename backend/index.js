@@ -8,6 +8,8 @@ import staffbtpRoutes from "./routes/staffbtpRoutes.js";
 import facultybtpRoutes from "./routes/facultybtpRoutes.js";
 import ugstudenthonorsroutes from "./routes/ugstudenthonorsRoutes.js"
 import facultyhonorsRoutes from "./routes/facultyhonorsRoutes.js"
+import ugstudentapRoutes from "./routes/ugstudentapRoutes.js";
+import facultyapRoutes from "./routes/facultyapRoutes.js";
 import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
 import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
 import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
@@ -32,6 +34,10 @@ app.use("/faculty/btp", facultybtpRoutes);
 //Honors
 app.use("/student/honors", ugstudenthonorsroutes);
 app.use("/faculty/honors", facultyhonorsRoutes);
+
+//Additional Project
+app.use("/student/ap", ugstudentapRoutes);
+app.use("/faculty/ap", facultyapRoutes);
 
 //Feedback
 app.use("/student/feedback", feedbackstudentRoutes);

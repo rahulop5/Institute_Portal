@@ -1,8 +1,8 @@
 # Feedback System — API Reference
 
-> **Last updated:** 2026-02-20
-> **Base URL:** `/api/feedback`
-> **Authentication:** All endpoints require JWT auth via middleware
+> **Last updated:** 2026-04-28  
+> **Authentication:** All endpoints require JWT auth via middleware  
+> **Route mounts:** Admin = `/puser/feedback`, Faculty = `/faculty/feedback`, Student = `/student/feedback`, Questions = `/questions`
 
 ---
 
@@ -22,7 +22,7 @@ Format: `[M|S][YY]` where `M` = Monsoon, `S` = Spring, `YY` = 2-digit year.
 
 ## Admin Endpoints
 
-**Base path:** `/api/feedback/admin`
+**Base path:** `/puser/feedback`  
 **Auth:** `authAdminMiddleware`
 
 ---
@@ -326,7 +326,7 @@ Returns all distinct semester codes from the Course collection, sorted newest-fi
 
 ## Faculty Endpoints
 
-**Base path:** `/api/feedback/faculty`
+**Base path:** `/faculty/feedback`  
 **Auth:** `authFacultyMiddleware`
 
 ---
@@ -413,7 +413,7 @@ Returns semesters the faculty has courses in, sorted newest-first.
 
 ## Student Endpoints
 
-**Base path:** `/api/feedback/student`
+**Base path:** `/student/feedback`  
 **Auth:** `authStudentMiddleware`
 
 ---
@@ -558,6 +558,25 @@ Final submission. Updates analytics for each faculty-course pair. **Atomic (tran
 
 ---
 
+## Questions Endpoint
+
+**Base path:** `/questions`  
+**Auth:** `authMiddleware` (any authenticated user)
+
+#### `GET /questions/`
+Returns all active feedback questions, sorted by order.
+
+**Response:**
+```json
+[
+  { "_id": "...", "text": "How well does the faculty explain concepts?", "type": "rating", "order": 1 },
+  { "_id": "...", "text": "Rate the course material quality", "type": "rating", "order": 2 },
+  { "_id": "...", "text": "Any additional feedback for the faculty?", "type": "text", "order": 16 }
+]
+```
+
+---
+
 ## Response Codes
 
 | Code | Meaning |
@@ -567,4 +586,5 @@ Final submission. Updates analytics for each faculty-course pair. **Atomic (tran
 | `400` | Validation error (bad input, already submitted, etc.) |
 | `403` | Access denied (wrong department) |
 | `404` | Resource not found |
+| `429` | Rate limited |
 | `500` | Server error |
