@@ -12,6 +12,7 @@ import Analytics from "../../models/feedback/Analytics.js";
 import Feedback from "../../models/feedback/Feedback.js";
 import Admin from "../../models/Admin.js";
 import { getCurrentSemester, getPreviousSemester } from "../../utils/semesterUtils.js";
+import FeedbackConfig from "../../models/feedback/FeedbackConfig.js";
 
 //dashboard
 export const adminDashboardStudent = async (req, res) => {
@@ -1722,6 +1723,78 @@ export const getAvailableSemesters = async (req, res) => {
     console.error("Error fetching semesters:", err);
     return res.status(500).json({
       message: "Error fetching available semesters",
+      error: err.message,
+    });
+  }
+};
+
+// Toggle feedback open/close for the current semester
+export const toggleFeedback = async (req, res) => {
+  try {
+    const adminEmail = req.user.email;
+    const semester = getCurrentSemester();
+
+    // Find or create config for this semester
+    let config = await FeedbackConfig.findOne({ semester });
+
+    if (!config) {
+      // First time — create with default open=true, then toggle to closed
+      config = new FeedbackConfig({
+        semester,
+        isOpen: false,
+        closedAt: new Date(),
+        closedBy: adminEmail,
+      });
+      await config.save();
+      return res.status(200).json({
+        message: `Feedback has been closed for semester ${semester}`,
+        isOpen: false,
+      });
+    }
+
+    // Toggle the state
+    config.isOpen = !config.isOpen;
+    if (!config.isOpen) {
+      config.closedAt = new Date();
+      config.closedBy = adminEmail;
+    } else {
+      config.closedAt = null;
+      config.closedBy = null;
+    }
+    await config.save();
+
+    return res.status(200).json({
+      message: config.isOpen
+        ? `Feedback has been opened for semester ${semester}`
+        : `Feedback has been closed for semester ${semester}`,
+      isOpen: config.isOpen,
+    });
+  } catch (err) {
+    console.error("Error toggling feedback:", err);
+    return res.status(500).json({
+      message: "Error toggling feedback status",
+      error: err.message,
+    });
+  }
+};
+
+// Get the feedback open/close status for the current semester
+export const getFeedbackStatus = async (req, res) => {
+  try {
+    const semester = getCurrentSemester();
+    const config = await FeedbackConfig.findOne({ semester });
+
+    // If no config exists, feedback is open by default
+    return res.status(200).json({
+      semester,
+      isOpen: config ? config.isOpen : true,
+      closedAt: config?.closedAt || null,
+      closedBy: config?.closedBy || null,
+    });
+  } catch (err) {
+    console.error("Error fetching feedback status:", err);
+    return res.status(500).json({
+      message: "Error fetching feedback status",
       error: err.message,
     });
   }

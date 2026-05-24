@@ -7,6 +7,7 @@ import Faculty from "../../models/Faculty.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Question from "../../models/feedback/Question.js";
 import { getCurrentSemester } from "../../utils/semesterUtils.js";
+import FeedbackConfig from "../../models/feedback/FeedbackConfig.js";
 
 export const feedbackStudentDashboard = async (req, res) => {
   try {
@@ -21,6 +22,10 @@ export const feedbackStudentDashboard = async (req, res) => {
     const studentId = stu._id;
 
     const currentSemester = getCurrentSemester();
+
+    // Check if feedback is open for the current semester
+    const feedbackConfig = await FeedbackConfig.findOne({ semester: currentSemester });
+    const isFeedbackOpen = feedbackConfig ? feedbackConfig.isOpen : true;
 
     // 1. Check if feedback instance already exists for this student + semester
     let feedbackInstance = await Feedback.findOne({
@@ -48,17 +53,40 @@ export const feedbackStudentDashboard = async (req, res) => {
           email: stu.email,
           started: true,
           submitted: true,
+          isFeedbackOpen,
           message: "Your feedback has been recorded",
+        });
+      }
+      // If feedback is closed and student hasn't submitted yet
+      if (!isFeedbackOpen) {
+        return res.status(200).json({
+          email: stu.email,
+          started: true,
+          submitted: false,
+          isFeedbackOpen: false,
+          message: "Feedback submission has been closed by the admin.",
         });
       }
       return res.status(200).json({
         email: stu.email,
         started: true,
+        isFeedbackOpen,
         feedback: feedbackInstance,
       });
     }
 
-    // 2. If not started → fetch student’s enrolled courses + assigned faculty
+    // If feedback is closed and student hasn't started yet
+    if (!isFeedbackOpen) {
+      return res.status(200).json({
+        email: stu.email,
+        started: false,
+        submitted: false,
+        isFeedbackOpen: false,
+        message: "Feedback submission has been closed by the admin.",
+      });
+    }
+
+    // 2. If not started → fetch student's enrolled courses + assigned faculty
     // Filter to only include courses from the current semester
     const enrollments = await Enrollment.find({ student: studentId }).populate({
       path: "course",
@@ -91,6 +119,7 @@ export const feedbackStudentDashboard = async (req, res) => {
     return res.status(200).json({
       email: stu.email,
       started: false,
+      isFeedbackOpen,
       courses: coursesWithFaculty,
     });
   } catch (err) {
@@ -103,6 +132,13 @@ export const feedbackStudentDashboard = async (req, res) => {
 
 export const selectFaculty = async (req, res) => {
   try {
+    // Check if feedback is open
+    const currentSemester = getCurrentSemester();
+    const feedbackConfig = await FeedbackConfig.findOne({ semester: currentSemester });
+    if (feedbackConfig && !feedbackConfig.isOpen) {
+      return res.status(403).json({ message: "Feedback submission has been closed by the admin." });
+    }
+
     const { selections } = req.body;
     // selections = [
     //   { courseId: "68db5b79...", facultyIds: ["68db66d7...", "68db66d8..."] },
@@ -208,6 +244,13 @@ export const selectFaculty = async (req, res) => {
 
 export const updateFeedback = async (req, res) => {
   try {
+    // Check if feedback is open
+    const currentSem = getCurrentSemester();
+    const feedbackConfig = await FeedbackConfig.findOne({ semester: currentSem });
+    if (feedbackConfig && !feedbackConfig.isOpen) {
+      return res.status(403).json({ message: "Feedback submission has been closed by the admin." });
+    }
+
     const { feedbacks, currentPage } = req.body;
     // console.log(feedbacks[0].answers);
 
@@ -335,6 +378,15 @@ export const submitFeedback = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
+    // Check if feedback is open
+    const currentSem = getCurrentSemester();
+    const feedbackConfig = await FeedbackConfig.findOne({ semester: currentSem }).session(session);
+    if (feedbackConfig && !feedbackConfig.isOpen) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Feedback submission has been closed by the admin." });
+    }
+
     const { feedbacks } = req.body;
 
     const student = await Student.findOne({ email: req.user.email }).session(session);

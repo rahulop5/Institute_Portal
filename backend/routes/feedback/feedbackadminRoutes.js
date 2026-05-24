@@ -15,7 +15,9 @@ import {
     updateCourseDetails,
     updateCourseStudents,
     resetFeedback,
-    getAvailableSemesters
+    getAvailableSemesters,
+    toggleFeedback,
+    getFeedbackStatus
 } from "../../controllers/feedback/feedbackadminController.js";
 import upload from "../../config/multer.js";
 import { authAdminMiddleware } from "../../controllers/authController.js";
@@ -48,6 +50,10 @@ router.post("/updateCourseStudents", authAdminMiddleware, upload.single("file"),
 
 //Reset Feedback
 router.post("/resetFeedback", authAdminMiddleware, resetFeedback);
+
+//Feedback open/close control
+router.post("/toggleFeedback", authAdminMiddleware, toggleFeedback);
+router.get("/feedbackStatus", authAdminMiddleware, getFeedbackStatus);
 
 //Semester listing
 router.get("/semesters", authAdminMiddleware, getAvailableSemesters);
