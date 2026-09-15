@@ -127,6 +127,20 @@ export const authAdminMiddleware = async (req, res, next) => {
   }
 };
 
+// Dean Academic accounts are Admins with Admin.isDean set, used for
+// cross-department analytics visibility - they must not reach any
+// management/write endpoint. Mount this after authAdminMiddleware on those
+// routes only; read-only dashboard routes don't need it.
+export const blockDeanWriteMiddleware = async (req, res, next) => {
+  const admin = await Admin.findOne({ email: req.user.email });
+  if (admin?.isDean) {
+    return res.status(403).json({
+      message: "Dean Academic accounts have read-only access",
+    });
+  }
+  next();
+};
+
 export const authFacultyMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

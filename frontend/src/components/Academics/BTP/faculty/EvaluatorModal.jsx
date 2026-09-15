@@ -1,8 +1,7 @@
 import { Form, redirect } from "react-router";
 import styles from "../../../styles/EvaluatorModal.module.css";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle, FaRegEnvelope } from "react-icons/fa";
 import idcard from "../../../../assets/idcard.svg";
-import bin from "../../../../assets/bin.svg";
 import { API_HOST } from "../../../../config";
 
 export default function EvaluatorModal({ projid, students, onClose, isEvaluator }) {
@@ -52,12 +51,12 @@ export default function EvaluatorModal({ projid, students, onClose, isEvaluator 
 
                     <div className={styles.binLabel}>
                       <div className={styles.binLabelImg}>
-                        <img src={bin} alt="Bin Icon" />
+                        <FaRegEnvelope className={styles.emailIcon} />
                       </div>
                       <div className={styles.binLabelDetailsDiv}>
-                        <div className={styles.label}>Bin Number</div>
+                        <div className={styles.label}>Email</div>
                         <div className={styles.binNumberValue}>
-                          {student.bin}
+                          {student.email}
                         </div>
                       </div>
                     </div>

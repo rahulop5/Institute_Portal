@@ -7,45 +7,6 @@ import styles from '../../../styles/EvaluationPage.module.css';
 export default function EvaluationPage({data}) {
   const [selectedTab, setSelectedTab] = useState('guiding');
 
-  const data2 = {
-    email: 'asha.iyer@example.com',
-    guideproj: [
-      {
-        _id: '1',
-        topic: 'Assistive Technologies for Accessibility',
-        projid: 'T1000202',
-        team: ['Pavan Karthik Soothradar', 'Abhiram', 'Sa Tej'],
-        status: 'pending',
-      },
-    ],
-    evalproj: [
-      {
-        _id: '2',
-        topic: 'Remote Monitoring and Control Systems',
-        projid: 'T1000784',
-        team: ['Pavan Karthik Soothradar', 'Abhiram', 'Sa Tej'],
-        status: 'rejected',
-      },
-    ],
-    evalreq: [
-      {
-        _id: '3',
-        topic: 'Next-Gen Communication Platforms',
-        projid: 'T1000312',
-        team: ['Pavan Karthik Soothradar', 'Abhiram', 'Sa Tej'],
-        status: 'approved',
-        deadline: '2023-12-31',
-      },
-      {
-        _id: '4',
-        topic: 'Low-Cost Tech for Grassroots Impact',
-        projid: 'T1000640',
-        team: ['Pavan Karthik Soothradar', 'Abhiram', 'Sa Tej'],
-        status: 'approved',
-      },
-    ],
-  };
-
   const getCurrentData = () => {
     if (selectedTab === 'guiding') return data.guideproj;
     if (selectedTab === 'evaluating') return data.evalproj;

@@ -20,7 +20,7 @@ import {
     getFeedbackStatus
 } from "../../controllers/feedback/feedbackadminController.js";
 import upload from "../../config/multer.js";
-import { authAdminMiddleware } from "../../controllers/authController.js";
+import { authAdminMiddleware, blockDeanWriteMiddleware } from "../../controllers/authController.js";
 
 const router = express.Router();
 
@@ -33,26 +33,26 @@ router.get("/dashboard/courses", authAdminMiddleware, adminDashboardCourse);
 router.get("/dashboard/course", authAdminMiddleware, viewCourse);
 
 // database feeding
-router.post("/addcourse", authAdminMiddleware, upload.single("file"), addCourse);
-router.post("/addFacultyCSV", authAdminMiddleware, upload.single("file"), addFacultyCSV);
-router.post("/addStudentsCSV", authAdminMiddleware, upload.single("file"), addStudentsCSV);
+router.post("/addcourse", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addCourse);
+router.post("/addFacultyCSV", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addFacultyCSV);
+router.post("/addStudentsCSV", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addStudentsCSV);
 
 //course actions
 router.get("/viewCourse", authAdminMiddleware, viewCourse);
-router.get("/resetcourse", authAdminMiddleware, resetCourse);
-router.delete("/deletecourse", authAdminMiddleware, deleteCourse);
-router.post("/addFacultyStudentstoCourse", authAdminMiddleware, upload.single("file"), addFacultyStudentstoCourse);
+router.get("/resetcourse", authAdminMiddleware, blockDeanWriteMiddleware, resetCourse);
+router.delete("/deletecourse", authAdminMiddleware, blockDeanWriteMiddleware, deleteCourse);
+router.post("/addFacultyStudentstoCourse", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addFacultyStudentstoCourse);
 
 // Update course details
-router.post("/updateCourseDetails", authAdminMiddleware, updateCourseDetails);
+router.post("/updateCourseDetails", authAdminMiddleware, blockDeanWriteMiddleware, updateCourseDetails);
 // Update course students (CSV)
-router.post("/updateCourseStudents", authAdminMiddleware, upload.single("file"), updateCourseStudents);
+router.post("/updateCourseStudents", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), updateCourseStudents);
 
 //Reset Feedback
-router.post("/resetFeedback", authAdminMiddleware, resetFeedback);
+router.post("/resetFeedback", authAdminMiddleware, blockDeanWriteMiddleware, resetFeedback);
 
 //Feedback open/close control
-router.post("/toggleFeedback", authAdminMiddleware, toggleFeedback);
+router.post("/toggleFeedback", authAdminMiddleware, blockDeanWriteMiddleware, toggleFeedback);
 router.get("/feedbackStatus", authAdminMiddleware, getFeedbackStatus);
 
 //Semester listing

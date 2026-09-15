@@ -25,6 +25,9 @@ export const getBTPDashboard = async (req, res) => {
         }
 
         // 3. Try to find the BTP registration record
+        // NOTE: requests.topic must stay an ObjectId, not populated - the
+        // requestStatus matching below (`r.topic.toString() === topicDoc._id...`)
+        // compares it directly against BTPTopic ids.
         const btpUser = await BTPRegistration.findOne({ student: student._id })
             .populate({
                 path: 'project',
@@ -32,10 +35,6 @@ export const getBTPDashboard = async (req, res) => {
                     { path: 'guide', select: 'name email dept' },
                     { path: 'evaluators.evaluator', select: 'name email' },
                 ]
-            })
-            .populate({
-                 path: 'requests.topic',
-                 select: 'faculty' 
             });
 
         // 4. Scenario A: Student is already in a Project

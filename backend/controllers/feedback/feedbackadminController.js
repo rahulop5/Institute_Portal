@@ -180,6 +180,7 @@ export const adminDashboardFaculty = async (req, res) => {
     // Send final aggregated response
     return res.status(200).json({
       isStaff: adminFn.isStaff,
+      isDean: adminFn.isDean,
       currentSemester: semesterFilter,
       availableSemesters: allSemesters,
       totalFaculties: faculties.length,

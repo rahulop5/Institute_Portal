@@ -14,7 +14,8 @@ const adminschema=new mongoose.Schema({
         message: "At least one department is required.",
       },
     },
-    isStaff: {type: Boolean, default: false}
+    isStaff: {type: Boolean, default: false},
+    isDean: {type: Boolean, default: false}
 })
 
 export default mongoose.model("Admin", adminschema);

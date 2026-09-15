@@ -8,6 +8,9 @@ import {
     rejectTopicRequest,
     evaluateProjectasGuide,
     evaluateProjectasEval,
+    releaseEvaluation,
+    assignEvaluator,
+    removeEvaluator,
     viewProject,
     viewProjectEvaluator
 } from "../controllers/facultybtpController.js";
@@ -21,6 +24,9 @@ router.post("/approvetopicrequest", authFacultyMiddleware, approveTopicRequest);
 router.delete("/rejecttopicreq", authFacultyMiddleware, rejectTopicRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateProjectasGuide);
 router.post("/evaluateevaluator", authFacultyMiddleware, evaluateProjectasEval);
+router.post("/releaseevaluation", authFacultyMiddleware, releaseEvaluation);
+router.post("/assignevaluator", authFacultyMiddleware, assignEvaluator);
+router.post("/removeevaluator", authFacultyMiddleware, removeEvaluator);
 router.get("/viewproject", authFacultyMiddleware, viewProject);
 router.get("/viewprojectevaluator", authFacultyMiddleware, viewProjectEvaluator);
 

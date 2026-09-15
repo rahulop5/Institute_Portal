@@ -161,6 +161,12 @@
 }
 
 /* Guide + Evaluators Grid */
+.guideEvalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .guideCard {
   display: flex;
   flex-direction: row;
@@ -363,6 +369,11 @@
   transform: translateX(-50%);
 }
 
+.activeCheckpoint {
+  background-color: #6092ff;
+  border-color: #6092ff;
+}
+
 /* Grid for date and score */
 .evalScoreGrid {
   display: grid;
@@ -376,7 +387,6 @@
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   text-align: center;
-  border: 0.5px solid #2a9d00;
 }
 
 .smallLabel {
@@ -391,9 +401,9 @@
 }
 
 .scoreValue {
-  font-size: 3rem;
-  font-weight: bold;
-  color: #2e7d32;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #000;
 }
 
 .outOf {

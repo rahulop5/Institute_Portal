@@ -3,6 +3,7 @@ import styles from '../../../styles/Overview.module.css';
 import totalprojects from '../../../../assets/totalprojs.svg';
 import guidingIcon from '../../../../assets/totalgudiing.svg';
 import evaluatingIcon from '../../../../assets/totalevaluating.svg';
+import requestsIcon from '../../../../assets/bell.png';
 
 export default function Overview({ data }) {
   const totalProjects     = data.guideproj.length + data.evalproj.length;
@@ -33,7 +34,7 @@ export default function Overview({ data }) {
       {/* Requests */}
       <div className={`${styles.item} ${styles.lastItem}`}>
         <span className={`${styles.number} ${styles.requests}`}>{requestCount}</span>
-        <span className={`${styles.icon}`}>EE</span>
+        <img src={requestsIcon} alt="Requests" className={styles.requestsIcon} />
       </div>
     </div>
   );

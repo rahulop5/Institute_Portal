@@ -3,11 +3,13 @@
 }
 
 .header{
-  width: 93%;
+  width: 100%;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns:  1.8fr 1.26fr 1fr 0.64fr; /* Removed the 8px column */
+  grid-template-columns: 1.8fr 1fr 1fr 0.5fr;
   align-items: center;
-  padding-left: 21px;
+  padding: 0 20px;
+  margin-bottom: 4px;
 }
 
 
@@ -23,18 +25,21 @@
 
 
 .card {
-  width: 93%;
+  width: 100%;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 1.8fr 1fr 1fr 0.5fr; /* Removed the 8px column */
+  grid-template-columns: 1.8fr 1fr 1fr 0.5fr;
   align-items: center;
   background-color: white;
   border-radius: 16px;
-  padding-top: 0px;
-  padding: 22px 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 18px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   position: relative;
   transition: box-shadow 0.2s ease;
- /* Optional: remove this too if it's not needed */
+}
+
+.card:hover {
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
 }
 
 .topic {

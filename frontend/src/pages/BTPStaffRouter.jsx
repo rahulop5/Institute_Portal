@@ -1,5 +1,4 @@
 import { useLoaderData } from "react-router";
-import NotStarted from "../components/Academics/BTP/NotStarted";
 import ErrorPage from "./Error";
 import TeamListPage from "../components/Academics/BTP/staff/TeamFormation/Teamlistpage";
 import FacultyManagement from "../components/Academics/BTP/staff/topicselection/FacultyManagement";
@@ -35,10 +34,7 @@ export default function BTPStaffRouter(){
     const data=useLoaderData();
     const phase=data.phase;
     switch (phase) {
-        case "NS":
-            return <NotStarted />
-    
-        case "TF": 
+        case "TF":
             return <TeamListPage data={data} />
 
         case "FA": 

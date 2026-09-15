@@ -43,10 +43,10 @@ export default function Sidebar() {
     <nav id="sidebar" className={isSidebarClosed ? "close" : ""}>
       <ul>
         <SimpleNavItem to="/academics/feedback" icon={homeIcon} label="Home" />
+        <SimpleNavItem to="/academics/btp" icon={btpIcon} label="BTP" />
 
-        
-          {/* <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" />
-          <SubMenuItem to="/academics/btp" icon={btpIcon} label="BTP" /> */}
+
+          {/* <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" /> */}
           {/* <SubMenuItem to="/academics/feedback" icon={feedbackIcon} label="Feedback Form" /> */}
       
 

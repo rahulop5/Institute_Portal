@@ -1,0 +1,131 @@
+.container {
+  padding: 0.5rem;
+}
+
+.heading {
+  font-size: 1.7rem;
+  font-weight: 400;
+  color: #1f1f1f;
+  margin-bottom: 1.5rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: #6f6f6f;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+}
+
+.facultyCard {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+}
+
+.facultyHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.facultyIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.facultyName {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.facultyDept {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.topicRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.topicRow:last-child {
+  border-bottom: none;
+}
+
+.topicTitle {
+  font-weight: 500;
+}
+
+.topicAbout {
+  color: #555;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.topicAction {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.requestBtn {
+  background: white;
+  border: 2px solid #1bbb55;
+  color: #1bbb55;
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.requestBtn:hover {
+  background: #1bbb55;
+  color: white;
+}
+
+.withdrawBtn {
+  background: transparent;
+  border: 2px solid #6f6f6f;
+  color: #444;
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.withdrawBtn:hover {
+  background: #6f6f6f;
+  color: white;
+}
+
+.badgePending,
+.badgeRejected {
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badgePending {
+  color: #b8860b;
+  background: #fdf3d9;
+}
+
+.badgeRejected {
+  color: #c0392b;
+  background: #fbe0dc;
+}

@@ -1,10 +1,8 @@
 import { useLoaderData } from "react-router";
-import NotStarted from "../components/Academics/BTP/NotStarted";
 import ErrorPage from "./Error";
-import BTPTeamselection_bin1 from "../components/Academics/BTP/student/TF/Teamselection_bin1";
-import BTPTeamselection_bin23 from "../components/Academics/BTP/student/TF/Teamselection_bin23";
-import FacultySelection from "../components/Academics/BTP/student/FA/Facultyselection";
+import TopicSelection from "../components/Academics/BTP/student/TopicSelection";
 import Inprogress from "../components/Academics/BTP/student/IP/Inprogress";
+import Completed from "../components/Academics/BTP/student/Completed";
 
 import { API_HOST } from "../config";
 
@@ -13,30 +11,19 @@ export default function BTPStudentRouter(){
     const data=useLoaderData();
     const phase=data.phase;
     switch (phase) {
-        case "NS":
-            return <NotStarted />
-    
-        case "TF": 
-            switch (data.bin) {
-                case 1:
-                    return <BTPTeamselection_bin1 data={data} />
-                case 2:
-                case 3: 
-                    return <BTPTeamselection_bin23 data={data} />
-                default:
-                    return <ErrorPage />
-            }
+        case "TOPIC_SELECTION":
+            return <TopicSelection data={data} />
 
-        case "FA": 
-            return <FacultySelection data={data} />
-            
-        case "IP":
+        case "IN_PROGRESS":
             return <Inprogress data={data} />
+
+        case "COMPLETED":
+            return <Completed data={data} />
 
         default:
             return <ErrorPage />
     }
-    
+
 }
 
 export async function loader(){

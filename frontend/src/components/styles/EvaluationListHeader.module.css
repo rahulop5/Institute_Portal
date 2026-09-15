@@ -2,51 +2,54 @@
 
 .wrapper {
   width: 100%;
-  /* margin-top: 1rem; */
+  margin-top: 3rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
 .wrapper h1 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 2rem;
+  font-size: 1.6rem;
+  color: #1f1f1f;
+  margin-bottom: 1.5rem;
   font-weight: 400;
 }
 .tabContainer {
-    margin-left: 2rem;
-    width: 80%;
+    width: fit-content;
     background-color: white;
-    padding: 8px 17px;
-    border-radius: 39px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    padding: 10px 12px;
+    border-radius: 25px;
+    display: flex;
     gap: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .tab {
   border: none;
   background: transparent;
-  padding: 12px 20px;
-  border-radius: 39px;
-  font-size: 18px;
+  padding: 8px 22px;
+  border-radius: 25px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  color: #333;
+  color: #555;
+  white-space: nowrap;
 }
 
 .tab:not(.active):hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: #f6f6ff;
+  color: #222;
 }
 
 .active {
-background-color: #ffffff;
+  background-color: #ffffff;
   z-index: 2;
   color: #000;
+  font-weight: 600;
   position: relative;
-box-shadow:
-     0px 0px 8px rgba(0, 0, 0, 0.2),   /* deep shadow bottom-right */
-     0px 0px 8px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0px 0px 6px rgba(0, 0, 0, 0.15),
+    0px 2px 8px rgba(0, 0, 0, 0.1);
 }

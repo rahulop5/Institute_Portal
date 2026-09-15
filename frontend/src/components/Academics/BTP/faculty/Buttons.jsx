@@ -7,27 +7,6 @@ import EvaluatorModal from "./EvaluatorModal";
 export default function Buttons({ projid, team, isEvaluator }) {
   const [showModal, setShowModal] = useState(false);
 
-  const dummyStudents = [
-    {
-      _id: "1",
-      name: "Rahul Kumar",
-      rollNumber: "20BCE001",
-      binNumber: "5",
-    },
-    {
-      _id: "2",
-      name: "Priya Sharma",
-      rollNumber: "20BCE002",
-      binNumber: "5",
-    },
-    {
-      _id: "2",
-      name: "Priya Sharma",
-      rollNumber: "20BCE002",
-      binNumber: "5",
-    },
-  ];
-
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
@@ -65,8 +44,8 @@ export default function Buttons({ projid, team, isEvaluator }) {
           students={team.map((student) => ({
             _id: student._id,
             name: student.name,
-            rollNumber: student.rollno, // backend sends as "rollno"
-            bin: student.bin || "-", // placeholder if not provided
+            rollNumber: student.rollNumber,
+            email: student.email,
           }))}
           onSubmit={handleSubmit}
           onClose={handleCloseModal}

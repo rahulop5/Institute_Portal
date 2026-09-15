@@ -1,15 +1,6 @@
 // Inprogress.jsx
-import ProjectCard from "./ProjectCard";
-import EvaluationCard from "./EvaluationCard";
-import ProgressCard from "./ProgressCard";
-import NextEvalCard from "./NextEvalCard";
-import TeamCard from "./TeamCard";
-import RemarksCard from "./RemarksCard";
-import ScoreCard from "./ScoreCard";
-import EvaluationDetails from "./Evaluations";
 import AddUpdateCard from "./UpdateCard";
 import { redirect } from "react-router";
-import classes from "../../../../styles/Inprogress.module.css";
 
 import styles from "../../../../styles/StudentInProgress.module.css";
 import Updatelist from "../../faculty/UpdateList";
@@ -18,20 +9,21 @@ import pendingIcon from "../../../../../assets/pendingsvg.svg";
 import studenitcon from "../../../../../assets/studenticon.svg";
 import { API_HOST } from "../../../../../config";
 
-export default function Inprogress({ data }) {
-  const today = new Date();
-  const nextEvalMonth = today.toLocaleString("default", { month: "long" });
-  const nextEvalDay = today.getDate();
+const BTP_MAX_EVALUATIONS = 4;
 
+export default function Inprogress({ data }) {
   const latestEvaluation = data.project.evaluations.find(
     (e) => e.time && e.remark
   );
-  const latestRemark = latestEvaluation?.remark || "No Remarks are given yet.";
+  const latestRemark = latestEvaluation?.remark || "No remarks yet.";
 
-  const scoreEvaluation = data.project.evaluations.find(
-    (e) => e.marksgiven !== null && e.marksgiven !== undefined
-  );
-  const currentScore = scoreEvaluation?.marksgiven ?? "NaN";
+  // marksgiven is only ever populated (and only ever the current student's
+  // own entry) once the guide has marked *and* made that evaluation visible
+  // - see canstudentsee in ugstudentbtpController.js.
+  const scoreEvaluation = [...data.project.evaluations]
+    .reverse()
+    .find((e) => e.marksgiven && e.marksgiven.length > 0);
+  const latestMarks = scoreEvaluation?.marksgiven?.[0]?.guidemarks;
 
   const evalCount = data.project.evaluations.length;
   const phase = evalCount <= 2 ? "Semester 1" : "Semester 2";
@@ -163,40 +155,35 @@ export default function Inprogress({ data }) {
               <div
                 className={styles.progressFill}
                 style={{
-                  width: `${(data.project.evaluations.length / 4) * 100}%`,
+                  width: `${(evalCount / BTP_MAX_EVALUATIONS) * 100}%`,
                 }}
               ></div>
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className={`${styles.checkpoint} ${
-                    data.project.evaluations.length >= i
-                      ? styles.activeCheckpoint
-                      : ""
+                    evalCount >= i ? styles.activeCheckpoint : ""
                   }`}
-                  style={{ left: `${(i / 4) * 100}%` }}
+                  style={{ left: `${(i / BTP_MAX_EVALUATIONS) * 100}%` }}
                 ></div>
               ))}
             </div>
           </div>
 
-          {/* Evaluation Date + Score */}
+          {/* Evaluations Completed + Latest Marks */}
           <div className={styles.evalScoreGrid}>
             <div className={styles.dateCard}>
-              <p className={styles.smallLabel}>Next Evaluation</p>
+              <p className={styles.smallLabel}>Evaluations Completed</p>
               <h2>
-                {data.nextEvalDate.month} <br />
-                <span className={styles.largeNumber}>
-                  {data.nextEvalDate.day}
-                </span>
+                <span className={styles.largeNumber}>{evalCount}</span>
+                {` / ${BTP_MAX_EVALUATIONS}`}
               </h2>
             </div>
 
             <div className={styles.scoreCard}>
-              <p className={styles.smallLabel}>Current Score</p>
+              <p className={styles.smallLabel}>Latest Guide Marks</p>
               <h2 className={styles.scoreValue}>
-                {data.currentScore.value}
-                <span className={styles.outOf}>/{data.currentScore.outOf}</span>
+                {latestMarks ?? "Not yet evaluated"}
               </h2>
             </div>
           </div>
@@ -206,10 +193,16 @@ export default function Inprogress({ data }) {
             <p className={styles.smallLabel}>Phase</p>
             <h2>{phase}</h2>
           </div>
+
+          {/* Latest Remark */}
+          <div className={styles.phaseCard}>
+            <p className={styles.smallLabel}>Latest Remark</p>
+            <h2>{latestRemark}</h2>
+          </div>
         </div>
       </div>
       <Updatelist updates={data.project.latestUpdates} />
-      {data.bin === 1 ? <AddUpdateCard key={Date.now()} /> : null}
+      <AddUpdateCard key={Date.now()} />
     </>
   );
 }

@@ -1,6 +1,5 @@
 import { Outlet, useMatch, useLoaderData } from "react-router";
-import ErrorPage from "./Error";
-import TopicAddtion from "../components/Academics/BTP/faculty/TopicAddition";
+import TopicAddition from "../components/Academics/BTP/faculty/TopicAddition";
 import EvaluationPage from "../components/Academics/BTP/faculty/EvaluationPage";
 
 import { API_HOST } from "../config";
@@ -8,7 +7,6 @@ import { API_HOST } from "../config";
 
 export default function BTPFacultyRouter() {
   const data = useLoaderData();
-  const phase = data.phase;
 
   const isViewingProject = useMatch("/academics/btp/faculty/:projid");
   const isViewingProjectEvaluator = useMatch("/academics/btp/faculty/evaluator/:projid");
@@ -21,16 +19,14 @@ export default function BTPFacultyRouter() {
     return <Outlet />;
   }
 
-  switch (phase) {
-    case "NOT_STARTED":
-    case "TEAM_FORMATION":
-    case "FACULTY_ASSIGNMENT":
-      return <TopicAddtion data={data} />;
-    case "IN_PROGRESS":
-      return <EvaluationPage data={data} />;
-    default:
-      return <ErrorPage />;
-  }
+  // Faculty don't have phases any more - topic management and project
+  // evaluation are both always available at once (see facultybtpController.js).
+  return (
+    <>
+      <TopicAddition data={data} />
+      <EvaluationPage data={data} />
+    </>
+  );
 }
 
 

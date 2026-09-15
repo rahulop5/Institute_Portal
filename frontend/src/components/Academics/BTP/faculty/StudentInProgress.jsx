@@ -6,11 +6,17 @@ import pendingIcon from "../../../../assets/pendingsvg.svg";
 import studenitcon from "../../../../assets/studenticon.svg";
 import { API_HOST } from "../../../../config";
 
+const BTP_MAX_EVALUATIONS = 4;
+
 export default function StudentInProgress() {
   const data = useLoaderData();
   // Derived values
   const evalCount = data.project.evaluations.length;
   const phase = evalCount <= 2 ? "Semester 1" : "Semester 2";
+  const latestEvaluation = data.project.evaluations.find(
+    (e) => e.time && e.remark
+  );
+  const latestRemark = latestEvaluation?.remark || "No remarks yet.";
 
   return (
     <>
@@ -60,7 +66,7 @@ export default function StudentInProgress() {
           <div className={styles.bottomContainer}>
             {/* Members Section */}
             <div className={styles.membersCard}>
-              {data.project.team.map((member, index) => (
+              {data.project.students.map((member, index) => (
                 <div className={styles.membersrow} key={member._id}>
                   <span>
                     <strong>{`Member ${index + 1} `}</strong>
@@ -98,21 +104,27 @@ export default function StudentInProgress() {
 
               {/* Evaluators */}
               <div className={styles.evaluatorCard}>
-                {data.project.evaluators.map((evalr, i) => (
-                  <div className={styles.evaluatorRow} key={i}>
-                    <span className={styles.labeleval}>Evaluator {i + 1}</span>
-                    <div className={styles.evaluatorInfo}>
-                      <div className={styles.iconWrapper}>
-                        <img
-                          src={studenitcon}
-                          alt="Evaluator Icon"
-                          className={styles.evaluatorIcon}
-                        />
+                {data.project.evaluators && data.project.evaluators.length > 0 ? (
+                  data.project.evaluators.map((evalr, i) => (
+                    <div className={styles.evaluatorRow} key={i}>
+                      <span className={styles.labeleval}>Evaluator {i + 1}</span>
+                      <div className={styles.evaluatorInfo}>
+                        <div className={styles.iconWrapper}>
+                          <img
+                            src={studenitcon}
+                            alt="Evaluator Icon"
+                            className={styles.evaluatorIcon}
+                          />
+                        </div>
+                        <div className={styles.nameWrapper}>{evalr.name}</div>
                       </div>
-                      <div className={styles.nameWrapper}>{evalr.name}</div>
                     </div>
+                  ))
+                ) : (
+                  <div className={styles.noevaluator}>
+                    <p>Evaluators have not been assigned yet</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -144,38 +156,33 @@ export default function StudentInProgress() {
             </div>
           </div>
 
-          {/* Evaluation Date + Score */}
+          {/* Evaluations Completed */}
           <div className={styles.evalScoreGrid}>
             <div className={styles.dateCard}>
-              <p className={styles.smallLabel}>Next Evaluation</p>
+              <p className={styles.smallLabel}>Evaluations Completed</p>
               <h2>
-                {data.nextEvalDate.month} <br />
-                <span className={styles.largeNumber}>
-                  {data.nextEvalDate.day}
-                </span>
+                <span className={styles.largeNumber}>{evalCount}</span>
+                {` / ${BTP_MAX_EVALUATIONS}`}
               </h2>
             </div>
 
-            <div className={styles.scoreCard}>
-              <p className={styles.smallLabel}>Current Score</p>
-              <h2 className={styles.scoreValue}>
-                {data.currentScore.value}
-                <span className={styles.outOf}>/{data.currentScore.outOf}</span>
-              </h2>
+            <div className={styles.phaseCard}>
+              <p className={styles.smallLabel}>Phase</p>
+              <h2>{phase}</h2>
             </div>
           </div>
 
-          {/* Phase */}
+          {/* Latest Remark */}
           <div className={styles.phaseCard}>
-            <p className={styles.smallLabel}>Phase</p>
-            <h2>{phase}</h2>
+            <p className={styles.smallLabel}>Latest Remark</p>
+            <h2>{latestRemark}</h2>
           </div>
         </div>
       </div>
-      <Updatelist 
-        updates={data.project.latestUpdates}
-        team={data.project.team}
-        projid={data.project.id}
+      <Updatelist
+        updates={data.project.updates}
+        team={data.project.students}
+        projid={data.project._id}
       />
     </>
   );

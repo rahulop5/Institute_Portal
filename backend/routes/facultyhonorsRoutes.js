@@ -8,6 +8,9 @@ import {
     rejectHonorsTopicRequest,
     evaluateHonorsProjectasGuide,
     evaluateHonorsProjectasEval,
+    releaseHonorsEvaluation,
+    assignEvaluator,
+    removeEvaluator,
     viewHonorsProject,
     viewHonorsProjectEvaluator
 } from "../controllers/facultyhonorsController.js";
@@ -21,6 +24,9 @@ router.post("/approvetopicrequest", authFacultyMiddleware, approveHonorsTopicReq
 router.delete("/rejecttopicreq", authFacultyMiddleware, rejectHonorsTopicRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateHonorsProjectasGuide);
 router.post("/evaluateevaluator", authFacultyMiddleware, evaluateHonorsProjectasEval);
+router.post("/releaseevaluation", authFacultyMiddleware, releaseHonorsEvaluation);
+router.post("/assignevaluator", authFacultyMiddleware, assignEvaluator);
+router.post("/removeevaluator", authFacultyMiddleware, removeEvaluator);
 router.get("/viewproject", authFacultyMiddleware, viewHonorsProject);
 router.get("/viewprojectevaluator", authFacultyMiddleware, viewHonorsProjectEvaluator);
 

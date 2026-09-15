@@ -214,7 +214,9 @@ export const evaluateProjectasGuide = async (req, res) => {
     const { projid, remark, marks } = req.body;
     if (!projid || !remark || !Array.isArray(marks)) return res.status(400).json({ message: "Invalid request" });
 
-    const project = await BTP.findById(projid).populate("guide");
+    const project = await BTP.findById(projid)
+      .populate("guide")
+      .populate({ path: "students.student", select: "student" });
     if (!project) return res.status(404).json({ message: "Project not found" });
     if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
 
@@ -231,12 +233,33 @@ export const evaluateProjectasGuide = async (req, res) => {
       return res.status(400).json({ message: "BTP has reached the maximum number of evaluations (4). Project is now completed." });
     }
 
+    // marks[].studentId from the client is the Student _id (viewProject/getFacultyBTPDashboard
+    // both expose the flattened Student doc), but marksgiven.student must ref BTPRegistration -
+    // resolve each one against this project's own team so a mark can't be attributed to a
+    // student who isn't actually on the project.
+    // No panel evaluators means there's nothing to pool - the guide's marks
+    // are the final marks, so release them to the student immediately.
+    const hasEvaluators = project.evaluators.length > 0;
+    const marksgiven = marks.map(m => {
+      const projectStudent = project.students.find(
+        s => s.student?.student?.toString() === m.studentId
+      );
+      if (!projectStudent) {
+        throw new Error(`Student ${m.studentId} is not on this project`);
+      }
+      return {
+        student: projectStudent.student._id,
+        guidemarks: m.guidemarks,
+        totalgrade: hasEvaluators ? undefined : String(m.guidemarks),
+      };
+    });
+
     const newEval = new BTPEvaluation({
         projectRef: projid,
         time: new Date(),
-        canstudentsee: false,
+        canstudentsee: !hasEvaluators,
         remark,
-        marksgiven: marks.map(m => ({ student: m.studentId, guidemarks: m.guidemarks })),
+        marksgiven,
         panelEvaluations: project.evaluators.map(e => ({ evaluator: e.evaluator, submitted: false }))
     });
     await newEval.save();
@@ -258,8 +281,14 @@ export const evaluateProjectasGuide = async (req, res) => {
 
 export const evaluateProjectasEval = async (req, res) => {
     try {
-        const { projid, panelmarks, remark } = req.body;
-        const evaluation = await BTPEvaluation.findOne({ projectRef: projid }).populate("panelEvaluations.evaluator");
+        const { projid, evalId, panelmarks, remark } = req.body;
+        if (!projid || !evalId || !remark || !Array.isArray(panelmarks)) {
+            return res.status(400).json({ message: "Invalid request" });
+        }
+
+        // evalId is required - a project can have several evaluation rounds,
+        // and without it there's no way to tell which one this submission is for.
+        const evaluation = await BTPEvaluation.findOne({ _id: evalId, projectRef: projid }).populate("panelEvaluations.evaluator");
         if (!evaluation) return res.status(404).json({ message: "Evaluation not found" });
 
         const user = await Faculty.findOne({ email: req.user.email });
@@ -268,13 +297,165 @@ export const evaluateProjectasEval = async (req, res) => {
         const evalIndex = evaluation.panelEvaluations.findIndex(e => e.evaluator._id.toString() === user._id.toString());
         if (evalIndex === -1) return res.status(403).json({ message: "Not an evaluator" });
 
+        // panelmarks[].studentId from the client is the Student _id (same as guide
+        // marks) but panelmarks.student must ref BTPRegistration - resolve against
+        // the project's own team.
+        const project = await BTP.findById(projid).populate({ path: "students.student", select: "student" });
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        const resolvedPanelmarks = panelmarks.map(m => {
+            const projectStudent = project.students.find(
+                s => s.student?.student?.toString() === m.studentId
+            );
+            if (!projectStudent) {
+                throw new Error(`Student ${m.studentId} is not on this project`);
+            }
+            return { student: projectStudent.student._id, marks: m.marks };
+        });
+
         evaluation.panelEvaluations[evalIndex].submitted = true;
+        evaluation.panelEvaluations[evalIndex].submittedAt = new Date();
         evaluation.panelEvaluations[evalIndex].remark = remark;
+        evaluation.panelEvaluations[evalIndex].panelmarks = resolvedPanelmarks;
         await evaluation.save();
         return res.status(200).json({ message: "Evaluation submitted" });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Error evaluating" });
+    }
+};
+
+export const releaseEvaluation = async (req, res) => {
+    try {
+        const { projid, evalId, marks } = req.body;
+        if (!projid || !evalId || !Array.isArray(marks)) {
+            return res.status(400).json({ message: "Invalid request" });
+        }
+
+        const project = await BTP.findById(projid)
+          .populate("guide")
+          .populate({ path: "students.student", select: "student" });
+        if (!project) return res.status(404).json({ message: "Project not found" });
+        if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
+
+        const evaluation = await BTPEvaluation.findOne({ _id: evalId, projectRef: projid });
+        if (!evaluation) return res.status(404).json({ message: "Evaluation not found" });
+
+        if (evaluation.canstudentsee) {
+            return res.status(400).json({ message: "This evaluation has already been sent to the student" });
+        }
+
+        const pendingEvaluators = evaluation.panelEvaluations.filter(e => !e.submitted);
+        if (pendingEvaluators.length > 0) {
+            return res.status(400).json({ message: `Waiting on ${pendingEvaluators.length} evaluator(s) to submit before this can be sent to the student` });
+        }
+
+        for (const m of marks) {
+            const projectStudent = project.students.find(
+                s => s.student?.student?.toString() === m.studentId
+            );
+            if (!projectStudent) {
+                return res.status(400).json({ message: `Student ${m.studentId} is not on this project` });
+            }
+            const markEntry = evaluation.marksgiven.find(
+                mg => mg.student.toString() === projectStudent.student._id.toString()
+            );
+            if (!markEntry) {
+                return res.status(400).json({ message: `No guide marks found for this student - evaluate as guide first` });
+            }
+            markEntry.totalgrade = m.totalgrade;
+        }
+
+        evaluation.canstudentsee = true;
+        await evaluation.save();
+        return res.status(200).json({ message: "Evaluation sent to student" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error releasing evaluation" });
+    }
+};
+
+export const assignEvaluator = async (req, res) => {
+    try {
+        const { projid, facultyEmail } = req.body;
+        if (!projid || !facultyEmail) return res.status(400).json({ message: "Invalid request" });
+
+        const project = await BTP.findById(projid).populate("guide");
+        if (!project) return res.status(404).json({ message: "Project not found" });
+        if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
+
+        if (project.status === "completed") {
+            return res.status(400).json({ message: "Cannot assign evaluators to a completed project" });
+        }
+
+        const targetFaculty = await Faculty.findOne({ email: facultyEmail });
+        if (!targetFaculty) return res.status(404).json({ message: "No faculty found with that email" });
+
+        if (targetFaculty.email === project.guide.email) {
+            return res.status(400).json({ message: "The guide cannot also be an evaluator" });
+        }
+
+        const alreadyAssigned = project.evaluators.some(e => e.evaluator.toString() === targetFaculty._id.toString());
+        if (alreadyAssigned) {
+            return res.status(400).json({ message: "This faculty is already an evaluator on this project" });
+        }
+
+        project.evaluators.push({ evaluator: targetFaculty._id });
+        await project.save();
+
+        // Add this evaluator to any evaluation round still awaiting release,
+        // so they can actually submit marks for work already in progress -
+        // otherwise a newly-assigned evaluator would have no effect until
+        // the next evaluation round is created.
+        await BTPEvaluation.updateMany(
+            { projectRef: projid, canstudentsee: false, "panelEvaluations.evaluator": { $ne: targetFaculty._id } },
+            { $push: { panelEvaluations: { evaluator: targetFaculty._id, submitted: false } } }
+        );
+
+        return res.status(201).json({ message: "Evaluator assigned" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error assigning evaluator" });
+    }
+};
+
+export const removeEvaluator = async (req, res) => {
+    try {
+        const { projid, facultyEmail } = req.body;
+        if (!projid || !facultyEmail) return res.status(400).json({ message: "Invalid request" });
+
+        const project = await BTP.findById(projid).populate("guide");
+        if (!project) return res.status(404).json({ message: "Project not found" });
+        if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
+
+        if (project.status === "completed") {
+            return res.status(400).json({ message: "Cannot remove evaluators from a completed project" });
+        }
+
+        const targetFaculty = await Faculty.findOne({ email: facultyEmail });
+        if (!targetFaculty) return res.status(404).json({ message: "No faculty found with that email" });
+
+        const isAssigned = project.evaluators.some(e => e.evaluator.toString() === targetFaculty._id.toString());
+        if (!isAssigned) {
+            return res.status(400).json({ message: "This faculty is not an evaluator on this project" });
+        }
+
+        project.evaluators = project.evaluators.filter(e => e.evaluator.toString() !== targetFaculty._id.toString());
+        await project.save();
+
+        // Drop their not-yet-submitted panel slot on any evaluation round
+        // still awaiting release, so removal actually unblocks that round
+        // instead of leaving it stuck waiting on someone who can no longer
+        // submit. Marks they already submitted stay untouched.
+        await BTPEvaluation.updateMany(
+            { projectRef: projid, canstudentsee: false },
+            { $pull: { panelEvaluations: { evaluator: targetFaculty._id, submitted: false } } }
+        );
+
+        return res.status(200).json({ message: "Evaluator removed" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error removing evaluator" });
     }
 };
 
@@ -289,8 +470,10 @@ export const viewProject = async (req, res) => {
             .populate("evaluators.evaluator", "name email");
         
         if (!project) return res.status(404).json({ message: "Project not found or you are not the guide" });
-        
-        const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+
+        const evaluations = await BTPEvaluation.find({ projectRef: project._id })
+            .sort({ time: 1 })
+            .populate("panelEvaluations.evaluator", "name email");
 
         return res.status(200).json({
             project: {
@@ -335,7 +518,7 @@ export const viewProjectEvaluator = async (req, res) => {
                  students: project.students.map(s => s.student?.student),
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
-                 updates: [] 
+                 updates: project.updates
             }
         });
     } catch(err) {

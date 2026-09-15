@@ -7,25 +7,19 @@ import Authentication, {
   action as authAction,
 } from "./pages/Authentication.jsx";
 import ErrorPage from "./pages/Error.jsx";
-import {
-  action as acceptTRAction,
-  action2 as rejectTRAction,
-} from "./components/Academics/BTP/student/TF/Teamselection_bin23.jsx";
 import { checkAuthLoader, tokenLoader } from "./util/auth.js";
 import Temp from "./pages/Lemp.jsx";
 import { action as logoutAction } from "./pages/Logout.jsx";
-import { action as sendTRAction } from "./components/Academics/BTP/student/TF/Teamselection_bin1.jsx";
 import BTPStudentRouter, {
   loader as btpLoader,
 } from "./pages/BTPStudentRouter.jsx";
 import {
-  action as applytotopicAction,
-  setPreferencesAction,
-} from "./components/Academics/BTP/student/FA/Facultyselection.jsx";
-import Inprogress, {
+  action as requestTopicAction,
+  action2 as withdrawRequestAction,
+} from "./components/Academics/BTP/student/TopicSelection.jsx";
+import {
   action as addUpdateAction,
 } from "./components/Academics/BTP/student/IP/Inprogress.jsx";
-import TopicAddition from "./components/Academics/BTP/faculty/TopicAddition.jsx";
 import BTPFacultyRouter, {
   loader as btpFacultyRouter,
 } from "./pages/BTPFacultyRouter.jsx";
@@ -59,7 +53,6 @@ import {
   deleteTeamAction,
   updateTeamAction,
 } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
-import { action as addStudentAction } from "./components/Academics/BTP/student/TF/AddStudentmodal.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {
@@ -144,33 +137,13 @@ const router = createBrowserRouter([
                 loader: btpLoader,
                 children: [
                   {
-                    path: "sendteamrequest",
-                    action: sendTRAction,
+                    path: "requesttopic",
+                    action: requestTopicAction,
                     element: <></>,
                   },
                   {
-                    path: "addteammember",
-                    action: addStudentAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "acceptteamrequest",
-                    action: acceptTRAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "rejectteamrequest",
-                    action: rejectTRAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "applytotopic",
-                    action: applytotopicAction,
-                    element: <></>,
-                  },
-                  {
-                    path: "setpreferences",
-                    action: setPreferencesAction,
+                    path: "withdrawrequest",
+                    action: withdrawRequestAction,
                     element: <></>,
                   },
                   {

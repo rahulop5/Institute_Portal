@@ -13,12 +13,13 @@
 
 .modalContent {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 32px;
   max-width: 1000px;
   width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  font-family: 'Segoe UI', sans-serif;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* .heading {
@@ -51,13 +52,13 @@
   flex-direction: column;
   min-width: 220px;
   max-width: 300px;
-  background: #f8f9ff00;
+  background: #fafaff;
   border-radius: 16px;
   padding: 16px;
   text-align: center;
   position: relative;
   align-items: center;
-  box-shadow: 0 0 8px rgba(180, 180, 255, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .avatarIcon {
@@ -162,18 +163,19 @@
 }
 
 .submitButton {
-  background-color: #8338ec;
+  background-color: #6092ff;
   color: white;
-  padding: 10px 24px;
-  border-radius: 20px;
+  padding: 10px 32px;
+  border-radius: 999px;
   border: none;
   font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .submitButton:hover {
-  background-color: #6f2dc1;
+  box-shadow: inset 0 4px 10px rgba(255, 255, 255, 0.5);
 }
 
 
@@ -225,6 +227,11 @@
   width: 30px;
   height: 30px;
   object-fit: contain;
+}
+
+.emailIcon {
+  font-size: 22px;
+  color: #6092ff;
 }
 
 .binLabelDetailsDiv {

@@ -1,49 +1,45 @@
 .overviewContainer {
   background-color: #ffffff;
   width: 95px;
-  padding: 15px 0;
+  padding: 20px 0;
   border-radius: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 22px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  margin-top: 10vh;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
 }
 
 
 .item {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  font-weight: bold;
-  font-size: 25px;
+  gap: 6px;
   color: #000;
 }
 
 .icon {
-  width: 32px;
-  height: 32px;
-  margin-bottom: 8px;
-  margin-right: -5px;
+  width: 26px;
+  height: 26px;
 }
 
 .number {
-  font-weight: 500;
-  font-size: 35px;
-  margin-top: 15px;
+  font-weight: 600;
+  font-size: 20px;
 }
 
 .guiding {
-  color: #2563eb;  /* blue */
+  color: #6092ff; /* site accent blue */
 }
 
 .evaluating {
-  color: #f59e0b;  /* orange */
+  color: #f59e0b; /* amber */
 }
 
 .requests {
-  color: #ef4444; /* red */
+  color: #e74c3c; /* red — needs attention */
 }
 
 .lastItem {
@@ -53,9 +49,19 @@
   height: 80px;
   border-radius: 25px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  font-size: 30px;
-  font-weight: 500;
+  gap: 4px;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+}
+
+.lastItem .number {
+  margin-top: 0;
+}
+
+.requestsIcon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
 }

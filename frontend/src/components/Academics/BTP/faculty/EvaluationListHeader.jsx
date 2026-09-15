@@ -13,7 +13,7 @@ export default function EvaluationList({ onTabChange }) {
     <>
    
     <div className={styles.wrapper}>
-    <h1>BTP</h1>
+    <h1>Your Projects</h1>
       <div className={styles.tabContainer}>
         <button
           className={`${styles.tab} ${activeTab === 'guiding' ? styles.active : ''}`}
