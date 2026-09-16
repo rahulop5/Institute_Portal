@@ -22,7 +22,17 @@ const honorschema = new mongoose.Schema({
             time: { type: Date, required: true },
         }
     ],
-    status: { type: String, enum: ["active", "completed"], default: "active" }
+    // "discontinued" = guide stopped guiding before completion (e.g. the
+    // student left the program) - distinct from "completed" so it's not
+    // mistaken for a finished project.
+    status: { type: String, enum: ["active", "completed", "discontinued"], default: "active" },
+    // Per-semester evaluation schedule, set by the guide on approval. Repeats
+    // identically each semester - e.g. [{maxMarks:25},{maxMarks:25},{maxMarks:50}]
+    // means 3 evaluations per semester, weighted 25/25/50.
+    evaluationConfig: {
+        type: [{ maxMarks: { type: Number, required: true } }],
+        default: () => [{ maxMarks: 50 }, { maxMarks: 50 }],
+    }
 });
 
 export default mongoose.model("Honors", honorschema);

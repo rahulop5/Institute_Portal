@@ -54,6 +54,30 @@ import {
   updateTeamAction,
 } from "./components/Academics/BTP/staff/TeamFormation/Overviewdialog.jsx";
 import Inprogressstaff from "./components/Academics/BTP/staff/inprogress/Inprogress.jsx";
+import { loader as meetingsRouterLoader } from "./pages/MeetingsRouter.jsx";
+import MeetingsFacultyRouter, {
+  loader as meetingsFacultyRouterLoader,
+} from "./pages/MeetingsFacultyRouter.jsx";
+import MeetingsStudentRouter, {
+  loader as meetingsStudentRouterLoader,
+} from "./pages/MeetingsStudentRouter.jsx";
+import { action as createSlotAction } from "./components/Academics/Meetings/faculty/CreateSlotForm.jsx";
+import {
+  action as approveMeetingAction,
+  action2 as rejectMeetingAction,
+} from "./components/Academics/Meetings/faculty/PendingRequests.jsx";
+import { action as cancelSlotAction } from "./components/Academics/Meetings/faculty/SlotsList.jsx";
+import FacultyList, {
+  loader as meetingsFacultyListLoader,
+} from "./components/Academics/Meetings/student/FacultyList.jsx";
+import AvailableSlots, {
+  loader as availableSlotsLoader,
+  requestSlotAction,
+} from "./components/Academics/Meetings/student/AvailableSlots.jsx";
+import MyBookings, {
+  loader as myBookingsLoader,
+  withdrawAction as withdrawSlotAction,
+} from "./components/Academics/Meetings/student/MyBookings.jsx";
 import AdminDashboard from "./components/Academics/FeedbackForm/admin/adminDashboard.jsx";
 import {
   adminDashboardFacultyLoader,
@@ -226,6 +250,39 @@ const router = createBrowserRouter([
                     action: assignGuideAction,
                     element: <></>,
                   },
+                ],
+              },
+            ],
+          },
+          {
+            path: "meetings",
+            children: [
+              {
+                index: true,
+                loader: meetingsRouterLoader,
+                element: <></>,
+              },
+              {
+                path: "faculty",
+                element: <MeetingsFacultyRouter />,
+                loader: meetingsFacultyRouterLoader,
+                children: [
+                  { path: "createslot", action: createSlotAction, element: <></> },
+                  { path: "approverequest", action: approveMeetingAction, element: <></> },
+                  { path: "rejectrequest", action: rejectMeetingAction, element: <></> },
+                  { path: "cancelslot", action: cancelSlotAction, element: <></> },
+                ],
+              },
+              {
+                path: "student",
+                element: <MeetingsStudentRouter />,
+                loader: meetingsStudentRouterLoader,
+                children: [
+                  { index: true, loader: meetingsFacultyListLoader, element: <FacultyList /> },
+                  { path: ":facultyId/slots", loader: availableSlotsLoader, element: <AvailableSlots /> },
+                  { path: "mybookings", loader: myBookingsLoader, element: <MyBookings /> },
+                  { path: "requestslot", action: requestSlotAction, element: <></> },
+                  { path: "withdrawrequest", action: withdrawSlotAction, element: <></> },
                 ],
               },
             ],

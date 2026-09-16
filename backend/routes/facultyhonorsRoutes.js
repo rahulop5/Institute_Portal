@@ -11,6 +11,8 @@ import {
     releaseHonorsEvaluation,
     assignEvaluator,
     removeEvaluator,
+    stopGuiding,
+    completeProject,
     viewHonorsProject,
     viewHonorsProjectEvaluator
 } from "../controllers/facultyhonorsController.js";
@@ -27,6 +29,8 @@ router.post("/evaluateevaluator", authFacultyMiddleware, evaluateHonorsProjectas
 router.post("/releaseevaluation", authFacultyMiddleware, releaseHonorsEvaluation);
 router.post("/assignevaluator", authFacultyMiddleware, assignEvaluator);
 router.post("/removeevaluator", authFacultyMiddleware, removeEvaluator);
+router.post("/stopguiding", authFacultyMiddleware, stopGuiding);
+router.post("/completeproject", authFacultyMiddleware, completeProject);
 router.get("/viewproject", authFacultyMiddleware, viewHonorsProject);
 router.get("/viewprojectevaluator", authFacultyMiddleware, viewHonorsProjectEvaluator);
 

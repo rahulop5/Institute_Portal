@@ -11,6 +11,8 @@ import {
     releaseEvaluation,
     assignEvaluator,
     removeEvaluator,
+    stopGuiding,
+    completeProject,
     viewProject,
     viewProjectEvaluator
 } from "../controllers/facultybtpController.js";
@@ -27,6 +29,8 @@ router.post("/evaluateevaluator", authFacultyMiddleware, evaluateProjectasEval);
 router.post("/releaseevaluation", authFacultyMiddleware, releaseEvaluation);
 router.post("/assignevaluator", authFacultyMiddleware, assignEvaluator);
 router.post("/removeevaluator", authFacultyMiddleware, removeEvaluator);
+router.post("/stopguiding", authFacultyMiddleware, stopGuiding);
+router.post("/completeproject", authFacultyMiddleware, completeProject);
 router.get("/viewproject", authFacultyMiddleware, viewProject);
 router.get("/viewprojectevaluator", authFacultyMiddleware, viewProjectEvaluator);
 

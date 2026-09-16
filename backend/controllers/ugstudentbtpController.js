@@ -40,24 +40,14 @@ export const getBTPDashboard = async (req, res) => {
         // 4. Scenario A: Student is already in a Project
         if (btpUser && btpUser.project) {
             const project = btpUser.project;
+            const isCompleted = project.status === "completed";
 
-            // Check if project is completed
+            // Completed projects still show full progress/marks history to the
+            // student - only the phase label and an informational message change,
+            // marking the project complete is an explicit guide action, not a
+            // reason to cut the student off from their own results.
             const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
 
-            if (project.status === "completed") {
-                return res.status(200).json({
-                    email: student.email,
-                    phase: "COMPLETED",
-                    message: `BTP completed after ${evaluations.length} evaluations.`,
-                    project: {
-                        _id: project._id,
-                        name: project.name,
-                        about: project.about,
-                        status: "completed"
-                    }
-                });
-            }
-            
             // Format updates and evaluations
             const updates = project.updates ? project.updates.sort((a, b) => new Date(a.time) - new Date(b.time)) : [];
             const formattedEvaluations = [];
@@ -76,6 +66,7 @@ export const getBTPDashboard = async (req, res) => {
                     resources: currEval.resources,
                     updates: evalUpdates,
                     canstudentsee: currEval.canstudentsee,
+                    maxMarks: currEval.maxMarks,
                     marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === btpUser._id.toString()) : null
                 });
             }
@@ -91,11 +82,13 @@ export const getBTPDashboard = async (req, res) => {
 
             return res.status(200).json({
                 email: student.email,
-                phase: "IN_PROGRESS",
+                phase: isCompleted ? "COMPLETED" : "IN_PROGRESS",
+                message: isCompleted ? `BTP completed after ${evaluations.length} evaluations.` : undefined,
                 project: {
                     _id: projectPopulated._id,
                     name: projectPopulated.name,
                     about: projectPopulated.about,
+                    status: project.status,
                     studentbatch: projectPopulated.studentbatch,
                     guide: projectPopulated.guide,
                     evaluators: projectPopulated.evaluators.map(e => e.evaluator),
@@ -105,7 +98,8 @@ export const getBTPDashboard = async (req, res) => {
                         rollno: s.student?.student?.rollNumber || ""
                     })),
                     evaluations: formattedEvaluations,
-                    latestUpdates: (projectPopulated.updates || []).sort((a, b) => new Date(b.time) - new Date(a.time))
+                    latestUpdates: (projectPopulated.updates || []).sort((a, b) => new Date(b.time) - new Date(a.time)),
+                    evaluationConfig: projectPopulated.evaluationConfig
                 }
             });
         }

@@ -11,6 +11,7 @@ import staffIcon from "../../assets/staff.svg";
 import facultyIcon from "../../assets/facukty.svg";
 import honorsIcon from "../../assets/person-rays.svg";
 import btpIcon from "../../assets/BTP.svg";
+import calendarIcon from "../../assets/calendar.png";
 import feedbackIcon from "../../assets/feedback-cycle-loop 1.svg";
 import academicsIcon from "../../assets/book-open-cover 1.svg";
 import homeIcon from "../../assets/home 2.svg";
@@ -44,6 +45,7 @@ export default function Sidebar() {
       <ul>
         <SimpleNavItem to="/academics/feedback" icon={homeIcon} label="Home" />
         <SimpleNavItem to="/academics/btp" icon={btpIcon} label="BTP" />
+        <SimpleNavItem to="/academics/meetings" icon={calendarIcon} label="Meetings" />
 
 
           {/* <SubMenuItem to="/academics/honors" icon={honorsIcon} label="Honors" /> */}

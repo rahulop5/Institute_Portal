@@ -9,6 +9,8 @@ import {
     releaseAPEvaluation,
     assignEvaluator,
     removeEvaluator,
+    stopGuiding,
+    completeProject,
     viewAPProject,
     viewAPProjectEvaluator
 } from "../controllers/facultyapController.js";
@@ -23,6 +25,8 @@ router.post("/evaluateevaluator", authFacultyMiddleware, evaluateAPProjectasEval
 router.post("/releaseevaluation", authFacultyMiddleware, releaseAPEvaluation);
 router.post("/assignevaluator", authFacultyMiddleware, assignEvaluator);
 router.post("/removeevaluator", authFacultyMiddleware, removeEvaluator);
+router.post("/stopguiding", authFacultyMiddleware, stopGuiding);
+router.post("/completeproject", authFacultyMiddleware, completeProject);
 router.get("/viewproject", authFacultyMiddleware, viewAPProject);
 router.get("/viewprojectevaluator", authFacultyMiddleware, viewAPProjectEvaluator);
 

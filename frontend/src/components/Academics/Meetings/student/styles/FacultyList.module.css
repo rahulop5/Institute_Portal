@@ -1,0 +1,45 @@
+.container {
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 0 13.9px 0 rgba(0, 0, 0, 0.1);
+}
+
+.heading {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.empty {
+  text-align: center;
+  color: #777;
+  padding: 1rem 0;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:last-child {
+  border-bottom: none;
+}
+
+.card:hover {
+  background-color: #fafafa;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.dept {
+  color: #777;
+  font-size: 0.9rem;
+}

@@ -9,6 +9,9 @@ const apEvaluationSchema = new mongoose.Schema({
   time: { type: Date, required: true },
   canstudentsee: { type: Boolean, required: true },
   remark: { type: String, required: false },
+  // Copied from the project's evaluationConfig at the time this round was
+  // created - see BTPEvaluation.js for the same pattern.
+  maxMarks: { type: Number, required: true, default: 50 },
   resources: [
     {
       resourceURL: { type: String, required: true },

@@ -1,0 +1,27 @@
+.page {
+  padding: 1rem 0 2rem;
+}
+
+.heading {
+  margin-bottom: 1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.tab,
+.tabActive {
+  padding: 0.5rem 0;
+  text-decoration: none;
+  color: #777;
+  font-weight: 500;
+}
+
+.tabActive {
+  color: #6092ff;
+  border-bottom: 2px solid #6092ff;
+}
