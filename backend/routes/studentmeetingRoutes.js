@@ -6,6 +6,7 @@ import {
     requestSlot,
     listMyMeetings,
     withdrawRequest,
+    cancelBooking,
 } from "../controllers/studentmeetingController.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/slots/:facultyId", authStudentMiddleware, listFacultySlots);
 router.post("/request", authStudentMiddleware, requestSlot);
 router.get("/mine", authStudentMiddleware, listMyMeetings);
 router.post("/withdraw", authStudentMiddleware, withdrawRequest);
+router.post("/cancel", authStudentMiddleware, cancelBooking);
 
 export default router;

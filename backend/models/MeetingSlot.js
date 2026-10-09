@@ -7,17 +7,19 @@ const meetingSlotSchema = new mongoose.Schema(
     startTime: { type: String, required: true }, // "HH:MM", from <input type="time">
     endTime: { type: String, required: true }, // "HH:MM"
     location: { type: String, required: true, trim: true }, // free text: room or link
+    title: { type: String, trim: true, maxlength: 120 }, // set by faculty; enforced in controller (legacy slots have none)
     status: {
       type: String,
       enum: ["available", "requested", "booked", "cancelled"],
       default: "available",
     },
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Student", default: null },
-    purpose: { type: String, default: null },
+    purpose: { type: String, default: null }, // student's optional comment
     requestedAt: { type: Date, default: null },
     approvedAt: { type: Date, default: null },
     rejectedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
+    cancelReason: { type: String, default: null }, // faculty's optional message when cancelling a booked meeting
   },
   { timestamps: true }
 );
