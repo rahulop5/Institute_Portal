@@ -1,9 +1,11 @@
+import { projectStartSemester, studentSemesterOn, startWindowProblem } from "../utils/semesterUtils.js";
 import HonorsRegistration from "../models/HonorsRegistration.js";
 import BTPRegistration from "../models/BTPRegistration.js";
 import HonorsTopic from "../models/HonorsTopic.js";
 import Honors from "../models/Honors.js";
 import HonorsEvaluation from "../models/HonorsEvaluation.js";
 import Student from "../models/feedback/Student.js";
+import { proposeTopic, visibleTopics, facultyDirectory } from "./topicProposalController.js";
 
 // Max evaluations for Honors: 4 semesters × 2 evals = 8
 const HONORS_MAX_EVALUATIONS = 8;
@@ -99,9 +101,21 @@ export const getHonorsDashboard = async (req, res) => {
                         rollno: s.student?.student?.rollNumber || ""
                     })),
                     evaluations: formattedEvaluations,
+                    startSemester: projectStartSemester(student.batch, project, evaluations),
                     latestUpdates: remainingUpdates,
                     evaluationConfig: projectPopulated.evaluationConfig
                 }
+            });
+        }
+
+        // Outside the semesters this program can start in: say so instead of
+        // offering topics.
+        const startProblem = startWindowProblem("honors", studentSemesterOn(student.batch, new Date()));
+        if (startProblem) {
+            return res.status(200).json({
+                email: student.email,
+                phase: "NOT_ELIGIBLE",
+                message: `${startProblem} You are in Semester ${studentSemesterOn(student.batch, new Date())}.`,
             });
         }
 
@@ -113,7 +127,7 @@ export const getHonorsDashboard = async (req, res) => {
         const formattedTopics = topics.map(topicDoc => ({
             _id: topicDoc._id,
             faculty: topicDoc.faculty,
-            topics: topicDoc.topics.map(t => {
+            topics: visibleTopics(topicDoc, honorsUser).map(t => {
                 const req = myRequests.find(r => 
                     r.topic.toString() === topicDoc._id.toString() && 
                     r.subTopicId.toString() === t._id.toString()
@@ -128,9 +142,11 @@ export const getHonorsDashboard = async (req, res) => {
         return res.status(200).json({
             email: student.email,
             phase: "TOPIC_SELECTION",
+            semester: studentSemesterOn(student.batch, new Date()),
             message: "Select a topic",
-            topics: formattedTopics,
-            myRequests: myRequests
+            topics: formattedTopics.filter(doc => doc.topics.length > 0),
+            myRequests: myRequests,
+            faculty: await facultyDirectory()
         });
 
     } catch (err) {
@@ -149,6 +165,8 @@ export const requestHonorsTopic = async (req, res) => {
         // 1. Get Student
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
+        const requestStartProblem = startWindowProblem("honors", studentSemesterOn(student.batch, new Date()));
+        if (requestStartProblem) return res.status(400).json({ message: requestStartProblem });
 
         // 2. Mutual exclusion check
         const btpReg = await BTPRegistration.findOne({ student: student._id, project: { $ne: null } });
@@ -240,6 +258,9 @@ export const withdrawHonorsRequest = async (req, res) => {
             topicDoc.requests = topicDoc.requests.filter(r => 
                 !(r.student.toString() === honorsUser._id.toString() && r.topic.toString() === topicId)
             );
+            // A withdrawn proposal of their own disappears entirely.
+            const own = topicDoc.topics.id(topicId);
+            if (own?.proposedBy?.equals(honorsUser._id)) own.deleteOne();
             await topicDoc.save();
         }
 
@@ -285,3 +306,11 @@ export const addUpdatetoHonorsProject = async (req, res) => {
         return res.status(500).json({ message: "Error adding update" });
     }
 };
+export const proposeHonorsTopic = proposeTopic({
+    program: "honors",
+    label: "Honors",
+    Topic: HonorsTopic,
+    Registration: HonorsRegistration,
+    OtherRegistration: BTPRegistration,
+    otherLabel: "a BTP",
+});

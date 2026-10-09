@@ -1,3 +1,4 @@
+import { projectStartSemester, studentSemesterOn, startWindowProblem } from "../utils/semesterUtils.js";
 import APRegistration from "../models/APRegistration.js";
 import APFacultyRequest from "../models/APFacultyRequest.js";
 import AP from "../models/AP.js";
@@ -93,9 +94,22 @@ export const getAPDashboard = async (req, res) => {
                         rollno: s.student?.student?.rollNumber || ""
                     })),
                     evaluations: formattedEvaluations,
+                    startSemester: projectStartSemester(student.batch, project, evaluations),
                     latestUpdates: (projectPopulated.updates || []).sort((a, b) => new Date(b.time) - new Date(a.time)),
                     evaluationConfig: projectPopulated.evaluationConfig
                 }
+            });
+        }
+
+        // Outside the semesters an AP can be taken in: say so instead of
+        // offering faculty.
+        const semester = studentSemesterOn(student.batch, new Date());
+        const startProblem = startWindowProblem("ap", semester);
+        if (startProblem) {
+            return res.status(200).json({
+                email: student.email,
+                phase: "NOT_ELIGIBLE",
+                message: `${startProblem} You are in Semester ${semester}.`,
             });
         }
 
@@ -143,6 +157,8 @@ export const requestFaculty = async (req, res) => {
         // 1. Get Student
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
+        const requestStartProblem = startWindowProblem("ap", studentSemesterOn(student.batch, new Date()));
+        if (requestStartProblem) return res.status(400).json({ message: requestStartProblem });
 
         // 2. Verify faculty exists
         const faculty = await Faculty.findById(facultyId);

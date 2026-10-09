@@ -25,10 +25,24 @@ const btpschema = new mongoose.Schema({
   // "discontinued" = guide stopped guiding before completion (e.g. the
   // student left the program) - distinct from "completed" so it's not
   // mistaken for a finished project.
-  status: { type: String, enum: ["active", "completed", "discontinued"], default: "active" },
+  // "dropped" / "switched" = closed by an approved program change request
+  // (see ProgramChangeRequest.js); the student is no longer on this project.
+  status: { type: String, enum: ["active", "completed", "discontinued", "dropped", "switched"], default: "active" },
   // Per-semester evaluation schedule, set by the guide on approval. Repeats
   // identically each semester - e.g. [{maxMarks:25},{maxMarks:25},{maxMarks:50}]
   // means 3 evaluations per semester, weighted 25/25/50.
+  // Every topic edit (by the student, guide or UG Projects, or through a
+  // guide change), oldest first - the project keeps its evaluations.
+  topicHistory: [
+    {
+      _id: false,
+      name: { type: String, required: true },
+      about: { type: String },
+      role: { type: String, required: true },
+      email: { type: String, required: true },
+      at: { type: Date, default: Date.now },
+    }
+  ],
   evaluationConfig: {
     type: [{ maxMarks: { type: Number, required: true } }],
     default: () => [{ maxMarks: 50 }, { maxMarks: 50 }],

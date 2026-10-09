@@ -12,6 +12,7 @@ import ugstudentapRoutes from "./routes/ugstudentapRoutes.js";
 import facultyapRoutes from "./routes/facultyapRoutes.js";
 import studentmeetingRoutes from "./routes/studentmeetingRoutes.js";
 import facultymeetingRoutes from "./routes/facultymeetingRoutes.js";
+import programChangeRoutes from "./routes/programChangeRoutes.js";
 import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
 import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
 import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
@@ -19,7 +20,13 @@ import questionsRoutes from "./routes/feedback/questionsRoutes.js";
 
 const app=express();
 app.use(cors({
-    origin: ["https://feedback-frontend-uk6j.vercel.app", "https://feedback.iiits.ac.in", "http://localhost:5173"],
+    origin: [
+        "https://feedback-frontend-uk6j.vercel.app",
+        "https://feedback.iiits.ac.in",
+        "http://localhost:5173",
+        // Optional extra origins for local previews, comma-separated.
+        ...(process.env.EXTRA_CORS_ORIGINS ? process.env.EXTRA_CORS_ORIGINS.split(",") : []),
+    ],
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -45,6 +52,9 @@ app.use("/faculty/ap", facultyapRoutes);
 app.use("/student/meetings", studentmeetingRoutes);
 app.use("/faculty/meetings", facultymeetingRoutes);
 
+//BTP/Honors drop or switch requests
+app.use("/programchange", programChangeRoutes);
+
 //Feedback
 app.use("/student/feedback", feedbackstudentRoutes);
 app.use("/faculty/feedback", feedbackfacultyRoutes);
@@ -61,6 +71,6 @@ app.get("/test", (req, res)=>{
 //add the page not found thing
 
 //add to env later
-app.listen(3000, "0.0.0.0", ()=>{
-    console.log("Server Running on port 3000")
+app.listen(process.env.PORT || 3000, "0.0.0.0", ()=>{
+    console.log(`Server Running on port ${process.env.PORT || 3000}`)
 });
