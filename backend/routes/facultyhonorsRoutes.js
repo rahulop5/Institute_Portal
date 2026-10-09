@@ -1,10 +1,11 @@
 import express from "express";
+import { updateInterests } from "../controllers/topicProposalController.js";
+import { forwardTopicRequest } from "../controllers/enrollmentController.js";
 import { authFacultyMiddleware } from "../controllers/authController.js";
 import {
     getFacultyHonorsDashboard,
     addHonorsTopic,
     deleteHonorsTopic,
-    approveHonorsTopicRequest,
     rejectHonorsTopicRequest,
     evaluateHonorsProjectasGuide,
     evaluateHonorsProjectasEval,
@@ -20,9 +21,10 @@ import {
 const router = express.Router();
 
 router.get("/", authFacultyMiddleware, getFacultyHonorsDashboard);
+router.post("/interests", authFacultyMiddleware, updateInterests);
 router.post("/addtopic", authFacultyMiddleware, addHonorsTopic);
 router.delete("/deletetopic", authFacultyMiddleware, deleteHonorsTopic);
-router.post("/approvetopicrequest", authFacultyMiddleware, approveHonorsTopicRequest);
+router.post("/approvetopicrequest", authFacultyMiddleware, forwardTopicRequest("honors"));
 router.delete("/rejecttopicreq", authFacultyMiddleware, rejectHonorsTopicRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateHonorsProjectasGuide);
 router.post("/evaluateevaluator", authFacultyMiddleware, evaluateHonorsProjectasEval);

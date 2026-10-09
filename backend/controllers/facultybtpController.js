@@ -45,9 +45,14 @@ export const getFacultyBTPDashboard = async (req, res) => {
     
     if (topics) {
         topics.topics.forEach((t) => topicMap.set(t._id.toString(), t));
+        // Requests this faculty member has sent on: where each one stands.
+        const reviews = await ProgramChangeRequest.find({ type: "enrollment", program: "btp", guide: user._id, status: { $in: ["pending_ugprojects", "pending_assistantdean"] } });
+        const reviewStatus = new Map(reviews.map((r) => [`${r.student}:${r.enrollment?.topicId}`, r.status]));
         enrichedRequests = topics.requests.map((req) => {
+            const studentDoc = req.student?.student || req.student;
             return {
                 ...req.toObject(),
+                review: reviewStatus.get(`${studentDoc?._id}:${req.topic}`) || null,
                 student: req.student?.student || req.student,
                 topicDetails: topicMap.get(req.topic.toString()) || null
             };
@@ -80,6 +85,7 @@ export const getFacultyBTPDashboard = async (req, res) => {
     return res.status(200).json({
       email: user.email,
       phase: "ACTIVE",
+      interests: user.interests || [],
       topics: topics ? { ...topics.toObject(), requests: enrichedRequests } : null,
       guideproj: guideProjects.map(formatProject),
       evalproj: evalProjects.map(formatProject),
@@ -219,6 +225,9 @@ export const rejectTopicRequest = async (req, res) => {
 
     const studentReg = await BTPRegistration.findOne({ student: studentId });
     if (!studentReg) return res.status(404).json({ message: "Student record not found" });
+    if (topicdoc.requests.some((r) => r.student.equals(studentReg._id) && r.topic.toString() === topicId && r.forwarded)) {
+      return res.status(400).json({ message: "This request has been sent for approval and can no longer be rejected here" });
+    }
 
     // Remove from BTPTopic requests
     await BTPTopic.updateOne(

@@ -10,7 +10,7 @@ const apRegistrationSchema = new mongoose.Schema({
             faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true },
             proposalTitle: { type: String, required: true },
             proposalText: { type: String, required: true },
-            status: { type: String, enum: ["Pending", "Rejected"], default: "Pending" }
+            status: { type: String, enum: ["Pending", "UnderReview", "Rejected"], default: "Pending" }
         }
     ]
 });

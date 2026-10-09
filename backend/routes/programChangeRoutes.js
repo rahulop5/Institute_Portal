@@ -14,6 +14,7 @@ import {
     updateTopicAsStudent,
     updateTopicAsStaff,
     listProjectsForUGProjects,
+  getProjectDetail,
     listFacultyForStudent,
     getStudentEnrollment,
 } from "../controllers/programChangeController.js";
@@ -30,12 +31,15 @@ router.post("/student/topic", authStudentMiddleware, updateTopicAsStudent);
 
 // Topic edits - no approval needed
 router.get("/ugprojects/projects", authUGProjectsMiddleware, listProjectsForUGProjects);
+router.get("/ugprojects/project", authUGProjectsMiddleware, getProjectDetail);
+router.get("/assistantdean/project", authAssistantDeanMiddleware, getProjectDetail);
 router.post("/ugprojects/topic", authUGProjectsMiddleware, updateTopicAsStaff("UGProjects"));
 router.post("/faculty/topic", authFacultyMiddleware, updateTopicAsStaff("Faculty"));
 
 // Approval chain: UG Projects -> Assistant Dean Academics -> guide
 router.get("/ugprojects", authUGProjectsMiddleware, listForReviewer("pending_ugprojects"));
 router.post("/ugprojects/decide", authUGProjectsMiddleware, decideForReviewer("pending_ugprojects"));
+router.get("/assistantdean/projects", authAssistantDeanMiddleware, listProjectsForUGProjects);
 router.get("/assistantdean", authAssistantDeanMiddleware, listForReviewer("pending_assistantdean"));
 router.post("/assistantdean/decide", authAssistantDeanMiddleware, decideForReviewer("pending_assistantdean"));
 router.get("/faculty", authFacultyMiddleware, listForReviewer("pending_faculty"));

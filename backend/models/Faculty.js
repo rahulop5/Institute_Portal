@@ -6,6 +6,9 @@ const facschema=new mongoose.Schema({
     emp_no: {type: String, required: true, unique: true},
     dept: {type: String, enum: ["CSE", "ECE", "MDS", "English"], required: true},
     role: {type: String, enum: ["hod", "faculty"], required: true},
+    // Areas the faculty member is interested in supervising; shown to students
+    // choosing a BTP / Honors / AP guide. Set by the faculty member.
+    interests: [{type: String}],
     achievements: [{
         achievement: {type: String, required: true},
     }],

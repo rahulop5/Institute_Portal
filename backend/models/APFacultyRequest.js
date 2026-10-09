@@ -10,7 +10,10 @@ const apFacultyRequestSchema = new mongoose.Schema({
             student: { type: mongoose.Schema.Types.ObjectId, ref: "APRegistration", required: true },
             proposalTitle: { type: String, required: true },
             proposalText: { type: String, required: true },
-            isapproved: { type: Boolean, required: true, default: false }
+            isapproved: { type: Boolean, required: true, default: false },
+            // True once the faculty member has sent it on for UG Projects /
+            // Assistant Dean approval (see enrollmentController.js).
+            forwarded: { type: Boolean, default: false }
         }
     ]
 });

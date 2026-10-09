@@ -1,8 +1,9 @@
 import express from "express";
+import { updateInterests } from "../controllers/topicProposalController.js";
+import { forwardAPRequest } from "../controllers/enrollmentController.js";
 import { authFacultyMiddleware } from "../controllers/authController.js";
 import {
     getFacultyAPDashboard,
-    approveAPRequest,
     rejectAPRequest,
     evaluateAPProjectasGuide,
     evaluateAPProjectasEval,
@@ -18,7 +19,8 @@ import {
 const router = express.Router();
 
 router.get("/", authFacultyMiddleware, getFacultyAPDashboard);
-router.post("/approverequest", authFacultyMiddleware, approveAPRequest);
+router.post("/interests", authFacultyMiddleware, updateInterests);
+router.post("/approverequest", authFacultyMiddleware, forwardAPRequest);
 router.delete("/rejectrequest", authFacultyMiddleware, rejectAPRequest);
 router.post("/evaluateguide", authFacultyMiddleware, evaluateAPProjectasGuide);
 router.post("/evaluateevaluator", authFacultyMiddleware, evaluateAPProjectasEval);

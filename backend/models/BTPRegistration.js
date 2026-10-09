@@ -9,7 +9,8 @@ const btpRegistrationSchema = new mongoose.Schema({
             _id: false,
             topic: { type: mongoose.Schema.Types.ObjectId, ref: "BTPTopic", required: true },
             subTopicId: { type: mongoose.Schema.Types.ObjectId, required: true },
-            status: { type: String, enum: ["Pending", "Rejected"], default: "Pending" },
+            status: { type: String, enum: ["Pending", "UnderReview", "Rejected"], default: "Pending" },
+            message: { type: String, default: "" },
             preference: { type: Number, required: true }
         }
     ]

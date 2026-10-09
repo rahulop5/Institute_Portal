@@ -1,10 +1,12 @@
 import Faculty from "../models/Faculty.js";
 import Student from "../models/feedback/Student.js";
+import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
 import { studentSemesterOn, startWindowProblem } from "../utils/semesterUtils.js";
 
 const DEPARTMENTS = ["CSE", "ECE", "MDS"];
 const TITLE_MAX = 150;
 const ABOUT_MAX = 1000;
+export const MESSAGE_MAX = 1500;
 
 // A student's own BTP/Honors topic, proposed to a faculty member of their
 // choice. It is stored as a topic under that faculty member marked
@@ -20,6 +22,9 @@ export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistr
       if (!facultyId || !topic || !about) {
         return res.status(400).json({ message: "Choose a faculty member and describe your topic." });
       }
+      const message = (req.body.message || "").trim();
+      if (!message) return res.status(400).json({ message: "Tell the faculty member about your interest in this area." });
+      if (message.length > MESSAGE_MAX) return res.status(400).json({ message: `Keep your message under ${MESSAGE_MAX} characters.` });
       if (topic.length > TITLE_MAX || about.length > ABOUT_MAX) {
         return res.status(400).json({ message: `Keep the title under ${TITLE_MAX} and the description under ${ABOUT_MAX} characters.` });
       }
@@ -33,6 +38,10 @@ export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistr
       const other = await OtherRegistration.findOne({ student: student._id, project: { $ne: null } });
       if (other) {
         return res.status(400).json({ message: `You are already enrolled in ${otherLabel} project. You cannot participate in ${label}.` });
+      }
+
+      if (await ProgramChangeRequest.findOne({ student: student._id, type: "enrollment", program: { $in: ["btp", "honors"] }, status: { $in: ["pending_ugprojects", "pending_assistantdean"] } })) {
+        return res.status(400).json({ message: "A request of yours is already under review. Withdraw it first to propose another topic." });
       }
 
       const faculty = await Faculty.findById(facultyId);
@@ -58,8 +67,8 @@ export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistr
       const proposed = topicDoc.topics[topicDoc.topics.length - 1];
 
       const preference = registration.requests.length + 1;
-      topicDoc.requests.push({ student: registration._id, topic: proposed._id, isapproved: false, preference });
-      registration.requests.push({ topic: topicDoc._id, subTopicId: proposed._id, status: "Pending", preference });
+      topicDoc.requests.push({ student: registration._id, topic: proposed._id, isapproved: false, preference, message });
+      registration.requests.push({ topic: topicDoc._id, subTopicId: proposed._id, status: "Pending", preference, message });
 
       await registration.save();
       await topicDoc.save();
@@ -78,9 +87,32 @@ export const visibleTopics = (topicDoc, registration) =>
 
 // Once a student has a project, drop their other pending requests and
 // proposals everywhere so no faculty member is left with a stale request.
-export const clearOpenRequests = (Topic, registrationId) =>
-  Topic.updateMany({}, { $pull: { requests: { student: registrationId }, topics: { proposedBy: registrationId } } });
+export const clearOpenRequests = (Topic, registrationId, session) =>
+  Topic.updateMany({}, { $pull: { requests: { student: registrationId }, topics: { proposedBy: registrationId } } }, session ? { session } : {});
 
 // Everyone a student can propose to.
 export const facultyDirectory = async () =>
-  (await Faculty.find({}, "name email dept").sort({ name: 1 })).map((f) => ({ _id: f._id, name: f.name, email: f.email, dept: f.dept }));
+  (await Faculty.find({}, "name email dept interests").sort({ name: 1 })).map((f) => ({
+    _id: f._id,
+    name: f.name,
+    email: f.email,
+    dept: f.dept,
+    interests: f.interests || [],
+  }));
+
+// A faculty member's own areas of interest (comma-separated in the UI).
+export const updateInterests = async (req, res) => {
+  try {
+    const raw = Array.isArray(req.body.interests) ? req.body.interests : [];
+    const interests = [...new Set(raw.map((i) => String(i).trim()).filter(Boolean))].slice(0, 12);
+    if (interests.some((i) => i.length > 60)) {
+      return res.status(400).json({ message: "Keep each area under 60 characters." });
+    }
+    const faculty = await Faculty.findOneAndUpdate({ email: req.user.email }, { $set: { interests } }, { new: true });
+    if (!faculty) return res.status(404).json({ message: "Faculty not found" });
+    return res.status(200).json({ message: "Areas of interest saved", interests: faculty.interests });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Error saving areas of interest" });
+  }
+};

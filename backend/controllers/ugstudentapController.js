@@ -4,6 +4,7 @@ import APFacultyRequest from "../models/APFacultyRequest.js";
 import AP from "../models/AP.js";
 import APEvaluation from "../models/APEvaluation.js";
 import Faculty from "../models/Faculty.js";
+import { findOpenEnrollment, reviewFor } from "./enrollmentController.js";
 import Student from "../models/feedback/Student.js";
 
 // Max evaluations for AP: 1 semester × 2 evals = 2
@@ -114,7 +115,7 @@ export const getAPDashboard = async (req, res) => {
         }
 
         // 4. Scenario B: No Project. Show Faculty List.
-        const facultyList = await Faculty.find({}, 'name email dept');
+        const facultyList = await Faculty.find({}, 'name email dept interests').sort({ name: 1 });
         
         const myRequests = apUser ? apUser.requests : [];
 
@@ -128,6 +129,7 @@ export const getAPDashboard = async (req, res) => {
                 name: fac.name,
                 email: fac.email,
                 dept: fac.dept,
+                interests: fac.interests || [],
                 requestStatus: req ? req.status : null,
                 proposalTitle: req ? req.proposalTitle : null
             };
@@ -138,6 +140,7 @@ export const getAPDashboard = async (req, res) => {
             phase: "FACULTY_SELECTION",
             message: "Select a faculty and propose your project",
             faculty: formattedFaculty,
+            review: await reviewFor(student._id, ["ap"]),
             myRequests: myRequests
         });
 
@@ -173,6 +176,10 @@ export const requestFaculty = async (req, res) => {
         // 4. Validation — only one AP at a time
         if (apUser.project) {
             return res.status(400).json({ message: "You are already in an Additional Project" });
+        }
+
+        if (await findOpenEnrollment(student._id, ["ap"])) {
+            return res.status(400).json({ message: "A proposal of yours is already under review. Withdraw it first to propose another." });
         }
 
         // Check duplicate request to same faculty

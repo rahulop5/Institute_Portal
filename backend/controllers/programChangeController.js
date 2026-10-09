@@ -9,13 +9,18 @@ import HonorsRegistration from "../models/HonorsRegistration.js";
 import APRegistration from "../models/APRegistration.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
 import HonorsEvaluation from "../models/HonorsEvaluation.js";
+import AP from "../models/AP.js";
+import APEvaluation from "../models/APEvaluation.js";
 import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
+import { RequestError, ENROLLMENT_NEXT, applyEnrollment, closeEnrollment, notifyOutcome } from "./enrollmentController.js";
 
 const PROGRAMS = {
   btp: { label: "BTP", model: "BTP", Project: BTP, Registration: BTPRegistration, Evaluation: BTPEvaluation, semesters: 2, credits: 4 },
   honors: { label: "Honors", model: "Honors", Project: Honors, Registration: HonorsRegistration, Evaluation: HonorsEvaluation, semesters: 4, credits: 8 },
 };
 const OTHER_PROGRAM = { btp: "honors", honors: "btp" };
+// Enrollment requests also cover Additional Projects, which have no drop / switch.
+const PROGRAM_LABELS = { btp: "BTP", honors: "Honors", ap: "Additional Project" };
 const DEFAULT_EVALUATION_CONFIG = [{ maxMarks: 50 }, { maxMarks: 50 }];
 
 const OPEN_STATUSES = ["pending_ugprojects", "pending_assistantdean", "pending_faculty"];
@@ -26,9 +31,6 @@ const STAGES = {
   pending_faculty: { role: "Faculty", next: "approved" },
 };
 
-// Thrown inside the approval transaction for problems the caller should see
-// as a 400 rather than a server error.
-class RequestError extends Error {}
 
 const GUIDE_CHANGE_REASON = "Current guide is no longer available on campus";
 
@@ -92,6 +94,7 @@ function requestOptions(program, project, { startSemester, currentSemester }) {
       switch: !continueProblem || !freshProblem,
       // Only when the current guide has left the institute.
       guide_change: project.status === "active",
+      topic_change: project.status === "active",
     },
     switchModes: { continue: !continueProblem, fresh: !freshProblem },
     reasons: {
@@ -100,6 +103,7 @@ function requestOptions(program, project, { startSemester, currentSemester }) {
       continue: continueProblem || null,
       fresh: freshProblem || null,
       guide_change: project.status === "active" ? null : closed,
+      topic_change: project.status === "active" ? null : closed,
     },
   };
 }
@@ -113,10 +117,20 @@ function formatRequest(request) {
   return {
     _id: request._id,
     program: request.program,
-    programLabel: PROGRAMS[request.program].label,
+    programLabel: PROGRAM_LABELS[request.program],
     targetLabel: request.type === "switch" ? PROGRAMS[OTHER_PROGRAM[request.program]].label : null,
     newGuide: request.newGuide ? { name: request.newGuide.name, email: request.newGuide.email } : null,
     newTopic: request.newTopic?.name ? { name: request.newTopic.name, about: request.newTopic.about } : null,
+    // enrollment: the topic request on its way to becoming a project
+    enrollment: request.enrollment?.topicName
+      ? {
+          topicName: request.enrollment.topicName,
+          topicAbout: request.enrollment.topicAbout,
+          message: request.enrollment.message,
+          proposed: !!request.enrollment.proposed,
+          evaluationConfig: (request.enrollment.evaluationConfig || []).map((slot) => ({ maxMarks: slot.maxMarks })),
+        }
+      : null,
     type: request.type,
     switchMode: request.switchMode || null,
     reason: request.reason,
@@ -175,7 +189,8 @@ export const getStudentProgramChange = async (req, res) => {
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     const enrollments = await findEnrollments(student._id);
-    const requests = await populateRequest(ProgramChangeRequest.find({ student: student._id }).sort({ createdAt: -1 }));
+    // Topic requests on their way to becoming a project show on the BTP / Honors pages instead.
+    const requests = await populateRequest(ProgramChangeRequest.find({ student: student._id, type: { $ne: "enrollment" } }).sort({ createdAt: -1 }));
     const openRequests = requests.filter((r) => OPEN_STATUSES.includes(r.status));
     // Topic changes wait on the guide alongside any other request.
     const isTopicChange = (r) => r.type === "topic_change";
@@ -193,7 +208,13 @@ export const getStudentProgramChange = async (req, res) => {
           evaluations: await evaluationsFor(program, project._id),
           ...(await (async () => {
             const context = await semesterContext(student, program, project);
-            return { ...context, ...requestOptions(program, project, context) };
+            const options = requestOptions(program, project, context);
+            // One topic change at a time: wait for the guide's answer.
+            if (pendingTopicChange) {
+              options.allowed.topic_change = false;
+              options.reasons.topic_change = "Your guide hasn't answered your last topic change yet.";
+            }
+            return { ...context, ...options };
           })()),
           openRequest: openRequest ? formatRequest(openRequest) : null,
           pendingTopicChange: pendingTopicChange ? formatRequest(pendingTopicChange) : null,
@@ -213,6 +234,11 @@ export const getStudentProgramChange = async (req, res) => {
 
 export const createProgramChangeRequest = async (req, res) => {
   try {
+    // A topic change is a program change request that goes straight to the guide.
+    if (req.body.type === "topic_change") {
+      req.body = { program: req.body.program, name: req.body.newTopic?.name, about: req.body.newTopic?.about };
+      return updateTopicAsStudent(req, res);
+    }
     const { program, type, switchMode, newGuideId, newTopic } = req.body;
     // A guide change always has the same reason, so the student doesn't type one.
     const reason = type === "guide_change" ? GUIDE_CHANGE_REASON : req.body.reason;
@@ -294,6 +320,7 @@ export const withdrawProgramChangeRequest = async (req, res) => {
       }
     );
     if (!request) return res.status(400).json({ message: "No open request to withdraw" });
+    if (request.type === "enrollment") await closeEnrollment(request, "withdrawn");
 
     return res.status(200).json({ message: "Request withdrawn" });
   } catch (err) {
@@ -337,7 +364,7 @@ export const listForReviewer = (stage) => async (req, res) => {
 };
 
 export const decideForReviewer = (stage) => async (req, res) => {
-  const { role, next } = STAGES[stage];
+  const { role } = STAGES[stage];
   const { requestId, decision, remark } = req.body;
   if (!requestId) return res.status(400).json({ message: "Request ID required" });
   if (!["approve", "reject"].includes(decision)) return res.status(400).json({ message: "Decision must be approve or reject" });
@@ -349,11 +376,15 @@ export const decideForReviewer = (stage) => async (req, res) => {
     action: decision === "approve" ? "approved" : "rejected",
     remark: remark?.trim() || undefined,
   };
-  const update = { $set: { status: decision === "approve" ? next : "rejected" }, $push: { history: entry } };
 
   try {
     const request = await ProgramChangeRequest.findById(requestId).populate("guide", "email").populate("newGuide", "email");
     if (!request) return res.status(404).json({ message: "Request not found" });
+    // An enrollment never waits on the guide at this point: they already sent it on.
+    const next = request.type === "enrollment" ? ENROLLMENT_NEXT[stage] : STAGES[stage].next;
+    if (!next) return res.status(400).json({ message: "This request is no longer waiting on you" });
+    const update = { $set: { status: decision === "approve" ? next : "rejected" }, $push: { history: entry } };
+
     // A guide change is decided by the proposed new guide, everything else by the current one.
     const decider = request.type === "guide_change" ? request.newGuide : request.guide;
     if (role === "Faculty" && decider?.email !== req.user.email) {
@@ -363,22 +394,28 @@ export const decideForReviewer = (stage) => async (req, res) => {
     // Matching on the expected status makes a double click or a second
     // reviewer acting on the same request a no-op instead of a double move.
     if (decision === "reject" || next !== "approved") {
-      const updated = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update);
+      const updated = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update, { new: true });
       if (!updated) return res.status(400).json({ message: "This request is no longer waiting on you" });
+      if (decision === "reject" && updated.type === "enrollment") {
+        await closeEnrollment(updated, "rejected");
+        notifyOutcome(updated, "rejected", { rejectedBy: role, remark: entry.remark });
+      }
       return res.status(200).json({ message: decision === "approve" ? "Request approved and forwarded" : "Request rejected" });
     }
 
     // Final approval: the request and the project change land together.
     const session = await mongoose.startSession();
+    let applied = null;
     try {
       await session.withTransaction(async () => {
-        const updated = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update, { session });
-        if (!updated) throw new RequestError("This request is no longer waiting on you");
-        await applyRequest(updated, session);
+        applied = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update, { session, new: true });
+        if (!applied) throw new RequestError("This request is no longer waiting on you");
+        await applyRequest(applied, session);
       });
     } finally {
       await session.endSession();
     }
+    if (applied?.type === "enrollment") notifyOutcome(applied, "approved");
     return res.status(200).json({ message: "Request approved and applied" });
   } catch (err) {
     if (err instanceof RequestError) return res.status(400).json({ message: err.message });
@@ -390,6 +427,7 @@ export const decideForReviewer = (stage) => async (req, res) => {
 // ---------- Applying an approved request ----------
 
 async function applyRequest(request, session) {
+  if (request.type === "enrollment") return applyEnrollment(request, session);
   const from = PROGRAMS[request.program];
   const project = await from.Project.findById(request.project).session(session);
   if (!project || !["active", "completed"].includes(project.status)) {
@@ -574,27 +612,30 @@ export const updateTopicAsStaff = (role) => async (req, res) => {
   }
 };
 
-// Every active BTP/Honors project, for UG Projects to look up students and
-// edit topics.
+// Every BTP / Honors / Additional Project on campus - who is doing it, under
+// which faculty member - for UG Projects and the Assistant Dean. Topics can be
+// edited for active BTP / Honors projects (UG Projects only, in the UI).
 export const listProjectsForUGProjects = async (req, res) => {
   try {
     const rows = [];
-    for (const [program, config] of Object.entries(PROGRAMS)) {
-      const projects = await config.Project.find({ status: "active" })
+    const sources = [...Object.entries(PROGRAMS).map(([program, config]) => [program, config.label, config.model, config.Project]), ["ap", "Additional Project", "AP", AP]];
+    for (const [program, programLabel, projectModel, Project] of sources) {
+      const projects = await Project.find({ status: { $in: ["active", "completed"] } })
         .populate("guide", "name email")
-        .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } });
+        .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } });
       for (const project of projects) {
         const student = project.students[0]?.student?.student;
         rows.push({
           _id: project._id,
           program,
-          programLabel: config.label,
-          projectModel: config.model,
+          programLabel,
+          projectModel,
+          status: project.status,
           name: project.name,
           about: project.about,
           guide: project.guide ? { name: project.guide.name, email: project.guide.email } : null,
-          student: student ? { name: student.name, email: student.email, rollNumber: student.rollNumber } : null,
-          lastTopicChange: project.topicHistory.at(-1) || null,
+          student: student ? { name: student.name, email: student.email, rollNumber: student.rollNumber, batch: student.batch } : null,
+          lastTopicChange: project.topicHistory?.at(-1) || null,
         });
       }
     }
@@ -606,6 +647,70 @@ export const listProjectsForUGProjects = async (req, res) => {
   }
 };
 
+// One project's full picture for UG Projects and the Assistant Dean: who is
+// doing it, under whom, every evaluation round with the marks given (released
+// or not), and the progress updates.
+export const getProjectDetail = async (req, res) => {
+  try {
+    const sources = {
+      BTP: { Project: BTP, Evaluation: BTPEvaluation, program: "btp" },
+      Honors: { Project: Honors, Evaluation: HonorsEvaluation, program: "honors" },
+      AP: { Project: AP, Evaluation: APEvaluation, program: "ap" },
+    };
+    const source = sources[req.query.model];
+    if (!source || !req.query.id) return res.status(400).json({ message: "Project required" });
+
+    const project = await source.Project.findById(req.query.id)
+      .populate("guide", "name email dept")
+      .populate("evaluators.evaluator", "name email")
+      .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } });
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const evaluations = await source.Evaluation.find({ projectRef: project._id })
+      .sort({ time: 1 })
+      .populate("panelEvaluations.evaluator", "name email");
+    const student = project.students[0]?.student?.student;
+    const number = (v) => (Number.isFinite(Number(v)) && v !== undefined && v !== null && v !== "" ? Number(v) : null);
+
+    return res.status(200).json({
+      project: {
+        _id: project._id,
+        program: source.program,
+        name: project.name,
+        about: project.about,
+        status: project.status,
+        guide: project.guide ? { name: project.guide.name, email: project.guide.email } : null,
+        evaluators: project.evaluators.map((e) => ({ name: e.evaluator?.name, email: e.evaluator?.email })),
+        student: student ? { name: student.name, email: student.email, rollNumber: student.rollNumber, batch: student.batch } : null,
+        startSemester: projectStartSemester(student?.batch, project, evaluations),
+        evaluationsPerSemester: (project.evaluationConfig?.length || DEFAULT_EVALUATION_CONFIG.length),
+        updates: [...(project.updates || [])].sort((a, b) => new Date(b.time) - new Date(a.time)).map((u) => ({ update: u.update, time: u.time })),
+        topicHistory: (project.topicHistory || []).map((t) => ({ name: t.name, role: t.role, at: t.at })),
+      },
+      evaluations: evaluations.map((ev) => {
+        const entry = ev.marksgiven?.[0];
+        return {
+          time: ev.time,
+          maxMarks: ev.maxMarks ?? 50,
+          released: !!ev.canstudentsee,
+          remark: ev.remark || null,
+          guideMarks: number(entry?.guidemarks),
+          finalMarks: number(entry?.totalgrade ?? entry?.guidemarks),
+          panel: (ev.panelEvaluations || []).map((p) => ({
+            name: p.evaluator?.name,
+            submitted: !!p.submitted,
+            marks: number(p.panelmarks?.[0]?.marks),
+            remark: p.remark || null,
+          })),
+        };
+      }),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Error loading project" });
+  }
+};
+
 // Which of BTP / Honors the student currently has a project in (null if
 // neither), so the sidebar can hide the program they're not part of.
 export const getStudentEnrollment = async (req, res) => {
@@ -613,14 +718,17 @@ export const getStudentEnrollment = async (req, res) => {
     const student = await Student.findOne({ email: req.user.email });
     if (!student) return res.status(404).json({ message: "Student not found" });
     const [enrollment] = await findEnrollments(student._id);
-    // Semester and AP status let the sidebar hide programs the student
-    // can't take yet (AP before Semester 5, BTP/Honors before Semester 3).
+    const semester = studentSemesterOn(student.batch, new Date());
     const ap = await APRegistration.findOne({ student: student._id, project: { $ne: null } });
-    return res.status(200).json({
-      program: enrollment?.program || null,
-      semester: studentSemesterOn(student.batch, new Date()),
-      hasAP: !!ap,
-    });
+    const program = enrollment?.program || null;
+    // Why each program can't be opened right now (null = available). The
+    // sidebar shows these as locked items with the reason instead of hiding them.
+    const locks = {
+      btp: program === "honors" ? "You're enrolled in Honors, so BTP isn't available." : program === "btp" ? null : startWindowProblem("btp", semester),
+      honors: program === "btp" ? "You're enrolled in BTP, so Honors isn't available." : program === "honors" ? null : startWindowProblem("honors", semester),
+      ap: ap ? null : startWindowProblem("ap", semester),
+    };
+    return res.status(200).json({ program, semester, hasAP: !!ap, locks });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Error loading enrollment" });

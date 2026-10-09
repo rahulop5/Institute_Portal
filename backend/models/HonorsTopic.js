@@ -20,7 +20,12 @@ const honorstopicschema = new mongoose.Schema({
             student: { type: mongoose.Schema.Types.ObjectId, ref: "HonorsRegistration", required: true },
             topic: { type: mongoose.Schema.Types.ObjectId, required: true },
             isapproved: { type: Boolean, required: true, default: false },
-            preference: { type: Number, required: true }
+            preference: { type: Number, required: true },
+            // What the student wrote about their interest in the topic.
+            message: { type: String, default: "" },
+            // True once the faculty member has sent it on for UG Projects /
+            // Assistant Dean approval (see enrollmentController.js).
+            forwarded: { type: Boolean, default: false }
         }
     ]
 });

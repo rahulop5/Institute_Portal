@@ -5,7 +5,8 @@ import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
 import Student from "../models/feedback/Student.js";
-import { proposeTopic, visibleTopics, facultyDirectory } from "./topicProposalController.js";
+import { proposeTopic, visibleTopics, facultyDirectory, MESSAGE_MAX } from "./topicProposalController.js";
+import { findOpenEnrollment, reviewFor } from "./enrollmentController.js";
 
 // Max evaluations for BTP: 2 semesters × 2 evals = 4
 const BTP_MAX_EVALUATIONS = 4;
@@ -145,6 +146,7 @@ export const getBTPDashboard = async (req, res) => {
             message: "Select a topic",
             topics: formattedTopics.filter(doc => doc.topics.length > 0),
             myRequests: myRequests,
+            review: await reviewFor(student._id),
             faculty: await facultyDirectory()
         });
 
@@ -156,7 +158,10 @@ export const getBTPDashboard = async (req, res) => {
 
 export const requestTopic = async (req, res) => {
     try {
-        const { topicDocId, topicId, preference } = req.body; 
+        const { topicDocId, topicId, preference } = req.body;
+        const message = (req.body.message || "").trim();
+        if (!message) return res.status(400).json({ message: "Tell the faculty member about your interest in this topic." });
+        if (message.length > MESSAGE_MAX) return res.status(400).json({ message: `Keep your message under ${MESSAGE_MAX} characters.` });
         if (!topicDocId || !topicId) {
             return res.status(400).json({ message: "Topic details required" });
         }
@@ -186,6 +191,10 @@ export const requestTopic = async (req, res) => {
             return res.status(400).json({ message: "You are already in a project" });
         }
 
+        if (await findOpenEnrollment(student._id)) {
+            return res.status(400).json({ message: "A request of yours is already under review. Withdraw it first to request another topic." });
+        }
+
         // Check duplicates
         const existingReq = btpUser.requests.find(r => 
             r.topic.toString() === topicDocId && 
@@ -200,6 +209,7 @@ export const requestTopic = async (req, res) => {
             topic: topicDocId,
             subTopicId: topicId,
             status: "Pending",
+            message,
             preference: preference || (btpUser.requests.length + 1)
         });
         await btpUser.save();
@@ -215,6 +225,7 @@ export const requestTopic = async (req, res) => {
             student: btpUser._id,
             topic: topicId,
             isapproved: false,
+            message,
             preference: preference || (btpUser.requests.length)
         });
         await topicDoc.save();

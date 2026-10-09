@@ -1,5 +1,6 @@
 import { projectStartSemester } from "../utils/semesterUtils.js";
 import Faculty from "../models/Faculty.js";
+import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
 import APFacultyRequest from "../models/APFacultyRequest.js";
 import AP from "../models/AP.js";
 import APEvaluation from "../models/APEvaluation.js";
@@ -36,10 +37,14 @@ export const getFacultyAPDashboard = async (req, res) => {
     let enrichedRequests = [];
     
     if (facReqDoc) {
+        // Requests this faculty member has sent on: where each one stands.
+        const reviews = await ProgramChangeRequest.find({ type: "enrollment", program: "ap", guide: user._id, status: { $in: ["pending_ugprojects", "pending_assistantdean"] } });
+        const reviewStatus = new Map(reviews.map((r) => [String(r.student), r.status]));
         enrichedRequests = facReqDoc.requests
             .filter(r => !r.isapproved)  // only show pending requests
             .map((req) => {
                 return {
+                    review: reviewStatus.get(String(req.student?.student?._id)) || null,
                     studentRegId: req.student?._id,
                     student: req.student?.student || req.student,
                     proposalTitle: req.proposalTitle,
@@ -75,6 +80,7 @@ export const getFacultyAPDashboard = async (req, res) => {
     return res.status(200).json({
       email: user.email,
       phase: "ACTIVE",
+      interests: user.interests || [],
       requests: enrichedRequests,
       guideproj: guideProjects.map(formatProject),
       evalproj: evalProjects.map(formatProject),
@@ -167,6 +173,11 @@ export const rejectAPRequest = async (req, res) => {
 
     const studentReg = await APRegistration.findOne({ student: studentId });
     if (!studentReg) return res.status(404).json({ message: "Student record not found" });
+
+    const sentOn = await APFacultyRequest.findOne({ faculty: fac._id, requests: { $elemMatch: { student: studentReg._id, forwarded: true } } });
+    if (sentOn) {
+      return res.status(400).json({ message: "This request has been sent for approval and can no longer be rejected here" });
+    }
 
     // Remove from APFacultyRequest
     await APFacultyRequest.updateOne(
