@@ -13,6 +13,7 @@ import AP from "../models/AP.js";
 import APEvaluation from "../models/APEvaluation.js";
 import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
 import { RequestError, ENROLLMENT_NEXT, applyEnrollment, closeEnrollment, notifyOutcome } from "./enrollmentController.js";
+import { notifyProgramChangeReceived } from "../utils/programChangeMailer.js";
 
 const PROGRAMS = {
   btp: { label: "BTP", model: "BTP", Project: BTP, Registration: BTPRegistration, Evaluation: BTPEvaluation, semesters: 2, credits: 4 },
@@ -296,6 +297,7 @@ export const createProgramChangeRequest = async (req, res) => {
       reason: reason.trim(),
       history: [{ role: "Student", email: req.user.email, action: "submitted" }],
     });
+    notifyProgramChangeReceived(request, "pending_ugprojects");
 
     return res.status(201).json({ message: "Request submitted to UG Projects", requestId: request._id });
   } catch (err) {
@@ -400,6 +402,8 @@ export const decideForReviewer = (stage) => async (req, res) => {
         await closeEnrollment(updated, "rejected");
         notifyOutcome(updated, "rejected", { rejectedBy: role, remark: entry.remark });
       }
+      // `updated` already includes this approval in its history, which is the trail the next reviewer sees.
+      if (decision === "approve") notifyProgramChangeReceived(updated, next);
       return res.status(200).json({ message: decision === "approve" ? "Request approved and forwarded" : "Request rejected" });
     }
 
@@ -569,7 +573,7 @@ export const updateTopicAsStudent = async (req, res) => {
     });
     if (waiting) return res.status(400).json({ message: "Your guide hasn't responded to your last topic change yet" });
 
-    await ProgramChangeRequest.create({
+    const topicRequest = await ProgramChangeRequest.create({
       student: student._id,
       program: req.body.program,
       type: "topic_change",
@@ -581,6 +585,7 @@ export const updateTopicAsStudent = async (req, res) => {
       status: "pending_faculty",
       history: [{ role: "Student", email: req.user.email, action: "submitted" }],
     });
+    notifyProgramChangeReceived(topicRequest, "pending_faculty");
     return res.status(201).json({ message: "Sent to your guide for approval" });
   } catch (err) {
     console.error(err);

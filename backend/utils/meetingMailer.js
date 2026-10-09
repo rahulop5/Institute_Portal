@@ -1,18 +1,4 @@
-import nodemailer from "nodemailer";
-
-let transporter = null;
-const getTransporter = () => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-  }
-  return transporter;
-};
-
-const esc = (s = "") =>
-  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+import { getTransporter, mailConfigured, esc } from "./mailer.js";
 
 // slot.date is stored as UTC midnight of the picked calendar day, so format it in UTC.
 const formatWhen = (slot) => {
@@ -113,7 +99,7 @@ async function deliver({ to, subject, ctx, heading, intro, introText, cancelled,
  *   `reason` is the canceller's optional message (cancelled only).
  */
 export function notifyMeeting(kind, { slot, faculty, student, cancelledBy, reason }) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!mailConfigured()) {
     console.warn("[meetingMailer] EMAIL_USER/EMAIL_PASS not set, skipping meeting email");
     return;
   }
