@@ -1,4 +1,7 @@
+import { projectStartSemester } from "../utils/semesterUtils.js";
 import Faculty from "../models/Faculty.js";
+import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
+import { clearOpenRequests } from "./topicProposalController.js";
 import HonorsTopic from "../models/HonorsTopic.js";
 import Honors from "../models/Honors.js";
 import HonorsEvaluation from "../models/HonorsEvaluation.js";
@@ -21,6 +24,10 @@ function validateEvaluationConfig(evaluationConfig) {
 }
 
 // Dashboard: Show Topics/Requests and Projects
+// Projects closed as discontinued, dropped or switched (see ProgramChangeRequest.js)
+// no longer belong on a faculty member's lists.
+const LISTED_STATUSES = ["active", "completed"];
+
 export const getFacultyHonorsDashboard = async (req, res) => {
   const user = await Faculty.findOne({ email: req.user.email });
   if (!user) return res.status(404).json({ message: "Error finding the faculty" });
@@ -49,11 +56,11 @@ export const getFacultyHonorsDashboard = async (req, res) => {
 
     // 2. Fetch Projects (Guided and Evaluated)
     const [guideProjects, evalProjects, evalRequestsRaw] = await Promise.all([
-      Honors.find({ guide: user._id }).populate({
+      Honors.find({ guide: user._id, status: { $in: LISTED_STATUSES } }).populate({
           path: "students.student",
           populate: { path: "student", select: "name email" }
       }),
-      Honors.find({ "evaluators.evaluator": user._id }).populate({
+      Honors.find({ "evaluators.evaluator": user._id, status: { $in: LISTED_STATUSES } }).populate({
           path: "students.student",
           populate: { path: "student", select: "name email" }
       }),
@@ -76,7 +83,9 @@ export const getFacultyHonorsDashboard = async (req, res) => {
       topics: topics ? { ...topics.toObject(), requests: enrichedRequests } : null,
       guideproj: guideProjects.map(formatProject),
       evalproj: evalProjects.map(formatProject),
-      evalreq: evalRequestsRaw.map(e => formatProject(e.projectRef)).filter(p => p)
+      evalreq: evalRequestsRaw
+        .filter(e => LISTED_STATUSES.includes(e.projectRef?.status))
+        .map(e => formatProject(e.projectRef))
     });
 
   } catch (err) {
@@ -187,6 +196,10 @@ export const approveHonorsTopicRequest = async (req, res) => {
     // Remove request from HonorsTopic
     factopicdoc.requests.splice(requestIndex, 1);
     await factopicdoc.save();
+
+    // The student now has a project: clear their other pending requests and
+    // proposals (including the proposal this project came from, if any).
+    await clearOpenRequests(HonorsTopic, studentReg._id);
 
     return res.status(201).json({ message: "Honors request approved and project created" });
 
@@ -549,7 +562,7 @@ export const viewHonorsProject = async (req, res) => {
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
         const project = await Honors.findOne({ _id: req.query.projid, guide: user._id })
-            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
+            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
         
@@ -570,7 +583,9 @@ export const viewHonorsProject = async (req, res) => {
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,
-                 evaluationConfig: project.evaluationConfig
+                 evaluationConfig: project.evaluationConfig,
+                 startSemester: projectStartSemester(project.students[0]?.student?.student?.batch, project, evaluations),
+                 pendingTopicChange: (await ProgramChangeRequest.findOne({ project: project._id, type: "topic_change", status: "pending_faculty" }))?.newTopic || null
             }
         });
     } catch(err) {
@@ -585,7 +600,7 @@ export const viewHonorsProjectEvaluator = async (req, res) => {
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
         const project = await Honors.findOne({ _id: req.query.projid, "evaluators.evaluator": user._id })
-            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
+            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
 
@@ -604,7 +619,8 @@ export const viewHonorsProjectEvaluator = async (req, res) => {
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,
-                 evaluationConfig: project.evaluationConfig
+                 evaluationConfig: project.evaluationConfig,
+                 startSemester: projectStartSemester(project.students[0]?.student?.student?.batch, project, evaluations)
             }
         });
     } catch(err) {

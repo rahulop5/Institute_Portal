@@ -1,3 +1,4 @@
+import { projectStartSemester } from "../utils/semesterUtils.js";
 import Faculty from "../models/Faculty.js";
 import APFacultyRequest from "../models/APFacultyRequest.js";
 import AP from "../models/AP.js";
@@ -509,7 +510,7 @@ export const viewAPProject = async (req, res) => {
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
         const project = await AP.findOne({ _id: req.query.projid, guide: user._id })
-            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
+            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
         
@@ -530,7 +531,8 @@ export const viewAPProject = async (req, res) => {
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,
-                 evaluationConfig: project.evaluationConfig
+                 evaluationConfig: project.evaluationConfig,
+                 startSemester: projectStartSemester(project.students[0]?.student?.student?.batch, project, evaluations)
             }
         });
     } catch(err) {
@@ -545,7 +547,7 @@ export const viewAPProjectEvaluator = async (req, res) => {
         if (!user) return res.status(403).json({ message: "Unauthorized" });
 
         const project = await AP.findOne({ _id: req.query.projid, "evaluators.evaluator": user._id })
-            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber" } })
+            .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } })
             .populate("guide", "name email")
             .populate("evaluators.evaluator", "name email");
 
@@ -564,7 +566,8 @@ export const viewAPProjectEvaluator = async (req, res) => {
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,
-                 evaluationConfig: project.evaluationConfig
+                 evaluationConfig: project.evaluationConfig,
+                 startSemester: projectStartSemester(project.students[0]?.student?.student?.batch, project, evaluations)
             }
         });
     } catch(err) {

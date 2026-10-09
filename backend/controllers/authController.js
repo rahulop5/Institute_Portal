@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import Student from "../models/feedback/Student.js";
 import Faculty from "../models/Faculty.js";
-import Staff from "../models/Staff.js";
+import UGProjects from "../models/UGProjects.js";
 import PrivilegedUser from "../models/PrivilegedUser.js";
 import Admin from "../models/Admin.js";
 import Course from "../models/feedback/Course.js";
@@ -79,7 +79,7 @@ export const authHonorsStudentMiddleware = async (req, res, next) => {
   }
 };
 
-export const authStaffMiddleware = async (req, res, next) => {
+export const authUGProjectsMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
@@ -89,7 +89,31 @@ export const authStaffMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role != "Staff") {
+    if (decoded.role !== "UGProjects") {
+      return res.status(403).json({
+        message: "You dont have access to this page",
+      });
+    }
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).json({
+      message: "Invalid or Expired Token",
+    });
+  }
+};
+
+export const authAssistantDeanMiddleware = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "AssistantDean") {
       return res.status(403).json({
         message: "You dont have access to this page",
       });
@@ -293,7 +317,7 @@ export const getProfile = async (req, res) => {
             // console.log("No referenceId for student user");
         }
     }
-    // Add other roles if necessary (Staff, PrivilegedUser)
+    // Add other roles if necessary (UGProjects, AssistantDean, PrivilegedUser)
 
     res.status(200).json(profileData);
   } catch (err) {
@@ -333,8 +357,8 @@ export const updateName = async (req, res) => {
         case "Student":
           roleModel = Student;
           break;
-        case "Staff":
-          roleModel = Staff;
+        case "UGProjects":
+          roleModel = UGProjects;
           break;
         default:
           roleModel = null;

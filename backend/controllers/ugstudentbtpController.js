@@ -1,9 +1,11 @@
+import { projectStartSemester, studentSemesterOn, startWindowProblem } from "../utils/semesterUtils.js";
 import BTPRegistration from "../models/BTPRegistration.js";
 import HonorsRegistration from "../models/HonorsRegistration.js";
 import BTPTopic from "../models/BTPTopic.js";
 import BTP from "../models/BTP.js";
 import BTPEvaluation from "../models/BTPEvaluation.js";
 import Student from "../models/feedback/Student.js";
+import { proposeTopic, visibleTopics, facultyDirectory } from "./topicProposalController.js";
 
 // Max evaluations for BTP: 2 semesters × 2 evals = 4
 const BTP_MAX_EVALUATIONS = 4;
@@ -98,9 +100,21 @@ export const getBTPDashboard = async (req, res) => {
                         rollno: s.student?.student?.rollNumber || ""
                     })),
                     evaluations: formattedEvaluations,
+                    startSemester: projectStartSemester(student.batch, project, evaluations),
                     latestUpdates: (projectPopulated.updates || []).sort((a, b) => new Date(b.time) - new Date(a.time)),
                     evaluationConfig: projectPopulated.evaluationConfig
                 }
+            });
+        }
+
+        // Outside the semesters this program can start in: say so instead of
+        // offering topics.
+        const startProblem = startWindowProblem("btp", studentSemesterOn(student.batch, new Date()));
+        if (startProblem) {
+            return res.status(200).json({
+                email: student.email,
+                phase: "NOT_ELIGIBLE",
+                message: `${startProblem} You are in Semester ${studentSemesterOn(student.batch, new Date())}.`,
             });
         }
 
@@ -112,7 +126,7 @@ export const getBTPDashboard = async (req, res) => {
         const formattedTopics = topics.map(topicDoc => ({
             _id: topicDoc._id,
             faculty: topicDoc.faculty,
-            topics: topicDoc.topics.map(t => {
+            topics: visibleTopics(topicDoc, btpUser).map(t => {
                 const req = myRequests.find(r => 
                     r.topic.toString() === topicDoc._id.toString() && 
                     r.subTopicId.toString() === t._id.toString()
@@ -127,9 +141,11 @@ export const getBTPDashboard = async (req, res) => {
         return res.status(200).json({
             email: student.email,
             phase: "TOPIC_SELECTION",
+            semester: studentSemesterOn(student.batch, new Date()),
             message: "Select a topic",
-            topics: formattedTopics,
-            myRequests: myRequests
+            topics: formattedTopics.filter(doc => doc.topics.length > 0),
+            myRequests: myRequests,
+            faculty: await facultyDirectory()
         });
 
     } catch (err) {
@@ -148,6 +164,8 @@ export const requestTopic = async (req, res) => {
         // 1. Get Student
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
+        const requestStartProblem = startWindowProblem("btp", studentSemesterOn(student.batch, new Date()));
+        if (requestStartProblem) return res.status(400).json({ message: requestStartProblem });
 
         // 2. Mutual exclusion check
         const honorsReg = await HonorsRegistration.findOne({ student: student._id, project: { $ne: null } });
@@ -239,6 +257,9 @@ export const withdrawRequest = async (req, res) => {
             topicDoc.requests = topicDoc.requests.filter(r => 
                 !(r.student.toString() === btpUser._id.toString() && r.topic.toString() === topicId)
             );
+            // A withdrawn proposal of their own disappears entirely.
+            const own = topicDoc.topics.id(topicId);
+            if (own?.proposedBy?.equals(btpUser._id)) own.deleteOne();
             await topicDoc.save();
         }
 
@@ -284,3 +305,12 @@ export const addUpdatetoProject = async (req, res) => {
         return res.status(500).json({ message: "Error adding update" });
     }
 };
+
+export const proposeBTPTopic = proposeTopic({
+    program: "btp",
+    label: "BTP",
+    Topic: BTPTopic,
+    Registration: BTPRegistration,
+    OtherRegistration: HonorsRegistration,
+    otherLabel: "an Honors",
+});

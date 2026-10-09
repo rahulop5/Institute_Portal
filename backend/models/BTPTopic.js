@@ -8,7 +8,10 @@ const btptopicschema = new mongoose.Schema({
             _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
             topic: { type: String, required: true },
             about: { type: String, required: true },
-            dept: { type: String, required: true, enum: ["CSE", "ECE", "MDS"] }
+            dept: { type: String, required: true, enum: ["CSE", "ECE", "MDS"] },
+            // Set when a student proposed this topic themselves: only that
+            // student and this faculty member see it.
+            proposedBy: { type: mongoose.Schema.Types.ObjectId, ref: "BTPRegistration", default: null }
         }
     ],
     requests: [
