@@ -17,6 +17,9 @@ import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
 import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
 import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
 import questionsRoutes from "./routes/feedback/questionsRoutes.js";
+import facultyGradesRoutes from "./routes/facultyGradesRoutes.js";
+import academicOfficeRoutes from "./routes/academicOfficeRoutes.js";
+import studentGradesRoutes from "./routes/studentGradesRoutes.js";
 
 const app=express();
 app.use(cors({
@@ -60,6 +63,11 @@ app.use("/student/feedback", feedbackstudentRoutes);
 app.use("/faculty/feedback", feedbackfacultyRoutes);
 app.use("/puser/feedback", feedbackadminRoutes);
 app.use("/questions", questionsRoutes);
+
+//Course grades
+app.use("/faculty/grades", facultyGradesRoutes);
+app.use("/academicoffice", academicOfficeRoutes);
+app.use("/student/grades", studentGradesRoutes);
 
 
 app.get("/test", (req, res)=>{
