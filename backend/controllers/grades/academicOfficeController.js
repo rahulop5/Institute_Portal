@@ -4,6 +4,9 @@
 import mongoose from "mongoose";
 import Course from "../../models/feedback/Course.js";
 import Student from "../../models/feedback/Student.js";
+import Question from "../../models/feedback/Question.js";
+import Analytics from "../../models/feedback/Analytics.js";
+import SectionSheet from "../../models/grades/SectionSheet.js";
 import Faculty from "../../models/Faculty.js";
 import BTP from "../../models/BTP.js";
 import Honors from "../../models/Honors.js";
@@ -12,15 +15,66 @@ import CourseGrading from "../../models/grades/CourseGrading.js";
 import CourseGradingVersion from "../../models/grades/CourseGradingVersion.js";
 import CourseAttempt from "../../models/grades/CourseAttempt.js";
 import GradeEntry from "../../models/grades/GradeEntry.js";
-import {openBacklogsFrom, semesterRank} from "../../utils/gradeEngine.js";
+import {semesterRank} from "../../utils/gradeEngine.js";
 import {GradeError, handle, histEntry} from "../../utils/gradeGuards.js";
-import SectionSheet from "../../models/grades/SectionSheet.js";
-import {snapshot, writeAttempts, ensureGrading, openBacklogPool, placeBacklog, assertBacklogOpen} from "../../utils/gradeService.js";
+import {snapshot, writeAttempts} from "../../utils/gradeService.js";
 import {getCurrentSemester} from "../../utils/semesterUtils.js";
 
 export const listCourses = handle(async (req, res) => {
     const courses = await Course.find().populate("faculty", "name").sort({semester: -1, name: 1}).lean();
-    res.json({courses: courses.map((c) => ({_id: c._id, name: c.name, code: c.code, abbreviation: c.abbreviation, semester: c.semester, department: c.department, credits: c.credits, faculty: c.faculty.map((f) => f.name)}))});
+    const gradings = await CourseGrading.find({course: {$in: courses.map((c) => c._id)}}).select("course status").lean();
+    const statusOf = Object.fromEntries(gradings.map((g) => [String(g.course), g.status]));
+    res.json({courses: courses.map((c) => ({
+        _id: c._id, name: c.name, code: c.code, abbreviation: c.abbreviation, semester: c.semester, department: c.department, credits: c.credits,
+        faculty: c.faculty.map((f) => f.name),
+        team: c.faculty.map((f) => ({_id: f._id, name: f.name})),
+        coordinatorId: c.coordinator || null,
+        // the team can change until the components are agreed
+        teamLocked: !!statusOf[String(c._id)] && statusOf[String(c._id)] !== "setup",
+    }))});
+});
+
+// The Academic Office picks who teaches a course and which of them is the coordinator
+// (sets the components, submits the grading). Nothing about marks or grades is touched.
+export const setCourseTeam = handle(async (req, res) => {
+    const course = await Course.findById(req.body.courseId);
+    if (!course) throw new GradeError("That course doesn't exist", 404);
+    const facultyIds = [...new Set((req.body.facultyIds || []).map(String))];
+    const coordinatorId = String(req.body.coordinatorId || "");
+    if (!facultyIds.length) throw new GradeError("Pick at least one faculty member.");
+    if (!facultyIds.includes(coordinatorId)) throw new GradeError("The coordinator must be one of the course's faculty.");
+    const found = await Faculty.find({_id: {$in: facultyIds}}).select("_id").lean();
+    if (found.length !== facultyIds.length) throw new GradeError("One of those faculty members doesn't exist.");
+
+    const grading = await CourseGrading.findOne({course: course._id});
+    if (grading && grading.status !== "setup")
+        throw new GradeError("Marks are already being collected for this course, so the team can't change now.", 409);
+
+    const before = course.faculty.map(String);
+    const added = facultyIds.filter((id) => !before.includes(id));
+    course.faculty = facultyIds;
+    course.coordinator = coordinatorId;
+    await course.save();
+
+    if (grading) {
+        // sheets and agreements belong to the people on the team, so start the setup step again
+        const removed = before.filter((id) => !facultyIds.includes(id));
+        if (removed.length) await SectionSheet.deleteMany({courseGrading: grading._id, faculty: {$in: removed}});
+        await CourseGrading.updateOne({_id: grading._id}, {$set: {componentAgreements: []}, $push: {history: histEntry("AcademicOffice", req.user.email, "team_changed")}});
+    }
+    // the feedback module keeps per-faculty analytics for each course they teach
+    if (added.length) {
+        const questions = await Question.find();
+        const blank = questions.map((q) => ({question: q._id, average: 0, min: 0, max: 0, responseCount: 0, textResponses: []}));
+        for (const id of added) {
+            const analytics = (await Analytics.findOne({faculty: id})) || new Analytics({faculty: id, courses: []});
+            if (!analytics.courses.some((c) => String(c.course) === String(course._id))) {
+                analytics.courses.push({course: course._id, questions: blank, totalResponses: 0});
+                await analytics.save();
+            }
+        }
+    }
+    res.json({message: "Course team saved."});
 });
 
 // No feedback / ratings here, only identity and what they teach.
@@ -117,123 +171,85 @@ export const release = handle(async (req, res) => {
     res.json({version, message: `Version ${version} released to students.`});
 });
 
+// Send an approved grading back to the faculty with a remark. Marks and grades are not touched:
+// the status goes back to the grading draft and earlier approvals are cleared, as in a CC send-back.
+export const sendBack = handle(async (req, res) => {
+    const remark = String(req.body.remark || "").trim();
+    if (!remark) throw new GradeError("A remark is required to send this back.");
+    const upd = await CourseGrading.findOneAndUpdate(
+        {_id: req.body.gradingId, status: "approved"},
+        {$set: {status: "grading", approvals: []}, $push: {history: histEntry("AcademicOffice", req.user.email, "ao_sent_back", remark)}},
+        {new: true}
+    );
+    if (!upd) throw new GradeError("This grading is not waiting for release, or was already released.", 409);
+    res.json({message: "Sent back to the faculty."});
+});
+
 // ---------------------------------------------------------------- backlog
-// The Academic Office hands backlog students to faculty. The assignment is the
-// student's (empty) GradeEntry on that faculty member's section sheet.
+// The Academic Office keeps the record of who has an open F. It does not decide
+// who sits with which faculty: it shares its own list, and each faculty member
+// adds those students to their section sheet.
 
 // The offering a backlog student will sit: this semester's, else the latest later one.
 async function offeringFor(courseKey, lastSemester) {
     const cur = getCurrentSemester();
-    const later = (await Course.find({abbreviation: courseKey}).populate("faculty", "name").lean()).filter((c) => semesterRank(c.semester) > semesterRank(lastSemester));
+    const later = (await Course.find({abbreviation: courseKey}).lean()).filter((c) => semesterRank(c.semester) > semesterRank(lastSemester));
     return later.find((c) => c.semester === cur) || later.sort((x, y) => semesterRank(y.semester) - semesterRank(x.semester))[0] || null;
 }
 
+// Everyone who has ever had an F in a course, with how it went since: still open (the latest
+// attempt is an F) or cleared (a later pass). A student sitting it right now shows as "sitting".
 export const backlog = handle(async (req, res) => {
     const attempts = await CourseAttempt.find().lean();
-    const all = {};
-    for (const a of attempts) (all[`${a.student}|${a.courseKey}`] ||= []).push(a);
-    const open = openBacklogsFrom(attempts);
-    const students = await Student.find({_id: {$in: open.map((a) => a.student)}}).select("name rollNumber batch").lean();
+    const groups = {};
+    for (const a of attempts) (groups[`${a.student}|${a.courseKey}`] ||= []).push(a);
+    const byTime = (x, y) => semesterRank(x.semester) - semesterRank(y.semester) || x.version - y.version || new Date(x.createdAt) - new Date(y.createdAt);
+    const failed = Object.values(groups).filter((list) => list.some((a) => a.grade === "F")).map((list) => list.sort(byTime));
+
+    const studentIds = [...new Set(failed.map((l) => String(l[0].student)))];
+    const students = await Student.find({_id: {$in: studentIds}}).select("name rollNumber batch").lean();
     const sBy = Object.fromEntries(students.map((s) => [String(s._id), s]));
 
-    const offerings = {};
-    for (const a of open) {
-        const k = `${a.courseKey}|${a.semester}`;
-        if (!(k in offerings)) offerings[k] = await offeringFor(a.courseKey, a.semester);
+    // students whose repeat attempt is on a sheet right now (grading not released yet)
+    const keys = [...new Set(failed.map((l) => l[0].courseKey))];
+    const live = await CourseGrading.find({courseKey: {$in: keys}, status: {$ne: "released"}}).select("courseKey semester status").lean();
+    const liveBy = Object.fromEntries(live.map((g) => [String(g._id), g]));
+    const entries = live.length ? await GradeEntry.find({courseGrading: {$in: live.map((g) => g._id)}, student: {$in: studentIds}}).select("courseGrading student").lean() : [];
+    const sitting = {};
+    for (const e of entries) {
+        const g = liveBy[String(e.courseGrading)];
+        sitting[`${e.student}|${g.courseKey}`] = {semester: g.semester, status: g.status};
     }
-    const ctx = {};
-    for (const c of Object.values(offerings)) {
-        if (!c || ctx[String(c._id)]) continue;
-        const grading = await CourseGrading.findOne({course: c._id}).lean();
-        const sheets = grading ? await SectionSheet.find({courseGrading: grading._id}).lean() : [];
-        const entries = grading ? await GradeEntry.find({courseGrading: grading._id, isBacklog: true}).lean() : [];
-        ctx[String(c._id)] = {grading, sheetBy: Object.fromEntries(sheets.map((x) => [String(x._id), x])), entryBy: Object.fromEntries(entries.map((e) => [String(e.student), e]))};
-    }
+
     const nextSem = nextSemester(getCurrentSemester());
-    res.json({backlog: open.map((a) => {
-        const hist = all[`${a.student}|${a.courseKey}`].sort((x, y) => semesterRank(x.semester) - semesterRank(y.semester) || x.version - y.version);
-        const c = offerings[`${a.courseKey}|${a.semester}`];
-        const x = c && ctx[String(c._id)];
-        const entry = x?.entryBy[String(a.student)];
-        const sheet = entry && x.sheetBy[String(entry.sheet)];
-        const marks = !!entry && (Object.keys(entry.marks || {}).length > 0 || entry.absent);
-        const openForAssign = !!c && (!x.grading || (["setup", "collecting"].includes(x.grading.status) && !x.grading.amendment?.type));
-        const locked = marks || (!!entry && sheet?.status === "ready") || (!!c && !openForAssign);
-        return {
-            studentId: a.student, rollNumber: sBy[String(a.student)]?.rollNumber, name: sBy[String(a.student)]?.name,
-            courseKey: a.courseKey, courseName: a.courseName, attempts: hist.length, lastSemester: a.semester, nextOpportunity: c ? c.semester : nextSem,
-            source: a.source,
-            offering: c ? {courseId: c._id, name: c.name, code: c.code, semester: c.semester, faculty: c.faculty.map((f) => ({_id: f._id, name: f.name}))} : null,
-            assignedFacultyId: sheet?.faculty || null,
-            locked,
-            reason: !c ? "No offering of this course yet" : marks ? "Marks already entered" : locked ? "Grading has moved on" : null,
-        };
-    }).sort((x, y) => String(x.rollNumber).localeCompare(String(y.rollNumber)))});
-});
-
-async function openOffering(courseId) {
-    const course = await Course.findById(courseId);
-    if (!course) throw new GradeError("That course offering doesn't exist", 404);
-    const grading = await ensureGrading(course);
-    assertBacklogOpen(grading);
-    return {course, grading};
-}
-
-// Assign one student to a faculty member of the offering (facultyId null = unassign).
-export const assignBacklog = handle(async (req, res) => {
-    const {studentId, courseId, facultyId} = req.body;
-    const {course, grading} = await openOffering(courseId);
-    let sheet = null;
-    if (facultyId) {
-        if (!course.faculty.map(String).includes(String(facultyId))) throw new GradeError("That faculty member doesn't teach this course.");
-        sheet = await SectionSheet.findOne({courseGrading: grading._id, faculty: facultyId});
-        if (!sheet) throw new GradeError("Section not found", 404);
+    const offerings = {};
+    const rows = [];
+    for (const list of failed) {
+        const last = list[list.length - 1];
+        const open = last.grade === "F";
+        const lastF = [...list].reverse().find((a) => a.grade === "F");
+        let offering = null;
+        if (open) {
+            const k = `${last.courseKey}|${last.semester}`;
+            if (!(k in offerings)) offerings[k] = await offeringFor(last.courseKey, last.semester);
+            offering = offerings[k];
+        }
+        const s = sBy[String(last.student)];
+        rows.push({
+            studentId: last.student, rollNumber: s?.rollNumber, name: s?.name,
+            courseKey: last.courseKey, courseName: last.courseName,
+            status: open ? "open" : "cleared",
+            attempts: list.length, lastSemester: lastF.semester,
+            history: list.map((a) => ({semester: a.semester, grade: a.grade, source: a.source})),
+            clearedIn: open ? null : last.semester,
+            sitting: sitting[`${last.student}|${last.courseKey}`] || null,
+            nextOpportunity: offering ? offering.semester : nextSem,
+            source: lastF.source,
+            offering: offering ? {courseId: offering._id, name: offering.name, code: offering.code, semester: offering.semester} : null,
+        });
     }
-    const pool = await openBacklogPool(grading);
-    const session = await mongoose.startSession();
-    try { await session.withTransaction(async () => placeBacklog(grading, pool, studentId, sheet, session)); }
-    finally { await session.endSession(); }
-    res.json({message: sheet ? "Assigned." : "Unassigned."});
-});
-
-// Random, even split: each unassigned student goes to a random one of the least-loaded faculty.
-export const assignBacklogRandomly = handle(async (req, res) => {
-    const only = req.body.courseId ? [String(req.body.courseId)] : null;
-    const open = openBacklogsFrom(await CourseAttempt.find().lean());
-    const byOffering = new Map();
-    for (const a of open) {
-        const c = await offeringFor(a.courseKey, a.semester);
-        if (!c || (only && !only.includes(String(c._id)))) continue;
-        if (!byOffering.has(String(c._id))) byOffering.set(String(c._id), {c, students: new Set()});
-        byOffering.get(String(c._id)).students.add(String(a.student));
-    }
-    const out = {assigned: 0, skipped: []};
-    for (const {c, students} of byOffering.values()) {
-        let grading;
-        try { ({grading} = await openOffering(c._id)); } catch (e) { out.skipped.push(`${c.name}: ${e.message}`); continue; }
-        const pool = await openBacklogPool(grading);
-        const placed = new Set((await GradeEntry.find({courseGrading: grading._id}).select("student").lean()).map((e) => String(e.student)));
-        const todo = pool.map((p) => String(p.student)).filter((id) => students.has(id) && !placed.has(id));
-        const sheets = (await SectionSheet.find({courseGrading: grading._id})).filter((x) => x.status === "editing");
-        if (todo.length && !sheets.length) { out.skipped.push(`${c.name}: every section is marked ready`); continue; }
-        const load = Object.fromEntries(await Promise.all(sheets.map(async (x) => [String(x._id), await GradeEntry.countDocuments({sheet: x._id, isBacklog: true})])));
-        const order = todo.sort(() => Math.random() - 0.5);
-        const session = await mongoose.startSession();
-        try {
-            await session.withTransaction(async () => {
-                for (const id of order) {
-                    const min = Math.min(...sheets.map((x) => load[String(x._id)]));
-                    const cands = sheets.filter((x) => load[String(x._id)] === min);
-                    const target = cands[Math.floor(Math.random() * cands.length)];
-                    await placeBacklog(grading, pool, id, target, session);
-                    load[String(target._id)]++;
-                }
-            });
-        } finally { await session.endSession(); }
-        out.assigned += order.length;
-        if (order.length) await CourseGrading.updateOne({_id: grading._id}, {$push: {history: histEntry("AcademicOffice", req.user.email, "backlog_assigned", `${order.length} student(s), random`)}});
-    }
-    res.json({...out, message: out.assigned ? `Assigned ${out.assigned} backlog student(s) at random.` : "Nothing left to assign."});
+    rows.sort((x, y) => (x.status === y.status ? 0 : x.status === "open" ? -1 : 1) || String(x.rollNumber).localeCompare(String(y.rollNumber)));
+    res.json({backlog: rows});
 });
 
 function nextSemester(code) {

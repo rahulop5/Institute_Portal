@@ -14,11 +14,11 @@ import {
 import {canOverride} from "../../utils/gradePermissions.js";
 import {GradeError, handle, getFaculty, requireCourseFaculty, requireSectionOwner, histEntry} from "../../utils/gradeGuards.js";
 import {
-    ensureGrading, openBacklogPool, computeAndStore, advanceIfAllReady, snapshot, buildCourseView, attemptLabel, LOCKED_STATUSES,
+    ensureGrading, openBacklogPool, cohortBatch, olderBatch, classLabel, backlogNote, computeAndStore, advanceIfAllReady, snapshot, buildCourseView, attemptLabel, LOCKED_STATUSES,
 } from "../../utils/gradeService.js";
 
 const q = (req) => ({...req.query, ...req.body});
-const userCtx = (faculty, course) => ({facultyId: faculty._id, courseFacultyIds: course.faculty});
+const userCtx = (faculty, course) => ({facultyId: faculty._id, courseFacultyIds: course.faculty, coordinatorId: course.coordinator});
 const lockMessage = async (grading) => {
     const map = {
         setup: "Components have not been agreed by everyone yet.",
@@ -46,8 +46,9 @@ export const myCourses = handle(async (req, res) => {
             mine = sheets.find((s) => String(s.faculty) === String(faculty._id));
         }
         out.push({
-            courseId: c._id, name: c.name, code: c.code, abbreviation: c.abbreviation, semester: c.semester,
+            courseId: c._id, name: c.name, code: c.code, abbreviation: c.abbreviation, semester: c.semester, classLabel: await classLabel(c),
             facultyCount: c.faculty.length, soleFaculty: c.faculty.length === 1,
+            isCoordinator: !!c.coordinator && String(c.coordinator) === String(faculty._id),
             status: grading?.status || "setup", version: grading?.version || 1,
             sectionsReady: sheets.filter((s) => s.status === "ready").length, sectionsTotal: c.faculty.length,
             mySectionStatus: mine?.status || "editing", amendment: grading?.amendment?.type || null,
@@ -63,8 +64,11 @@ export const getCourse = handle(async (req, res) => {
     const me = String(faculty._id);
     view.permissions = {
         cutoffs: canOverride(userCtx(faculty, course), "cutoffs"),
+        components: canOverride(userCtx(faculty, course), "components"),
+        submit: canOverride(userCtx(faculty, course), "submit"),
         moveToP: Object.fromEntries(view.rows.filter((r) => r.computedGrade === "F").map((r) => [String(r.id), canOverride(userCtx(faculty, course), "f_to_p", {sheetFacultyId: r.sectionFacultyId})])),
     };
+    view.coordinatorId = course.coordinator || null;
     view.myApproved = grading.approvals.some((a) => String(a.faculty) === me);
     view.myAgreed = grading.componentAgreements.some((a) => String(a.faculty) === me);
     view.mySheetId = view.sections.find((s) => String(s.facultyId) === me)?._id;
@@ -75,7 +79,7 @@ export const getCourse = handle(async (req, res) => {
 async function backlogView(grading) {
     const pool = await openBacklogPool(grading);
     if (!pool.length) return [];
-    const students = await Student.find({_id: {$in: pool.map((p) => p.student)}}).select("name rollNumber").lean();
+    const students = await Student.find({_id: {$in: pool.map((p) => p.student)}}).select("name rollNumber batch").lean();
     const byId = Object.fromEntries(students.map((s) => [String(s._id), s]));
     const entries = await GradeEntry.find({courseGrading: grading._id, student: {$in: pool.map((p) => p.student)}}).lean();
     const entryBy = Object.fromEntries(entries.map((e) => [String(e.student), e]));
@@ -84,7 +88,7 @@ async function backlogView(grading) {
             const e = entryBy[String(p.student)];
             return {
                 studentId: p.student, rollNumber: byId[String(p.student)]?.rollNumber, name: byId[String(p.student)]?.name,
-                attempts: p.attempts, lastSemester: p.semester, note: attemptLabel(p.attempts, p.semester),
+                attempts: p.attempts, lastSemester: p.semester, note: backlogNote(byId[String(p.student)], grading.semester, p.attempts, p.semester),
                 sheetId: e?.sheet || null, hasMarks: !!e && (Object.keys(e.marks || {}).length > 0 || e.absent),
             };
         })
@@ -93,17 +97,18 @@ async function backlogView(grading) {
 
 export const getSection = handle(async (req, res) => {
     const {faculty, course, grading, sheet} = await requireSectionOwner(req, q(req).courseId);
-    const entries = await GradeEntry.find({courseGrading: grading._id, sheet: sheet._id}).populate("student", "name rollNumber").lean();
+    const entries = await GradeEntry.find({courseGrading: grading._id, sheet: sheet._id}).populate("student", "name rollNumber batch").lean();
     const live = grading.components.length && entries.length;
     const rows = entries
         .map((e) => ({
-            studentId: e.student._id, rollNumber: e.student.rollNumber, name: e.student.name, marks: e.marks || {},
+            student: e.student, studentId: e.student._id, rollNumber: e.student.rollNumber, name: e.student.name, marks: e.marks || {},
             total: computeTotal(e.marks, grading.components), isBacklog: e.isBacklog, absent: e.absent, amended: e.amended,
         }))
         .sort((a, b) => Number(a.isBacklog) - Number(b.isBacklog) || String(a.rollNumber).localeCompare(String(b.rollNumber)));
     const backlog = await backlogView(grading);
     const noteBy = Object.fromEntries(backlog.map((b) => [String(b.studentId), b.note]));
-    for (const r of rows) r.backlogNote = r.isBacklog ? noteBy[String(r.studentId)] || "Backlog" : null;
+    for (const r of rows) r.backlogNote = r.isBacklog ? noteBy[String(r.studentId)] || backlogNote(r.student, course.semester, 0, null) : null;
+    for (const r of rows) delete r.student;
 
     const allSheets = await SectionSheet.find({courseGrading: grading._id}).populate("faculty", "name").lean();
     const conflicts = [];
@@ -146,6 +151,7 @@ export const previousComponents = handle(async (req, res) => {
 // ---------------------------------------------------------------- components
 export const setComponents = handle(async (req, res) => {
     const {faculty, course} = await requireCourseFaculty(req, req.body.courseId);
+    if (!canOverride(userCtx(faculty, course), "components")) throw new GradeError("Only the course coordinator sets the components.", 403);
     const grading = await ensureGrading(course);
     if (!["setup", "collecting", "grading"].includes(grading.status) || grading.amendment?.type)
         throw new GradeError(await lockMessage(grading), 409);
@@ -219,16 +225,18 @@ export const saveMarks = handle(async (req, res) => {
     const amending = !!grading.amendment?.type;
 
     const rolls = [...new Set(rows.map((r) => String(r.rollNumber ?? "").trim()).filter(Boolean))];
-    const students = await Student.find({rollNumber: {$in: [...rolls, ...rolls.map((r) => r.toUpperCase())]}}).select("name rollNumber").lean();
+    const students = await Student.find({rollNumber: {$in: [...rolls, ...rolls.map((r) => r.toUpperCase())]}}).select("name rollNumber batch").lean();
     const byRoll = Object.fromEntries(students.map((s) => [s.rollNumber.toUpperCase(), s]));
     const enrolled = new Set((await Enrollment.find({course: course._id, student: {$in: students.map((s) => s._id)}}).select("student").lean()).map((e) => String(e.student)));
     const existing = await GradeEntry.find({courseGrading: grading._id, student: {$in: students.map((s) => s._id)}}).lean();
     const entryBy = Object.fromEntries(existing.map((e) => [String(e.student), e]));
     const pool = new Set((await openBacklogPool(grading)).map((p) => String(p.student)));
+    const cohort = await cohortBatch(course);
     const sheets = await SectionSheet.find({courseGrading: grading._id}).populate("faculty", "name").lean();
     const facOf = (id) => sheets.find((s) => String(s._id) === String(id))?.faculty?.name || "another section";
 
     const result = {saved: 0, unmatched: [], rejected: [], conflicts: []};
+    const unverified = [];
     const mySheet = await SectionSheet.findById(sheet._id);
     for (const r of rows) {
         const roll = String(r.rollNumber ?? "").trim();
@@ -241,7 +249,6 @@ export const saveMarks = handle(async (req, res) => {
 
         if (entry) {
             if (String(entry.sheet) !== String(sheet._id)) {
-                if (entry.isBacklog) { result.rejected.push({rollNumber: roll, reason: `Backlog student assigned to ${facOf(entry.sheet)}`}); continue; }
                 if (!mySheet.conflicts.some((c) => String(c.student) === String(st._id)))
                     mySheet.conflicts.push({student: st._id, marks, claimedBy: entry.sheet});
                 result.conflicts.push({rollNumber: roll, heldBy: facOf(entry.sheet)});
@@ -249,25 +256,36 @@ export const saveMarks = handle(async (req, res) => {
             }
             if (amending && !entry.amended) { result.rejected.push({rollNumber: roll, reason: "Not part of the open amendment"}); continue; }
             const set = {marks, total: computeTotal(marks, grading.components)};
-            if (entry.isBacklog) set.absent = !!r.absent;
+            if (r.absent !== undefined) set.absent = !!r.absent;
             await GradeEntry.updateOne({_id: entry._id}, {$set: set});
             result.saved++;
             continue;
         }
         if (amending) { result.rejected.push({rollNumber: roll, reason: "Amendments only change students already graded"}); continue; }
-        if (!enrolled.has(String(st._id))) {
-            result.rejected.push({rollNumber: roll, reason: pool.has(String(st._id)) ? "Open backlog: assign it to a section on the course page first" : "Not enrolled in this course"});
+        // A backlog student is one from an earlier batch than the class (the roster lists them
+        // together) or with an open F in this course on record. Everyone else must be enrolled.
+        const backlog = pool.has(String(st._id)) || olderBatch(st, cohort);
+        if (!backlog && !enrolled.has(String(st._id))) {
+            result.rejected.push({rollNumber: roll, reason: "Not enrolled in this course and not from an earlier batch"});
             continue;
         }
         try {
-            await GradeEntry.create({courseGrading: grading._id, sheet: sheet._id, student: st._id, marks, total: computeTotal(marks, grading.components)});
+            await GradeEntry.create({
+                courseGrading: grading._id, sheet: sheet._id, student: st._id, marks, total: computeTotal(marks, grading.components),
+                absent: !!r.absent,
+                ...(backlog ? {isBacklog: true, attemptType: "repeat"} : {}),
+            });
             result.saved++;
+            // no F on record: the roll year is the only evidence, so leave a trail for review
+            if (backlog && !pool.has(String(st._id))) unverified.push(roll);
         } catch (e) {
             if (e.code !== 11000) throw e;
             result.rejected.push({rollNumber: roll, reason: "Already in another section"});
         }
     }
     if (mySheet.isModified("conflicts")) await mySheet.save();
+    if (unverified.length)
+        await CourseGrading.updateOne({_id: grading._id}, {$push: {history: histEntry("Faculty", req.user.email, "backlog_added", `Earlier-batch student(s) added without an F on record: ${unverified.join(", ")}`)}});
     res.json(result);
 });
 
@@ -277,16 +295,40 @@ export const deleteRow = handle(async (req, res) => {
         throw new GradeError("This section can't be edited right now.", 409);
     const entry = await GradeEntry.findOne({courseGrading: grading._id, sheet: sheet._id, student: req.body.studentId});
     if (!entry) throw new GradeError("Student is not on your sheet", 404);
-    if (entry.isBacklog) throw new GradeError("Backlog rows are managed from the backlog split on the course page.");
     await entry.deleteOne();
     // anyone who had entered this student as a conflict now holds the row
     const claimant = await SectionSheet.findOne({courseGrading: grading._id, "conflicts.student": entry.student});
     if (claimant) {
         const c = claimant.conflicts.find((x) => String(x.student) === String(entry.student));
-        await GradeEntry.create({courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks: c.marks || {}, total: computeTotal(c.marks, grading.components)});
+        await GradeEntry.create({
+            courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks: c.marks || {}, total: computeTotal(c.marks, grading.components),
+            ...(entry.isBacklog ? {isBacklog: true, attemptType: "repeat"} : {}),
+        });
         await SectionSheet.updateOne({_id: claimant._id}, {$pull: {conflicts: {student: entry.student}}});
     }
     res.json({message: "Removed"});
+});
+
+// Start the sheet over after a bad import: remove every student from my sheet, nothing else.
+export const clearSection = handle(async (req, res) => {
+    const {grading, sheet} = await requireSectionOwner(req, req.body.courseId);
+    if (grading.status !== "collecting" || sheet.status !== "editing" || grading.amendment?.type)
+        throw new GradeError("This section can't be edited right now.", 409);
+    const entries = await GradeEntry.find({courseGrading: grading._id, sheet: sheet._id}).lean();
+    await GradeEntry.deleteMany({_id: {$in: entries.map((e) => e._id)}});
+    await SectionSheet.updateOne({_id: sheet._id}, {$set: {conflicts: []}});
+    // anyone who had entered one of these students as a conflict now holds the row
+    for (const entry of entries) {
+        const claimant = await SectionSheet.findOne({courseGrading: grading._id, "conflicts.student": entry.student});
+        if (!claimant) continue;
+        const c = claimant.conflicts.find((x) => String(x.student) === String(entry.student));
+        await GradeEntry.create({
+            courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks: c.marks || {}, total: computeTotal(c.marks, grading.components),
+            ...(entry.isBacklog ? {isBacklog: true, attemptType: "repeat"} : {}),
+        });
+        await SectionSheet.updateOne({_id: claimant._id}, {$pull: {conflicts: {student: entry.student}}});
+    }
+    res.json({removed: entries.length, message: `Removed ${entries.length} student${entries.length === 1 ? "" : "s"} from your sheet.`});
 });
 
 export const dropConflict = handle(async (req, res) => {
@@ -345,7 +387,6 @@ export const getBacklog = handle(async (req, res) => {
     res.json({
         backlog: await backlogView(grading),
         sections: sections.map((s) => ({_id: s._id, faculty: s.faculty?.name, status: s.status})),
-        canAssign: false, // the Academic Office assigns backlog students
     });
 });
 
@@ -433,6 +474,7 @@ export const setFinalGrade = handle(async (req, res) => {
 
 export const submit = handle(async (req, res) => {
     const {grading, faculty, course} = await requireGradingStage(req);
+    if (!canOverride(userCtx(faculty, course), "submit")) throw new GradeError("Only the course coordinator submits the grading.", 403);
     if (grading.amendment?.type && !grading.amendment.mode) throw new GradeError("Choose frozen or recompute for the amendment first.");
     const view = await buildCourseView(grading, course, faculty._id);
     if (view.sections.some((s) => s.status !== "ready")) throw new GradeError("Every section must be ready.");

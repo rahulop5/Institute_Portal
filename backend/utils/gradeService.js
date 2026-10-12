@@ -63,10 +63,61 @@ export async function openBacklogPool(grading) {
     return open.filter((a) => !enrolled.has(String(a.student))).map((a) => ({...a, attempts: countFor(a.student)}));
 }
 
-export function attemptLabel(attempts, lastSemester) {
-    const nth = attempts + 1;
-    const ord = nth === 2 ? "2nd" : nth === 3 ? "3rd" : `${nth}th`;
-    return `Backlog · ${ord} attempt (F in ${lastSemester})`;
+// A student's intake year: the year in the roll number (S2024..., S2023...), else Student.batch.
+// The roll is used first because a student held back keeps the old roll but moves to a newer batch.
+export function intakeYear(student) {
+    const m = /^[A-Za-z](\d{4})/.exec(student?.rollNumber || "");
+    return m ? Number(m[1]) : Number(student?.batch) || null;
+}
+
+// The class's intake year: the most common one among students enrolled in this offering.
+export async function cohortBatch(course) {
+    const enr = await Enrollment.find({course: course._id}).populate("student", "batch rollNumber").lean();
+    const count = {};
+    for (const e of enr) { const y = intakeYear(e.student); if (y) count[y] = (count[y] || 0) + 1; }
+    return Number(Object.entries(count).sort((a, b) => b[1] - a[1])[0]?.[0]) || null;
+}
+
+// Earlier intake than the class (e.g. S2023 in an S2024 class) = repeating the course.
+export function olderBatch(student, cohort) {
+    const a = intakeYear(student);
+    return !!a && !!cohort && a < Number(cohort);
+}
+
+const ordinal = (n) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`);
+
+// Year of study in a semester: S2024 in Monsoon 2026 is 3rd year. Monsoon (M26) starts the
+// 2026 academic year, Spring (S26) belongs to the one that began in 2025.
+export function yearOfStudy(student, semester) {
+    const intake = intakeYear(student);
+    const m = /^([MS])(\d{2})$/.exec(semester || "");
+    if (!intake || !m) return null;
+    const y = 2000 + Number(m[2]) - (m[1] === "S" ? 1 : 0) - intake + 1;
+    return y >= 1 && y <= 6 ? y : null;
+}
+
+// "3rd year" (null when the roll gives no usable year)
+export function yearLabel(student, semester) {
+    const y = yearOfStudy(student, semester);
+    return y ? `${ordinal(y)} year` : null;
+}
+
+// The class a faculty member teaches, e.g. "3rd year (S2024)".
+export async function classLabel(course) {
+    const cohort = await cohortBatch(course);
+    const y = cohort && yearLabel({batch: String(cohort)}, course.semester);
+    return y ? `${y} (S${cohort})` : null;
+}
+
+// What a backlog student is called: "4th year · 2nd attempt (F in S26)" or "4th year · repeating".
+export function backlogNote(student, semester, attempts, lastSemester) {
+    const lead = yearLabel(student, semester) || "Backlog";
+    if (!attempts && !lastSemester) return `${lead} · repeating`;
+    return `${lead} · ${ordinal(attempts + 1)} attempt (F in ${lastSemester})`;
+}
+
+export function attemptLabel(attempts, lastSemester, student, semester) {
+    return backlogNote(student, semester, attempts, lastSemester);
 }
 
 // Re-run the engine on every entry and persist T, cutoffs and grades.
@@ -198,34 +249,10 @@ export function sectionEditable(grading, sheet, entry) {
     return true;
 }
 
-// Put a backlog student on a section (or take them off with sheet = null).
-// A GradeEntry (isBacklog) is the only record of who owns them. Called by the Academic Office.
-export async function placeBacklog(grading, pool, student, sheet, session) {
-    const entry = await GradeEntry.findOne({courseGrading: grading._id, student}).session(session);
-    if (!pool.some((p) => String(p.student) === String(student)))
-        throw new GradeError("That student has no open backlog in this course.");
-    if (entry) {
-        if (!entry.isBacklog) throw new GradeError("That student is already a regular student on a sheet.");
-        if (Object.keys(entry.marks || {}).length || entry.absent) throw new GradeError("This backlog student already has marks entered. Clear them first.");
-        const from = await SectionSheet.findById(entry.sheet).session(session);
-        if (from.status === "ready") throw new GradeError("The current section is marked ready. Ask that faculty to reopen it.");
-    }
-    if (!sheet) { if (entry) await entry.deleteOne({session}); return; }
-    if (sheet.status === "ready") throw new GradeError("That section is marked ready. Ask that faculty to reopen it.");
-    if (entry) { entry.sheet = sheet._id; await entry.save({session}); }
-    else await GradeEntry.create([{courseGrading: grading._id, sheet: sheet._id, student, isBacklog: true, attemptType: "repeat"}], {session});
-}
-
-export function assertBacklogOpen(grading) {
-    if (!["setup", "collecting"].includes(grading.status) || grading.amendment?.type)
-        throw new GradeError("Backlog students can only be assigned while sections are being collected.", 409);
-}
-
-
 // ------------ combined view ------------
 export async function buildCourseView(grading, course, viewerFacultyId) {
     const sheets = await SectionSheet.find({courseGrading: grading._id}).populate("faculty", "name email").lean();
-    const entries = await GradeEntry.find({courseGrading: grading._id}).populate("student", "name rollNumber email").lean();
+    const entries = await GradeEntry.find({courseGrading: grading._id}).populate("student", "name rollNumber email batch").lean();
     const sheetById = Object.fromEntries(sheets.map((s) => [String(s._id), s]));
 
     // live engine result (preview) so the chart always matches the rows
@@ -257,7 +284,7 @@ export async function buildCourseView(grading, course, viewerFacultyId) {
             finalGrade: e.absent ? null : (stored ? e.finalGrade : live?.grades[String(e._id)] ?? null),
             override: e.override,
             prev: e.prev,
-            backlogNote: e.isBacklog && lastF ? attemptLabel(past.length, lastF.semester) : null,
+            backlogNote: e.isBacklog ? backlogNote(e.student, grading.semester, lastF ? past.length : 0, lastF?.semester) : null,
         };
     });
 
