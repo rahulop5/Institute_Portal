@@ -18,6 +18,7 @@ router.post("/agreecomponents", authFacultyMiddleware, g.agreeComponents);
 // My section
 router.post("/savemarks", authFacultyMiddleware, g.saveMarks);
 router.post("/deleterow", authFacultyMiddleware, g.deleteRow);
+router.post("/clearsection", authFacultyMiddleware, g.clearSection);
 router.post("/dropconflict", authFacultyMiddleware, g.dropConflict);
 router.post("/markready", authFacultyMiddleware, g.markReady);
 router.post("/reopensection", authFacultyMiddleware, g.reopenSection);

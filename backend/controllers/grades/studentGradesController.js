@@ -1,4 +1,8 @@
 import Student from "../../models/feedback/Student.js";
+import Course from "../../models/feedback/Course.js";
+import Enrollment from "../../models/feedback/Enrollment.js";
+import GradeEntry from "../../models/grades/GradeEntry.js";
+import {getCurrentSemester} from "../../utils/semesterUtils.js";
 import CourseGrading from "../../models/grades/CourseGrading.js";
 import CourseGradingVersion from "../../models/grades/CourseGradingVersion.js";
 import CourseAttempt from "../../models/grades/CourseAttempt.js";
@@ -28,11 +32,42 @@ async function releasedFor(studentId) {
     return out;
 }
 
+// Every course the student is taking now, whether or not a grade is out yet: this semester's
+// enrolments, plus any course they are repeating whose grading hasn't been released.
+async function currentCourses(studentId, released) {
+    const cur = getCurrentSemester();
+    const gradeOfCourse = new Map(released.map(({snap, row}) => [String(snap.course), {gradingId: snap.courseGrading, grade: row.finalGrade, version: snap.version}]));
+    const enrolled = await Enrollment.find({student: studentId}).populate({path: "course", populate: {path: "faculty", select: "name"}}).lean();
+    const out = new Map();
+    for (const e of enrolled) {
+        const c = e.course;
+        if (!c || c.semester !== cur) continue;
+        out.set(String(c._id), {courseId: c._id, name: c.name, code: c.code, semester: c.semester, faculty: c.faculty.map((f) => f.name), repeating: false});
+    }
+    const repeats = await GradeEntry.find({student: studentId, isBacklog: true}).populate("courseGrading", "course status").lean();
+    for (const r of repeats) {
+        const g = r.courseGrading;
+        if (!g || g.status === "released" || out.has(String(g.course))) continue;
+        const c = await Course.findById(g.course).populate("faculty", "name").lean();
+        if (c) out.set(String(c._id), {courseId: c._id, name: c.name, code: c.code, semester: c.semester, faculty: c.faculty.map((f) => f.name), repeating: true});
+    }
+    // released, but the student missed the exam: their grade waits for the re-exam
+    const releasedGradings = await CourseGrading.find({course: {$in: [...out.keys()]}, status: "released"}).select("course").lean();
+    const missed = new Set();
+    if (releasedGradings.length) {
+        const gById = Object.fromEntries(releasedGradings.map((g) => [String(g._id), String(g.course)]));
+        for (const e of await GradeEntry.find({courseGrading: {$in: releasedGradings.map((g) => g._id)}, student: studentId, absent: true}).select("courseGrading").lean())
+            missed.add(gById[String(e.courseGrading)]);
+    }
+    return [...out.values()].map((c) => ({...c, ...(gradeOfCourse.get(String(c.courseId)) || {}), missedExam: missed.has(String(c.courseId))})).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export const myGrades = handle(async (req, res) => {
     const student = await me(req);
     const items = await releasedFor(student._id);
     const attempts = await CourseAttempt.find({student: student._id}).lean();
     res.json({
+        current: await currentCourses(student._id, items),
         grades: items
             .map(({snap, row}) => ({gradingId: snap.courseGrading, course: snap.courseName, code: snap.courseCode, semester: snap.semester, version: snap.version, grade: row.finalGrade, attemptType: row.attemptType}))
             .sort((a, b) => semesterRank(b.semester) - semesterRank(a.semester)),

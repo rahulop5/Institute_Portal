@@ -8,7 +8,7 @@
 export const BAND_KEYS = ["O", "A", "B", "C", "D"];
 export const GRADE_ORDER = ["O", "A", "B", "C", "D", "P", "F"];
 export const DEFAULT_BANDS = { O: 10, A: 20, B: 30, C: 20, D: 10 };
-export const BAND_LIMITS = { A: [15, 20], B: [25, 30], C: [15, 20] };
+export const BAND_LIMITS = { A: [15, 20], B: [25, 30], C: [15, 20], D: [5, 15] };
 
 const round2 = (n) => Math.round(n * 100) / 100;
 

@@ -33,8 +33,8 @@ const courseGradingSchema = new mongoose.Schema({
     approvals: [{_id: false, faculty: {type: mongoose.Schema.Types.ObjectId, ref: "Faculty"}, at: {type: Date, default: Date.now}}],
     releasedAt: Date,
 
-    // Backlog assignment is NOT stored here: a backlog student's GradeEntry
-    // (isBacklog: true, sheet) is the single record of which section owns them.
+    // Backlog students are not listed here: a backlog student's GradeEntry
+    // (isBacklog: true, on the sheet of the faculty who added them) is the only record.
 
     amendment: {
         _id: false,
