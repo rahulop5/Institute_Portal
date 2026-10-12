@@ -618,14 +618,14 @@ export const updateTopicAsStaff = (role) => async (req, res) => {
 };
 
 // Every BTP / Honors / Additional Project on campus - who is doing it, under
-// which faculty member - for UG Projects and the Assistant Dean. Topics can be
-// edited for active BTP / Honors projects (UG Projects only, in the UI).
-export const listProjectsForUGProjects = async (req, res) => {
+// which faculty member. `statuses` limits which projects are listed; null
+// lists all of them.
+const listProjects = (statuses) => async (req, res) => {
   try {
     const rows = [];
     const sources = [...Object.entries(PROGRAMS).map(([program, config]) => [program, config.label, config.model, config.Project]), ["ap", "Additional Project", "AP", AP]];
     for (const [program, programLabel, projectModel, Project] of sources) {
-      const projects = await Project.find({ status: { $in: ["active", "completed"] } })
+      const projects = await Project.find(statuses ? { status: { $in: statuses } } : {})
         .populate("guide", "name email")
         .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } });
       for (const project of projects) {
@@ -651,6 +651,13 @@ export const listProjectsForUGProjects = async (req, res) => {
     return res.status(500).json({ message: "Error loading projects" });
   }
 };
+
+// UG Projects and the Assistant Dean see current and finished projects. Topics
+// can be edited for active BTP / Honors projects (UG Projects only, in the UI).
+export const listProjectsForUGProjects = listProjects(["active", "completed"]);
+
+// Admins see every project, including dropped, switched and discontinued ones.
+export const listAllProjects = listProjects(null);
 
 // One project's full picture for UG Projects and the Assistant Dean: who is
 // doing it, under whom, every evaluation round with the marks given (released

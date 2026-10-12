@@ -12,6 +12,7 @@ import ugstudentapRoutes from "./routes/ugstudentapRoutes.js";
 import facultyapRoutes from "./routes/facultyapRoutes.js";
 import studentmeetingRoutes from "./routes/studentmeetingRoutes.js";
 import facultymeetingRoutes from "./routes/facultymeetingRoutes.js";
+import adminmeetingRoutes from "./routes/adminmeetingRoutes.js";
 import programChangeRoutes from "./routes/programChangeRoutes.js";
 import feedbackstudentRoutes from "./routes/feedback/feedbackstudentRoutes.js";
 import feedbackfacultyRoutes from "./routes/feedback/feedbackfacultyRoutes.js";
@@ -51,6 +52,7 @@ app.use("/faculty/ap", facultyapRoutes);
 //Meetings
 app.use("/student/meetings", studentmeetingRoutes);
 app.use("/faculty/meetings", facultymeetingRoutes);
+app.use("/admin/meetings", adminmeetingRoutes);
 
 //BTP/Honors drop or switch requests
 app.use("/programchange", programChangeRoutes);
