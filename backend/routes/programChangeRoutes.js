@@ -4,6 +4,7 @@ import {
     authFacultyMiddleware,
     authUGProjectsMiddleware,
     authAssistantDeanMiddleware,
+    authAdminMiddleware,
 } from "../controllers/authController.js";
 import {
     getStudentProgramChange,
@@ -14,6 +15,7 @@ import {
     updateTopicAsStudent,
     updateTopicAsStaff,
     listProjectsForUGProjects,
+    listAllProjects,
   getProjectDetail,
     listFacultyForStudent,
     getStudentEnrollment,
@@ -34,6 +36,9 @@ router.get("/ugprojects/projects", authUGProjectsMiddleware, listProjectsForUGPr
 router.get("/ugprojects/project", authUGProjectsMiddleware, getProjectDetail);
 router.get("/assistantdean/project", authAssistantDeanMiddleware, getProjectDetail);
 router.post("/ugprojects/topic", authUGProjectsMiddleware, updateTopicAsStaff("UGProjects"));
+// Admin: read-only view of every project
+router.get("/admin/projects", authAdminMiddleware, listAllProjects);
+router.get("/admin/project", authAdminMiddleware, getProjectDetail);
 router.post("/faculty/topic", authFacultyMiddleware, updateTopicAsStaff("Faculty"));
 
 // Approval chain: UG Projects -> Assistant Dean Academics -> guide
