@@ -71,9 +71,18 @@ export const adminDashboardFaculty = async (req, res) => {
     }
     const adminDept = adminFn.departments;
 
-    // Get all faculties of the same department
-    // Use $in operator to match any of the admin's departments
-    const faculties = await Faculty.find({ dept: { $in: adminDept } }).lean();
+    // Determine semester filter
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
+    // Faculty of the admin's departments, plus faculty from other departments
+    // who teach a course in them this semester (only those courses count).
+    const teachingHere = await Course.distinct("faculty", {
+      department: { $in: adminDept },
+      semester: semesterFilter,
+    });
+    const faculties = await Faculty.find({
+      $or: [{ dept: { $in: adminDept } }, { _id: { $in: teachingHere } }],
+    }).lean();
 
     if (!faculties || faculties.length === 0) {
       return res
@@ -83,15 +92,13 @@ export const adminDashboardFaculty = async (req, res) => {
 
     const result = [];
 
-    // Determine semester filter
-    const semesterFilter = req.query.semester || getCurrentSemester();
-
     // For each faculty, gather analytics
     for (const faculty of faculties) {
+      const ownDept = adminDept.includes(faculty.dept);
       const analytics = await Analytics.findOne({ faculty: faculty._id })
         .populate({
           path: "courses.course",
-          select: "name code semester",
+          select: "name code semester department",
         })
         .populate({
           path: "courses.questions.question",
@@ -121,6 +128,8 @@ export const adminDashboardFaculty = async (req, res) => {
         if (!c.course) continue;
         // Filter by semester if the course has semester info
         if (semesterFilter && c.course.semester && c.course.semester !== semesterFilter) continue;
+        // Faculty from another department: only their courses in this admin's departments
+        if (!ownDept && !adminDept.includes(c.course.department)) continue;
 
         const qAverages = c.questions
           .filter((q) => q.question && q.question.type === "rating")
@@ -374,7 +383,13 @@ export const viewFaculty = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (!adminFn.departments.includes(faculty.dept)) {
+    // Allowed for faculty of the admin's departments, or faculty from another
+    // department who teach a course in them (only those courses are shown).
+    const ownDept = adminFn.departments.includes(faculty.dept);
+    if (
+      !ownDept &&
+      !(await Course.exists({ faculty: faculty._id, department: { $in: adminFn.departments } }))
+    ) {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
@@ -394,7 +409,7 @@ export const viewFaculty = async (req, res) => {
     const analytics = await Analytics.findOne({ faculty: facultyId })
       .populate({
         path: "courses.course",
-        select: "name code semester",
+        select: "name code semester department",
       })
       .populate({
         path: "courses.questions.question",
@@ -428,6 +443,8 @@ export const viewFaculty = async (req, res) => {
         if (!c.course) return null;
         // Filter by semester
         if (c.course.semester && c.course.semester !== semesterFilter) return null;
+        // Faculty from another department: only their courses in this admin's departments
+        if (!ownDept && !adminFn.departments.includes(c.course.department)) return null;
 
         const validAverages = c.questions
           .filter((q) => q.question && q.question.type === "rating")
@@ -652,8 +669,13 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
+    // Allowed if the faculty is in the admin's departments, or the course is
+    // (a department head sees every course in their department, whoever teaches it).
     if (!adminFn.departments.includes(facultyDoc.dept)) {
-        return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+        const course = await Course.findById(courseId, "department").lean();
+        if (!course || !adminFn.departments.includes(course.department)) {
+            return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+        }
     }
 
     if (adminFn.isStaff) {
