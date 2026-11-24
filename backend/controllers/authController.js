@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import Student from "../models/feedback/Student.js";
 import Faculty from "../models/Faculty.js";
@@ -10,146 +11,53 @@ import Admin from "../models/Admin.js";
 import Course from "../models/feedback/Course.js";
 import Enrollment from "../models/feedback/Enrollment.js";
 import nodemailer from "nodemailer";
+import { str, normEmail } from "../utils/security.js";
 
-export const authMiddleware = async (req, res, next) => {
+// One verifier for every role. Besides the signature it checks, against the database, that the
+// account still exists with the role in the token and that the token was issued after the last
+// password change/reset, so a reset (e.g. after a stolen password) logs out every old session.
+const verifyAs = (roles) => async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
+  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  const token = authHeader.split(" ")[1];
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    decoded = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET, { algorithms: ["HS256"] });
   } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
+    return res.status(403).json({ message: "Invalid or Expired Token" });
   }
-};
-
-export const authStudentMiddleware = async (req, res, next) => {
-  // console.log("authStudentMiddleware");
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
+  if (typeof decoded?.email !== "string" || typeof decoded.role !== "string") {
+    return res.status(403).json({ message: "Invalid or Expired Token" });
   }
-  const token = authHeader.split(" ")[1];
+  if (roles && !roles.includes(decoded.role)) {
+    return res.status(403).json({ message: "You dont have access to this page" });
+  }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Student") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
+    const user = await User.findOne({ email: decoded.email }).select("role passwordChangedAt").lean();
+    if (!user || user.role !== decoded.role) {
+      return res.status(403).json({ message: "Invalid or Expired Token" });
     }
-    req.user = decoded;
-    next();
+    // iat has 1-second precision: a token from the same second as the change counts as old
+    // (tokens issued after a change are stamped one second later, see signToken).
+    if (user.passwordChangedAt && (decoded.iat || 0) <= Math.floor(new Date(user.passwordChangedAt).getTime() / 1000)) {
+      return res.status(403).json({ message: "Invalid or Expired Token" });
+    }
   } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
+    console.error("auth lookup failed:", err);
+    return res.status(500).json({ message: "Something went wrong. Please try again." });
   }
+  req.user = decoded;
+  next();
 };
 
-export const authHonorsStudentMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Student") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
-  }
-};
-
-export const authUGProjectsMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "UGProjects") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
-  }
-};
-
-export const authAssistantDeanMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "AssistantDean") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
-  }
-};
-
-export const authAdminMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role != "Admin") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
-  }
-};
+export const authMiddleware = verifyAs(null);
+export const authStudentMiddleware = verifyAs(["Student"]);
+export const authHonorsStudentMiddleware = verifyAs(["Student"]);
+export const authUGProjectsMiddleware = verifyAs(["UGProjects"]);
+export const authAssistantDeanMiddleware = verifyAs(["AssistantDean"]);
+export const authAdminMiddleware = verifyAs(["Admin"]);
+export const authFacultyMiddleware = verifyAs(["Faculty"]);
 
 // Opening/closing feedback and resetting a semester's feedback affect every
 // department at once, so only Dean Academic accounts (Admins with
@@ -187,64 +95,51 @@ export const requireDeanMiddleware = async (req, res, next) => {
   next();
 };
 
-export const authFacultyMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Faculty") {
-      return res.status(403).json({
-        message: "You dont have access to this page",
-      });
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid or Expired Token",
-    });
-  }
+const signToken = (user) => {
+  const now = Math.floor(Date.now() / 1000);
+  const changed = user.passwordChangedAt ? Math.floor(new Date(user.passwordChangedAt).getTime() / 1000) : 0;
+  const iat = Math.max(now, changed + 1);
+  return jwt.sign({ email: user.email, role: user.role, iat, exp: iat + 3600 }, process.env.JWT_SECRET, { algorithm: "HS256" });
 };
 
+// Compared against when the email is unknown, so both cases take the same time.
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString("hex"), 10);
+const MIN_PASSWORD = 8;
+const MAX_PASSWORD = 128;
+
 export const handleLogin = async (req, res) => {
-  const { email, pass } = req.body;
-  const user = await User.findOne({ email: email });
-  if (!user) {
-    return res.status(401).json({
-      msg: "Invalid Email",
-    });
+  const email = normEmail(req.body?.email);
+  const pass = str(req.body?.pass);
+  if (!email || !pass || pass.length > MAX_PASSWORD) {
+    return res.status(400).json({ message: "Email and password are required" });
   }
-  const isPasswordCorrect = await bcrypt.compare(pass, user.password);
-  if (!isPasswordCorrect) {
-    return res.status(401).json({
-      message: "Invalid Password",
+  try {
+    const user = await User.findOne({ email });
+    const ok = await bcrypt.compare(pass, user ? user.password : DUMMY_HASH);
+    if (!user || !ok) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+    return res.json({
+      name: "User",
+      role: user.role,
+      token: signToken(user),
     });
+  } catch (err) {
+    console.error("login failed:", err);
+    return res.status(500).json({ message: "Something went wrong. Please try again." });
   }
-  const payload = {
-    email: user.email,
-    role: user.role,
-  };
-  const jwt_token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
-  return res.json({
-    name: "User",
-    role: user.role,
-    token: jwt_token,
-  });
 };
 
 export const changePassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const oldPassword = str(req.body?.oldPassword);
+    const newPassword = str(req.body?.newPassword);
 
     if (!oldPassword || !newPassword) {
       return res.status(400).json({ message: "Both old and new passwords are required." });
+    }
+    if (newPassword.length < MIN_PASSWORD || newPassword.length > MAX_PASSWORD) {
+      return res.status(400).json({ message: `The new password must be ${MIN_PASSWORD} to ${MAX_PASSWORD} characters.` });
     }
 
     // Get logged-in user's email from token middleware
@@ -261,23 +156,17 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ message: "Old password is incorrect." });
     }
 
-    // Hash and update new password
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(newPassword, salt);
-    user.password = hashed;
-
+    user.password = await bcrypt.hash(newPassword, 10);
+    // Logs out every other session; this one gets a fresh token below.
+    user.passwordChangedAt = new Date();
     await user.save();
 
-    return res.status(200).json({ message: "Password changed successfully!" });
+    return res.status(200).json({ message: "Password changed successfully!", token: signToken(user) });
   } catch (err) {
     console.error("Error changing password:", err);
-    return res.status(500).json({
-      message: "Error changing password",
-      error: err.message,
-    });
+    return res.status(500).json({ message: "Error changing password" });
   }
 };
-
 export const getProfile = async (req, res) => {
   try {
     const userEmail = req.user.email;
@@ -398,7 +287,6 @@ export const updateName = async (req, res) => {
     console.error("Error updating name:", err);
     return res.status(500).json({
       message: "Error updating name",
-      error: err.message,
     });
   }
 };
@@ -413,77 +301,80 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Same answer whether or not the email has an account, so the form can't be used to find accounts.
+const OTP_SENT = { message: "If that email has an account, an OTP has been sent to it." };
+const OTP_INVALID = { message: "Invalid or expired OTP" };
+const OTP_TTL_MS = 10 * 60 * 1000;
+// Wrong guesses allowed per OTP (verify and reset both count); after that it is void.
+const MAX_OTP_TRIES = 5;
+
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = normEmail(req.body?.email);
+    if (!email) return res.status(400).json({ message: "Enter your email" });
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(200).json(OTP_SENT);
 
     // Rate Limiting: Max 3 emails per 24 hours
     const now = new Date();
     const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-
-    // Reset count if last attempt was more than 24 hours ago
     if (user.lastOtpSentAt && user.lastOtpSentAt < oneDayAgo) {
       user.otpAttemptCount = 0;
     }
-
     if (user.otpAttemptCount >= 3) {
       return res.status(429).json({ message: "Limit exceeded. Try again tomorrow." });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Save OTP to DB (valid for 10 minutes)
-    user.resetOtp = otp;
-    user.resetOtpExpire = new Date(now.getTime() + 10 * 60 * 1000); // 10 mins
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    user.resetOtp = await bcrypt.hash(otp, 10); // only the hash is stored
+    user.resetOtpExpire = new Date(now.getTime() + OTP_TTL_MS);
+    user.otpVerifyAttempts = 0;
     user.lastOtpSentAt = now;
     user.otpAttemptCount += 1;
     await user.save();
 
-    // Send Email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: ${otp}`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Error sending email" });
-      } else {
-        return res.status(200).json({ message: "OTP sent successfully" });
-      }
-    });
+    // Always to the address on the account, never to what the request said.
+    // Not awaited: the response time must not depend on whether the account exists.
+    transporter
+      .sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: "Password Reset OTP",
+        text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes. If you did not ask for this, ignore this email.`,
+      })
+      .catch((error) => console.error("OTP email failed:", error.message));
+    return res.status(200).json(OTP_SENT);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+// Spends one try atomically before comparing, so parallel guessing can't exceed MAX_OTP_TRIES.
+async function checkOtp(body) {
+  const email = normEmail(body?.email);
+  const otp = str(body?.otp);
+  if (!email || !otp || !/^\d{6}$/.test(otp)) return null;
+  const user = await User.findOneAndUpdate(
+    { email, resetOtp: { $exists: true }, resetOtpExpire: { $gt: new Date() }, otpVerifyAttempts: { $not: { $gte: MAX_OTP_TRIES } } },
+    { $inc: { otpVerifyAttempts: 1 } },
+    { new: true }
+  );
+  if (!user) return null;
+  // Older plain-text OTPs (before hashing) are simply treated as invalid; they expire in 10 minutes.
+  const ok = user.resetOtp?.startsWith("$2") && (await bcrypt.compare(otp, user.resetOtp));
+  if (!ok) {
+    if (user.otpVerifyAttempts >= MAX_OTP_TRIES)
+      await User.updateOne({ _id: user._id }, { $unset: { resetOtp: "", resetOtpExpire: "" } });
+    return null;
+  }
+  return user;
+}
+
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (!user.resetOtp || user.resetOtp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (user.resetOtpExpire < new Date()) {
-      return res.status(400).json({ message: "OTP has expired" });
-    }
-
+    const user = await checkOtp(req.body);
+    if (!user) return res.status(400).json(OTP_INVALID);
     return res.status(200).json({ message: "OTP verified successfully" });
   } catch (err) {
     console.error(err);
@@ -493,31 +384,18 @@ export const verifyOtp = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const newPassword = str(req.body?.newPassword);
+    if (!newPassword || newPassword.length < MIN_PASSWORD || newPassword.length > MAX_PASSWORD) {
+      return res.status(400).json({ message: `The new password must be ${MIN_PASSWORD} to ${MAX_PASSWORD} characters.` });
     }
+    const user = await checkOtp(req.body);
+    if (!user) return res.status(400).json(OTP_INVALID);
 
-    // Double check OTP just in case (though frontend should have verified)
-    if (!user.resetOtp || user.resetOtp !== otp) {
-        return res.status(400).json({ message: "Invalid OTP" });
-    }
-  
-    if (user.resetOtpExpire < new Date()) {
-        return res.status(400).json({ message: "OTP has expired" });
-    }
-
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(newPassword, salt);
-
-    user.password = hashed;
-    // Clear OTP fields
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.passwordChangedAt = new Date(); // logs out every existing session
     user.resetOtp = undefined;
     user.resetOtpExpire = undefined;
-    
+    user.otpVerifyAttempts = 0;
     await user.save();
 
     return res.status(200).json({ message: "Password reset successfully" });

@@ -19,6 +19,9 @@ const userschema=new mongoose.Schema({
     resetOtpExpire: { type: Date },
     lastOtpSentAt: { type: Date },
     otpAttemptCount: { type: Number, default: 0 },
+    otpVerifyAttempts: { type: Number, default: 0 },
+    // Tokens issued before this are rejected (set on password change / reset).
+    passwordChangedAt: { type: Date },
 });
 
 export default mongoose.model("User", userschema);

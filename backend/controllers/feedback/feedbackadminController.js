@@ -2,6 +2,7 @@ import fs from "fs";
 import csv from "csv-parser";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import Course from "../../models/feedback/Course.js";
 import Faculty from "../../models/Faculty.js";
 import User from "../../models/User.js";
@@ -11,9 +12,15 @@ import Question from "../../models/feedback/Question.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Feedback from "../../models/feedback/Feedback.js";
 import Admin from "../../models/Admin.js";
-import { getCurrentSemester, getPreviousSemester } from "../../utils/semesterUtils.js";
+import { getCurrentSemester, getPreviousSemester, sortSemestersDesc, pickFacultySemester } from "../../utils/semesterUtils.js";
 import { canManageRecords } from "../authController.js";
 import FeedbackConfig from "../../models/feedback/FeedbackConfig.js";
+import { protectCourseStats } from "../../utils/feedbackPrivacy.js";
+
+// A random password nobody knows; the account is claimed through "Forgot password".
+// Low bcrypt cost is fine: 192 random bits can't be guessed, and bulk uploads stay fast.
+
+const unusablePassword = () => bcrypt.hash(crypto.randomBytes(24).toString("base64url"), 6);
 
 //dashboard
 // Every semester code that has courses, newest first.
@@ -87,7 +94,6 @@ export const adminDashboardStudent = async (req, res) => {
     console.error("Error fetching admin student dashboard:", err);
     return res.status(500).json({
       message: "Error fetching student dashboard",
-      error: err.message,
     });
   }
 };
@@ -251,13 +257,7 @@ export const adminDashboardFaculty = async (req, res) => {
     }
 
     // Fetch available semesters for dropdown
-    const allSemesters = await Course.distinct("semester");
-    allSemesters.sort((a, b) => {
-      const yearA = parseInt(a.substring(1), 10);
-      const yearB = parseInt(b.substring(1), 10);
-      if (yearA !== yearB) return yearB - yearA;
-      return a.charAt(0) === "M" ? -1 : 1;
-    });
+    const allSemesters = sortSemestersDesc(await Course.distinct("semester"));
 
     // Send final aggregated response
     return res.status(200).json({
@@ -286,7 +286,6 @@ export const adminDashboardFaculty = async (req, res) => {
     console.error("Error fetching admin faculty dashboard:", err);
     return res.status(500).json({
       message: "Error fetching faculty dashboard data",
-      error: err.message,
     });
   }
 };
@@ -381,7 +380,6 @@ export const adminDashboardCourse = async (req, res) => {
     console.error("Error fetching admin course dashboard:", err);
     return res.status(500).json({
       message: "Error fetching course dashboard data",
-      error: err.message,
     });
   }
 };
@@ -441,7 +439,7 @@ export const viewCourse = async (req, res) => {
     console.error("Error in viewCourse:", err);
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json({ message: "Server error" });
   }
 };
 
@@ -481,17 +479,11 @@ export const viewFaculty = async (req, res) => {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
-    // Determine semester filter
-    const semesterFilter = req.query.semester || getCurrentSemester();
-
-    // Fetch available semesters for dropdown
-    const allSemesters = await Course.distinct("semester");
-    allSemesters.sort((a, b) => {
-      const yearA = parseInt(a.substring(1), 10);
-      const yearB = parseInt(b.substring(1), 10);
-      if (yearA !== yearB) return yearB - yearA;
-      return a.charAt(0) === "M" ? -1 : 1;
-    });
+    // Dropdown shows only the semesters this faculty was assigned a course in
+    const allSemesters = sortSemestersDesc(
+      await Course.distinct("semester", { faculty: faculty._id })
+    );
+    const semesterFilter = pickFacultySemester(req.query.semester, allSemesters);
 
     // Fetch analytics for this faculty
     const analytics = await Analytics.findOne({ faculty: facultyId })
@@ -599,7 +591,6 @@ export const viewFaculty = async (req, res) => {
     console.error("Error in viewFaculty:", err);
     return res.status(500).json({
       message: "Error fetching faculty details",
-      error: err.message,
     });
   }
 };
@@ -722,7 +713,6 @@ export const viewFaculty2 = async (req, res) => {
     console.error("Error in viewFaculty:", err);
     return res.status(500).json({
       message: "Error fetching faculty details",
-      error: err.message,
     });
   }
 };
@@ -852,7 +842,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     };
 
     // Send final response
-    return res.status(200).json({
+    return res.status(200).json(protectCourseStats({
       name: courseData.course.name,
       coursecode: courseData.course.code,
       avgscore: parseFloat(avgscore.toFixed(2)),
@@ -870,7 +860,7 @@ export const viewFacultyCourseStatistics = async (req, res) => {
         question: maxQ?.question?.order || "N/A",
       },
       feedback,
-    });
+    }));
   } catch (err) {
     console.error("Error fetching course statistics:", err);
     return res
@@ -1091,7 +1081,7 @@ export const addCourse = async (req, res) => {
     }
     return res
       .status(500)
-      .json({ message: "Error adding course", error: err.message });
+      .json({ message: "Error adding course" });
   }
 };
 
@@ -1113,10 +1103,10 @@ export const addFacultyCSV = async (req, res) => {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (row) => {
-          if (row.email && row.name && row.dept) {
+          if (row.email && row.name && row.dept && row.emp_no) {
             facultyData.push({
               emp_no: row.emp_no.trim(),
-              email: row.email.trim(),
+              email: row.email.trim().toLowerCase(),
               name: row.name.trim(),
               dept: row.dept.trim(),
               role: "faculty",
@@ -1132,9 +1122,18 @@ export const addFacultyCSV = async (req, res) => {
     if (facultyData.length === 0) {
       await session.abortTransaction();
       session.endSession();
+      fs.unlink(filePath, () => {});
       return res
         .status(400)
         .json({ message: "No valid faculty records found in CSV" });
+    }
+    const uploader = await Admin.findOne({ email: req.user.email });
+    const outside = facultyData.filter((f) => !uploader?.departments.includes(f.dept));
+    if (outside.length) {
+      await session.abortTransaction();
+      session.endSession();
+      fs.unlink(filePath, () => {});
+      return res.status(403).json({ message: `You can only add faculty to your own departments (${outside.length} row(s) are for another department).` });
     }
 
     // Filter out already existing faculty emails
@@ -1160,16 +1159,16 @@ export const addFacultyCSV = async (req, res) => {
     // Insert new faculties
     const facultyDocs = await Faculty.insertMany(newFacultyData, { session });
 
-    // Create corresponding user accounts
-    const hashedPassword = await bcrypt.hash("yoyoyo", 10);
-    const userDocs = facultyDocs.map((fac) => ({
+    // Create corresponding user accounts. Each gets its own random, never-shown password: people
+    // set their own with "Forgot password" (OTP to their email). No shared default password.
+    const userDocs = await Promise.all(facultyDocs.map(async (fac) => ({
       name: fac.name,
       email: fac.email,
-      password: hashedPassword,
+      password: await unusablePassword(),
       role: "Faculty",
       referenceId: fac._id,
       lastlogin: new Date(),
-    }));
+    })));
 
     await User.insertMany(userDocs, { session });
 
@@ -1193,7 +1192,7 @@ export const addFacultyCSV = async (req, res) => {
     }
     return res
       .status(500)
-      .json({ message: "Error adding faculty", error: err.message });
+      .json({ message: "Error adding faculty" });
   }
 };
 
@@ -1232,9 +1231,17 @@ export const addStudentsCSV = async (req, res) => {
 
     if (studentsData.length === 0) {
       await session.abortTransaction();
+      fs.unlink(filePath, () => {});
       return res
         .status(400)
         .json({ message: "No valid student data found in CSV" });
+    }
+    const uploader = await Admin.findOne({ email: req.user.email });
+    const outside = studentsData.filter((st) => !uploader?.departments.includes(st.department));
+    if (outside.length) {
+      await session.abortTransaction();
+      fs.unlink(filePath, () => {});
+      return res.status(403).json({ message: `You can only add students to your own departments (${outside.length} row(s) are for another department).` });
     }
 
     // Filter out existing students
@@ -1268,11 +1275,10 @@ export const addStudentsCSV = async (req, res) => {
     // Create corresponding user accounts
     const users = [];
     for (const student of createdStudents) {
-      const hashedPassword = await bcrypt.hash("yoyoyo", 10); // rollNumber as default password
       users.push({
         name: student.name,
         email: student.email,
-        password: hashedPassword, 
+        password: await unusablePassword(), // set by the student via "Forgot password"
         role: "Student",
         referenceId: student._id,
         lastlogin: new Date(),
@@ -1301,7 +1307,7 @@ export const addStudentsCSV = async (req, res) => {
     fs.unlink(req.file?.path || "", () => {});
     return res
       .status(500)
-      .json({ message: "Error adding students", error: err.message });
+      .json({ message: "Error adding students" });
   }
 };
 
@@ -1362,7 +1368,7 @@ export const resetCourse = async (req, res) => {
     }
     return res
       .status(500)
-      .json({ message: "Error resetting course", error: err.message });
+      .json({ message: "Error resetting course" });
   }
 };
 
@@ -1428,7 +1434,6 @@ export const deleteCourse = async (req, res) => {
     }
     return res.status(500).json({
       message: "Error deleting course",
-      error: err.message,
     });
   }
 };
@@ -1613,7 +1618,7 @@ export const addFacultyStudentstoCourse = async (req, res) => {
     }
     return res
       .status(500)
-      .json({ message: "Error adding faculty/students", error: err.message });
+      .json({ message: "Error adding faculty/students" });
   }
 };
 
@@ -1650,7 +1655,13 @@ export const updateCourseDetails = async (req, res) => {
     if (faculty && Array.isArray(faculty)) {
         // faculty is expected to be an array of faculty IDs (or objects with IDs)
         // If frontend sends objects, extract IDs.
-        const facultyIds = faculty.map(f => typeof f === 'object' ? f.id || f._id : f);
+        const facultyIds = [...new Set(faculty.map(f => String(f && typeof f === 'object' ? f.id || f._id : f)))];
+        if (facultyIds.length > 20 || facultyIds.some((id) => !mongoose.isValidObjectId(id))) {
+          return res.status(400).json({ message: "Invalid faculty list" });
+        }
+        if ((await Faculty.countDocuments({ _id: { $in: facultyIds } })) !== facultyIds.length) {
+          return res.status(400).json({ message: "One of those faculty members doesn't exist" });
+        }
         course.faculty = facultyIds;
 
         // Initialize analytics for any newly assigned faculty
@@ -1694,7 +1705,7 @@ export const updateCourseDetails = async (req, res) => {
     return res.status(200).json({ message: "Course details updated successfully", course });
   } catch (err) {
     console.error("Error updating course details:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -1719,6 +1730,13 @@ export const updateCourseStudents = async (req, res) => {
     const course = await Course.findById(courseId).session(session);
     if (!course) {
        throw new Error("Course not found");
+    }
+    const adminFn = await Admin.findOne({ email: req.user.email });
+    if (!adminFn || !adminFn.departments.includes(course.department)) {
+      await session.abortTransaction();
+      session.endSession();
+      if (req.file?.path) fs.unlink(req.file.path, () => {});
+      return res.status(403).json({ message: "Access denied: course belongs to another department" });
     }
 
 
@@ -1784,7 +1802,7 @@ export const updateCourseStudents = async (req, res) => {
     }
     if (req.file) fs.unlink(req.file.path, () => {});
     console.error("Error updating course students:", err);
-    return res.status(500).json({ message: "Error updating students", error: err.message });
+    return res.status(500).json({ message: "Error updating students" });
   }
 };
 
@@ -1805,7 +1823,6 @@ export const resetFeedbackPreview = async (req, res) => {
     console.error("Error previewing feedback reset:", err);
     return res.status(500).json({
       message: "Error checking what a reset would delete",
-      error: err.message,
     });
   }
 };
@@ -1835,7 +1852,6 @@ export const resetFeedback = async (req, res) => {
     console.error("Error resetting feedback:", err);
     return res.status(500).json({
       message: "Error resetting feedback system",
-      error: err.message,
     });
   }
 };
@@ -1864,7 +1880,6 @@ export const getAvailableSemesters = async (req, res) => {
     console.error("Error fetching semesters:", err);
     return res.status(500).json({
       message: "Error fetching available semesters",
-      error: err.message,
     });
   }
 };
@@ -1914,7 +1929,6 @@ export const toggleFeedback = async (req, res) => {
     console.error("Error toggling feedback:", err);
     return res.status(500).json({
       message: "Error toggling feedback status",
-      error: err.message,
     });
   }
 };
@@ -1936,7 +1950,6 @@ export const getFeedbackStatus = async (req, res) => {
     console.error("Error fetching feedback status:", err);
     return res.status(500).json({
       message: "Error fetching feedback status",
-      error: err.message,
     });
   }
 };

@@ -1,3 +1,4 @@
+import { oid } from "../utils/security.js";
 import { projectStartSemester, studentSemesterOn, startWindowProblem } from "../utils/semesterUtils.js";
 import mongoose from "mongoose";
 import Student from "../models/feedback/Student.js";
@@ -308,7 +309,7 @@ export const createProgramChangeRequest = async (req, res) => {
 
 export const withdrawProgramChangeRequest = async (req, res) => {
   try {
-    const { requestId } = req.body;
+    const requestId = oid(req.body.requestId);
     if (!requestId) return res.status(400).json({ message: "Request ID required" });
 
     const student = await Student.findOne({ email: req.user.email });
@@ -367,7 +368,9 @@ export const listForReviewer = (stage) => async (req, res) => {
 
 export const decideForReviewer = (stage) => async (req, res) => {
   const { role } = STAGES[stage];
-  const { requestId, decision, remark } = req.body;
+  const { decision } = req.body;
+  const requestId = oid(req.body.requestId);
+  const remark = typeof req.body.remark === "string" ? req.body.remark.slice(0, 2000) : undefined;
   if (!requestId) return res.status(400).json({ message: "Request ID required" });
   if (!["approve", "reject"].includes(decision)) return res.status(400).json({ message: "Decision must be approve or reject" });
   if (decision === "reject" && !remark?.trim()) return res.status(400).json({ message: "A reason is required to reject" });
@@ -396,7 +399,7 @@ export const decideForReviewer = (stage) => async (req, res) => {
     // Matching on the expected status makes a double click or a second
     // reviewer acting on the same request a no-op instead of a double move.
     if (decision === "reject" || next !== "approved") {
-      const updated = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update, { new: true });
+      const updated = await ProgramChangeRequest.findOneAndUpdate({ _id: request._id, status: stage }, update, { new: true });
       if (!updated) return res.status(400).json({ message: "This request is no longer waiting on you" });
       if (decision === "reject" && updated.type === "enrollment") {
         await closeEnrollment(updated, "rejected");
@@ -412,7 +415,7 @@ export const decideForReviewer = (stage) => async (req, res) => {
     let applied = null;
     try {
       await session.withTransaction(async () => {
-        applied = await ProgramChangeRequest.findOneAndUpdate({ _id: requestId, status: stage }, update, { session, new: true });
+        applied = await ProgramChangeRequest.findOneAndUpdate({ _id: request._id, status: stage }, update, { session, new: true });
         if (!applied) throw new RequestError("This request is no longer waiting on you");
         await applyRequest(applied, session);
       });

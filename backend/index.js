@@ -1,7 +1,11 @@
+// Must stay the first import: registers the query guard before any model is compiled.
+import "./utils/queryGuard.js";
 import express from "express";
 import connectDB from "./config/db.js";
 import env from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
+import {rejectOperators, errorHandler} from "./utils/security.js";
 import authRoutes from "./routes/authRoutes.js";
 import ugstudentbtpRoutes from "./routes/ugstudentbtpRoutes.js";
 import staffbtpRoutes from "./routes/staffbtpRoutes.js";
@@ -20,6 +24,10 @@ import feedbackadminRoutes from "./routes/feedback/feedbackadminRoutes.js";
 import questionsRoutes from "./routes/feedback/questionsRoutes.js";
 
 const app=express();
+app.disable("x-powered-by");
+// Behind nginx/another proxy set TRUST_PROXY=1 (number of proxy hops) so rate limits see real client IPs.
+if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+app.use(helmet());
 app.use(cors({
     origin: [
         "https://feedback-frontend-uk6j.vercel.app",
@@ -29,8 +37,11 @@ app.use(cors({
         ...(process.env.EXTRA_CORS_ORIGINS ? process.env.EXTRA_CORS_ORIGINS.split(",") : []),
     ],
 }));
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+// 2mb: the UG Projects link-students preview sends a whole file (up to 500 rows) at once.
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({extended: false, limit: "100kb"}));
+// Rejects MongoDB operators ("$ne", "$gte", ...) and dotted paths smuggled in as request keys.
+app.use(rejectOperators);
 env.config();
 connectDB();
 
@@ -70,7 +81,9 @@ app.get("/test", (req, res)=>{
     });
 });
 
-//add the page not found thing
+app.use((req, res) => res.status(404).json({message: "Not found"}));
+// Never sends error details or stack traces to the client.
+app.use(errorHandler);
 
 //add to env later
 app.listen(process.env.PORT || 3000, "0.0.0.0", ()=>{

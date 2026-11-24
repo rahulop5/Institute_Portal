@@ -21,6 +21,7 @@ import {
     resetFeedbackPreview
 } from "../../controllers/feedback/feedbackadminController.js";
 import upload from "../../config/multer.js";
+import { rejectOperators } from "../../utils/security.js";
 import { authAdminMiddleware, requireDeanMiddleware, requireRecordManagerMiddleware } from "../../controllers/authController.js";
 
 const router = express.Router();
@@ -34,20 +35,20 @@ router.get("/dashboard/courses", authAdminMiddleware, adminDashboardCourse);
 router.get("/dashboard/course", authAdminMiddleware, viewCourse);
 
 // database feeding
-router.post("/addcourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addCourse);
-router.post("/addFacultyCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addFacultyCSV);
-router.post("/addStudentsCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addStudentsCSV);
+router.post("/addcourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), rejectOperators, addCourse);
+router.post("/addFacultyCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), rejectOperators, addFacultyCSV);
+router.post("/addStudentsCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), rejectOperators, addStudentsCSV);
 
 //course actions
 router.get("/viewCourse", authAdminMiddleware, viewCourse);
 router.get("/resetcourse", authAdminMiddleware, requireRecordManagerMiddleware, resetCourse);
 router.delete("/deletecourse", authAdminMiddleware, requireRecordManagerMiddleware, deleteCourse);
-router.post("/addFacultyStudentstoCourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addFacultyStudentstoCourse);
+router.post("/addFacultyStudentstoCourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), rejectOperators, addFacultyStudentstoCourse);
 
 // Update course details
 router.post("/updateCourseDetails", authAdminMiddleware, requireRecordManagerMiddleware, updateCourseDetails);
 // Update course students (CSV)
-router.post("/updateCourseStudents", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), updateCourseStudents);
+router.post("/updateCourseStudents", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), rejectOperators, updateCourseStudents);
 
 //Reset Feedback
 // Two steps: the preview says what would be deleted, and the reset itself
