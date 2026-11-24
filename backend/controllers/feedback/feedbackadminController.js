@@ -12,41 +12,72 @@ import Analytics from "../../models/feedback/Analytics.js";
 import Feedback from "../../models/feedback/Feedback.js";
 import Admin from "../../models/Admin.js";
 import { getCurrentSemester, getPreviousSemester } from "../../utils/semesterUtils.js";
+import { canManageRecords } from "../authController.js";
 import FeedbackConfig from "../../models/feedback/FeedbackConfig.js";
 
 //dashboard
+// Every semester code that has courses, newest first.
+async function sortedSemesters() {
+  const all = await Course.distinct("semester");
+  return all.sort((a, b) => {
+    const yearA = parseInt(a.substring(1), 10);
+    const yearB = parseInt(b.substring(1), 10);
+    if (yearA !== yearB) return yearB - yearA;
+    return a.charAt(0) === "M" ? -1 : 1;
+  });
+}
+
+// Students enrolled in one semester's courses, split by whether they have
+// submitted that semester's feedback (other semesters don't count).
 export const adminDashboardStudent = async (req, res) => {
   try {
-    // Fetch all students
-    const allStudents = await Student.find()
-      .select("name email rollNumber batch")
+    const semester = req.query.semester || getCurrentSemester();
+
+    const courses = await Course.find({ semester })
+      .select("name code ug department")
+      .lean();
+    const enrollments = await Enrollment.find({
+      course: { $in: courses.map((c) => c._id) },
+    })
+      .select("student course")
       .lean();
 
-    // Fetch all submitted feedbacks
-    const submittedFeedbacks = await Feedback.find({ submitted: true })
-      .select("student")
-      .lean();
-
-    // Extract submitted student IDs
-    const submittedIds = new Set(
-      submittedFeedbacks.map((f) => f.student.toString())
-    );
-
-    // Split into submitted / unsubmitted
-    const submittedStudents = [];
-    const unsubmittedStudents = [];
-
-    for (const student of allStudents) {
-      if (submittedIds.has(student._id.toString())) {
-        submittedStudents.push(student);
-      } else {
-        unsubmittedStudents.push(student);
-      }
+    // student id -> ids of their courses this semester
+    const coursesByStudent = new Map();
+    for (const e of enrollments) {
+      const id = e.student.toString();
+      if (!coursesByStudent.has(id)) coursesByStudent.set(id, []);
+      coursesByStudent.get(id).push(e.course.toString());
     }
 
-    // Return data
+    const students = await Student.find({ _id: { $in: [...coursesByStudent.keys()] } })
+      .select("name email rollNumber batch department")
+      .lean();
+
+    const submittedFeedbacks = await Feedback.find({ semester, submitted: true })
+      .select("student")
+      .lean();
+    const submittedIds = new Set(submittedFeedbacks.map((f) => f.student.toString()));
+
+    const submittedStudents = [];
+    const unsubmittedStudents = [];
+    for (const student of students) {
+      const row = { ...student, courseIds: coursesByStudent.get(student._id.toString()) || [] };
+      if (submittedIds.has(student._id.toString())) submittedStudents.push(row);
+      else unsubmittedStudents.push(row);
+    }
+
     return res.status(200).json({
-      totalStudents: allStudents.length,
+      currentSemester: semester,
+      availableSemesters: await sortedSemesters(),
+      courses: courses.map((c) => ({
+        id: c._id,
+        name: c.name,
+        code: c.code,
+        ug: c.ug,
+        department: c.department,
+      })),
+      totalStudents: students.length,
       totalSubmitted: submittedStudents.length,
       totalUnsubmitted: unsubmittedStudents.length,
       submittedStudents,
@@ -71,9 +102,48 @@ export const adminDashboardFaculty = async (req, res) => {
     }
     const adminDept = adminFn.departments;
 
-    // Get all faculties of the same department
-    // Use $in operator to match any of the admin's departments
-    const faculties = await Faculty.find({ dept: { $in: adminDept } }).lean();
+    // Determine semester filter
+    const semesterFilter = req.query.semester || getCurrentSemester();
+
+    // Faculty of the admin's departments, plus faculty from other departments
+    // who teach a course in them this semester (only those courses count).
+    const teachingHere = await Course.distinct("faculty", {
+      department: { $in: adminDept },
+      semester: semesterFilter,
+    });
+    const faculties = await Faculty.find({
+      $or: [{ dept: { $in: adminDept } }, { _id: { $in: teachingHere } }],
+    }).lean();
+
+    // Courses each faculty member teaches this semester, for the course and
+    // year filters. Faculty from another department only list courses in the
+    // admin's departments.
+    const semesterCourses = await Course.find({
+      semester: semesterFilter,
+      faculty: { $in: faculties.map((f) => f._id) },
+    })
+      .select("name code ug department faculty")
+      .lean();
+    // Each course carries its own score and response count (null/0 when it has
+    // no feedback record yet), so the page can recompute a faculty member's
+    // numbers for just the courses a filter picks.
+    const coursesOf = (faculty, stats = new Map()) =>
+      semesterCourses
+        .filter((c) => c.faculty.some((id) => id.equals(faculty._id)))
+        .filter((c) => adminDept.includes(faculty.dept) || adminDept.includes(c.department))
+        .map((c) => {
+          const st = stats.get(c._id.toString());
+          return {
+            id: c._id,
+            name: c.name,
+            code: c.code,
+            ug: c.ug,
+            department: c.department,
+            counted: !!st,
+            score: st ? st.avg : null,
+            responses: st ? st.responses : 0,
+          };
+        });
 
     if (!faculties || faculties.length === 0) {
       return res
@@ -82,16 +152,18 @@ export const adminDashboardFaculty = async (req, res) => {
     }
 
     const result = [];
-
-    // Determine semester filter
-    const semesterFilter = req.query.semester || getCurrentSemester();
+    // HODs and the Dean only see faculty teaching this semester; staff and the
+    // super-admins (who add faculty) see everyone.
+    const hideIdle = !canManageRecords(adminFn);
 
     // For each faculty, gather analytics
     for (const faculty of faculties) {
+      const ownDept = adminDept.includes(faculty.dept);
+      if (hideIdle && coursesOf(faculty).length === 0) continue;
       const analytics = await Analytics.findOne({ faculty: faculty._id })
         .populate({
           path: "courses.course",
-          select: "name code semester",
+          select: "name code semester department",
         })
         .populate({
           path: "courses.questions.question",
@@ -105,10 +177,11 @@ export const adminDashboardFaculty = async (req, res) => {
           name: faculty.name,
           email: faculty.email,
           department: faculty.dept,
+          outsideDept: !ownDept,
           avgscore: 0,
           impress: 0,
           coursestaught: 0,
-          courses: [],
+          courses: coursesOf(faculty),
         });
         continue;
       }
@@ -116,11 +189,14 @@ export const adminDashboardFaculty = async (req, res) => {
       let totalAvg = 0;
       let totalCourses = 0;
       let totalImpressions = 0;
+      const courseStats = new Map();
 
       for (const c of analytics.courses) {
         if (!c.course) continue;
         // Filter by semester if the course has semester info
         if (semesterFilter && c.course.semester && c.course.semester !== semesterFilter) continue;
+        // Faculty from another department: only their courses in this admin's departments
+        if (!ownDept && !adminDept.includes(c.course.department)) continue;
 
         const qAverages = c.questions
           .filter((q) => q.question && q.question.type === "rating")
@@ -134,6 +210,10 @@ export const adminDashboardFaculty = async (req, res) => {
         totalCourses++;
         totalAvg += courseAvg;
         totalImpressions += c.totalResponses;
+        courseStats.set(c.course._id.toString(), {
+          avg: parseFloat(courseAvg.toFixed(2)),
+          responses: c.totalResponses,
+        });
       }
 
       const overallAvg = totalCourses > 0 ? totalAvg / totalCourses : 0;
@@ -143,9 +223,11 @@ export const adminDashboardFaculty = async (req, res) => {
         name: faculty.name,
         email: faculty.email,
         department: faculty.dept,
+        outsideDept: !ownDept,
         avgscore: parseFloat(overallAvg.toFixed(2)),
         impress: totalImpressions,
         coursestaught: totalCourses,
+        courses: coursesOf(faculty, courseStats),
       });
     }
 
@@ -181,14 +263,23 @@ export const adminDashboardFaculty = async (req, res) => {
     return res.status(200).json({
       isStaff: adminFn.isStaff,
       isDean: adminFn.isDean,
+      adminDepartments: adminDept,
       currentSemester: semesterFilter,
       availableSemesters: allSemesters,
       totalFaculties: faculties.length,
       departmentAverage: adminFn.isStaff ? "N/A" : departmentAverage,
       topFaculty: adminFn.isStaff ? null : topFaculty,
       bottomFaculty: adminFn.isStaff ? null : bottomFaculty,
-      faculties: adminFn.isStaff 
-        ? result.map(f => ({ ...f, avgscore: "N/A", impress: "N/A", coursestaught: "N/A" })) 
+      // Staff manage records and never see ratings: just each faculty member
+      // and the courses they teach.
+      faculties: adminFn.isStaff
+        ? result.map((f) => ({
+            ...f,
+            avgscore: "N/A",
+            impress: "N/A",
+            coursestaught: f.courses.length,
+            courses: f.courses.map(({ id, name, code, ug, department }) => ({ id, name, code, ug, department })),
+          }))
         : result,
     });
   } catch (err) {
@@ -260,6 +351,7 @@ export const adminDashboardCourse = async (req, res) => {
           isreset: course.isreset,
           ug: course.ug, 
           semester: course.semester,
+          department: course.department,
         };
       })
     );
@@ -374,7 +466,18 @@ export const viewFaculty = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
-    if (!adminFn.departments.includes(faculty.dept)) {
+    // Allowed for faculty of the admin's departments, or faculty from another
+    // department who teach a course in them (only those courses are shown).
+    // Staff manage records only; a faculty member's ratings page is not for them.
+    if (adminFn.isStaff) {
+      return res.status(403).json({ message: "Access denied: Staff members cannot view faculty ratings." });
+    }
+
+    const ownDept = adminFn.departments.includes(faculty.dept);
+    if (
+      !ownDept &&
+      !(await Course.exists({ faculty: faculty._id, department: { $in: adminFn.departments } }))
+    ) {
         return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
     }
 
@@ -394,7 +497,7 @@ export const viewFaculty = async (req, res) => {
     const analytics = await Analytics.findOne({ faculty: facultyId })
       .populate({
         path: "courses.course",
-        select: "name code semester",
+        select: "name code semester department",
       })
       .populate({
         path: "courses.questions.question",
@@ -415,6 +518,9 @@ export const viewFaculty = async (req, res) => {
           impress: 0,
           coursesTaught: 0,
           courses: [],
+          // Set when this faculty member is from another department: only
+          // their courses in these departments are shown and counted.
+          limitedTo: ownDept ? null : adminFn.departments,
         },
       });
     }
@@ -428,6 +534,8 @@ export const viewFaculty = async (req, res) => {
         if (!c.course) return null;
         // Filter by semester
         if (c.course.semester && c.course.semester !== semesterFilter) return null;
+        // Faculty from another department: only their courses in this admin's departments
+        if (!ownDept && !adminFn.departments.includes(c.course.department)) return null;
 
         const validAverages = c.questions
           .filter((q) => q.question && q.question.type === "rating")
@@ -484,6 +592,7 @@ export const viewFaculty = async (req, res) => {
         impress: totalImpressions,
         coursestaught: totalCourses,
         courses: courses,
+        limitedTo: ownDept ? null : adminFn.departments,
       },
     });
   } catch (err) {
@@ -652,8 +761,13 @@ export const viewFacultyCourseStatistics = async (req, res) => {
     if (!adminFn) {
         return res.status(404).json({ message: "Admin profile not found" });
     }
+    // Allowed if the faculty is in the admin's departments, or the course is
+    // (a department head sees every course in their department, whoever teaches it).
     if (!adminFn.departments.includes(facultyDoc.dept)) {
-        return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+        const course = await Course.findById(courseId, "department").lean();
+        if (!course || !adminFn.departments.includes(course.department)) {
+            return res.status(403).json({ message: "Access denied: Faculty belongs to another department" });
+        }
     }
 
     if (adminFn.isStaff) {
@@ -1677,15 +1791,41 @@ export const updateCourseStudents = async (req, res) => {
 //Reset the feedback system — deletes feedback for a specific semester
 // If ?semester is provided, deletes that semester's feedback
 // Otherwise deletes the PREVIOUS semester's feedback
+// Step 1 of a reset: which semester would be cleared and how many forms that
+// deletes. Nothing is changed here.
+export const resetFeedbackPreview = async (req, res) => {
+  try {
+    const semester = getPreviousSemester();
+    const [total, submitted] = await Promise.all([
+      Feedback.countDocuments({ semester }),
+      Feedback.countDocuments({ semester, submitted: true }),
+    ]);
+    return res.status(200).json({ semester, total, submitted });
+  } catch (err) {
+    console.error("Error previewing feedback reset:", err);
+    return res.status(500).json({
+      message: "Error checking what a reset would delete",
+      error: err.message,
+    });
+  }
+};
+
+// Step 2: deletes the previous semester's feedback forms, but only when the
+// request body repeats that semester code (confirmSemester), so a stray click
+// or call can't do it. Analytics are kept.
 export const resetFeedback = async (req, res) => {
   try {
-    const targetSemester = req.query.semester || getPreviousSemester();
+    const targetSemester = getPreviousSemester();
 
-    // Delete all Feedback documents for the target semester
+    if (req.body?.confirmSemester !== targetSemester) {
+      return res.status(400).json({
+        message: `To reset, confirm the semester code ${targetSemester}.`,
+        semester: targetSemester,
+      });
+    }
+
     const result = await Feedback.deleteMany({ semester: targetSemester });
 
-    // We do NOT reset analytics.
-    
     return res.status(200).json({
       message: `Feedback reset successfully for semester ${targetSemester}.`,
       semester: targetSemester,

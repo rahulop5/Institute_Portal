@@ -175,15 +175,37 @@ export const authAdminMiddleware = async (req, res, next) => {
   }
 };
 
-// Dean Academic accounts are Admins with Admin.isDean set, used for
-// cross-department analytics visibility - they must not reach any
-// management/write endpoint. Mount this after authAdminMiddleware on those
-// routes only; read-only dashboard routes don't need it.
-export const blockDeanWriteMiddleware = async (req, res, next) => {
+// Opening/closing feedback and resetting a semester's feedback affect every
+// department at once, so only Dean Academic accounts (Admins with
+// Admin.isDean set) and the portal super-admins below may do them.
+const SUPER_ADMIN_EMAILS = ["prod.admin@iiits.in"];
+
+export const canControlFeedback = (admin) =>
+  !!admin && (admin.isDean || SUPER_ADMIN_EMAILS.includes(admin.email?.toLowerCase()));
+
+// Adding faculty, students or courses and editing, deleting or resetting
+// courses is kept to the staff admin account and the portal super-admins -
+// not HODs, not the Dean.
+export const canManageRecords = (admin) =>
+  !!admin && (admin.isStaff || SUPER_ADMIN_EMAILS.includes(admin.email?.toLowerCase()));
+
+// Mount this after authAdminMiddleware on course/student management routes.
+export const requireRecordManagerMiddleware = async (req, res, next) => {
   const admin = await Admin.findOne({ email: req.user.email });
-  if (admin?.isDean) {
+  if (!canManageRecords(admin)) {
     return res.status(403).json({
-      message: "Dean Academic accounts have read-only access",
+      message: "Only the staff account can add or change faculty, courses and students",
+    });
+  }
+  next();
+};
+
+// Mount this after authAdminMiddleware.
+export const requireDeanMiddleware = async (req, res, next) => {
+  const admin = await Admin.findOne({ email: req.user.email });
+  if (!canControlFeedback(admin)) {
+    return res.status(403).json({
+      message: "Only the Dean Academic account can do this",
     });
   }
   next();
@@ -303,6 +325,8 @@ export const getProfile = async (req, res) => {
              const adminDetails = await Admin.findById(user.referenceId);
              if(adminDetails) {
                  profileData = { ...profileData, ...adminDetails.toObject() };
+                 profileData.canControlFeedback = canControlFeedback(adminDetails);
+                 profileData.canManageRecords = canManageRecords(adminDetails);
              }
         }
     } else if (user.role === "Faculty") {

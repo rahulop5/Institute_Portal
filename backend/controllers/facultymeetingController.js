@@ -148,3 +148,21 @@ export const cancelSlot = async (req, res) => {
     return res.status(500).json({ message: "Error cancelling slot" });
   }
 };
+
+// Admin: every meeting slot on campus, newest first, with the faculty member
+// who offered it and the student who requested or booked it. Read-only.
+export const listAllSlots = async (req, res) => {
+  try {
+    const slots = await MeetingSlot.find()
+      .sort({ date: -1, startTime: -1 })
+      .populate("faculty", "name email dept")
+      .populate("requestedBy", "name email rollNumber")
+      .lean();
+    return res.status(200).json({
+      slots: slots.map((s) => ({ ...s, isPast: isSlotInPast(s) })),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Error loading meetings" });
+  }
+};
