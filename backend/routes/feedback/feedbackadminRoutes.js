@@ -17,10 +17,11 @@ import {
     resetFeedback,
     getAvailableSemesters,
     toggleFeedback,
-    getFeedbackStatus
+    getFeedbackStatus,
+    resetFeedbackPreview
 } from "../../controllers/feedback/feedbackadminController.js";
 import upload from "../../config/multer.js";
-import { authAdminMiddleware, blockDeanWriteMiddleware } from "../../controllers/authController.js";
+import { authAdminMiddleware, requireDeanMiddleware, requireRecordManagerMiddleware } from "../../controllers/authController.js";
 
 const router = express.Router();
 
@@ -33,26 +34,29 @@ router.get("/dashboard/courses", authAdminMiddleware, adminDashboardCourse);
 router.get("/dashboard/course", authAdminMiddleware, viewCourse);
 
 // database feeding
-router.post("/addcourse", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addCourse);
-router.post("/addFacultyCSV", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addFacultyCSV);
-router.post("/addStudentsCSV", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addStudentsCSV);
+router.post("/addcourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addCourse);
+router.post("/addFacultyCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addFacultyCSV);
+router.post("/addStudentsCSV", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addStudentsCSV);
 
 //course actions
 router.get("/viewCourse", authAdminMiddleware, viewCourse);
-router.get("/resetcourse", authAdminMiddleware, blockDeanWriteMiddleware, resetCourse);
-router.delete("/deletecourse", authAdminMiddleware, blockDeanWriteMiddleware, deleteCourse);
-router.post("/addFacultyStudentstoCourse", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), addFacultyStudentstoCourse);
+router.get("/resetcourse", authAdminMiddleware, requireRecordManagerMiddleware, resetCourse);
+router.delete("/deletecourse", authAdminMiddleware, requireRecordManagerMiddleware, deleteCourse);
+router.post("/addFacultyStudentstoCourse", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), addFacultyStudentstoCourse);
 
 // Update course details
-router.post("/updateCourseDetails", authAdminMiddleware, blockDeanWriteMiddleware, updateCourseDetails);
+router.post("/updateCourseDetails", authAdminMiddleware, requireRecordManagerMiddleware, updateCourseDetails);
 // Update course students (CSV)
-router.post("/updateCourseStudents", authAdminMiddleware, blockDeanWriteMiddleware, upload.single("file"), updateCourseStudents);
+router.post("/updateCourseStudents", authAdminMiddleware, requireRecordManagerMiddleware, upload.single("file"), updateCourseStudents);
 
 //Reset Feedback
-router.post("/resetFeedback", authAdminMiddleware, blockDeanWriteMiddleware, resetFeedback);
+// Two steps: the preview says what would be deleted, and the reset itself
+// only runs when the request repeats that semester code.
+router.get("/resetFeedbackPreview", authAdminMiddleware, requireDeanMiddleware, resetFeedbackPreview);
+router.post("/resetFeedback", authAdminMiddleware, requireDeanMiddleware, resetFeedback);
 
 //Feedback open/close control
-router.post("/toggleFeedback", authAdminMiddleware, blockDeanWriteMiddleware, toggleFeedback);
+router.post("/toggleFeedback", authAdminMiddleware, requireDeanMiddleware, toggleFeedback);
 router.get("/feedbackStatus", authAdminMiddleware, getFeedbackStatus);
 
 //Semester listing
