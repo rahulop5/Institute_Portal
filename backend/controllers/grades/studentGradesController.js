@@ -102,8 +102,10 @@ export const courseDetail = handle(async (req, res) => {
 
 export const requestCorrection = handle(async (req, res) => {
     const student = await me(req);
-    const message = String(req.body.message || "").trim();
+    const message = typeof req.body.message === "string" ? req.body.message.trim() : "";
     if (!message) throw new GradeError("Describe what looks wrong.");
+    if (message.length > 2000) throw new GradeError("Keep it under 2000 characters.");
+    const component = typeof req.body.component === "string" ? req.body.component.slice(0, 100) : undefined;
     const hit = (await releasedFor(student._id)).find((i) => String(i.snap.courseGrading) === String(req.body.gradingId));
     if (!hit) throw new GradeError("No released grade for this course.", 404);
     const grading = await CourseGrading.findById(req.body.gradingId);
@@ -113,7 +115,7 @@ export const requestCorrection = handle(async (req, res) => {
         throw new GradeError("You already have an open request for this course.", 409);
     await GradeCorrectionRequest.create({
         student: student._id, courseGrading: grading._id, faculty: sheet.faculty,
-        component: req.body.component || undefined, message,
+        component: component || undefined, message,
         history: [histEntry("Student", req.user.email, "submitted", message)],
     });
     res.json({message: "Sent to your section faculty."});

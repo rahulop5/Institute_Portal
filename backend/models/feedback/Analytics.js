@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 
 const textResponseSchema = new mongoose.Schema({
   text: { type: String, required: true },
-  score: { type: Number, required: true }, // student's average rating on that feedback page
+  // The writer's average rating (Q1–Q15) at submission. Optional: comments saved
+  // between Round 24 and its revert have none.
+  score: { type: Number, required: false },
 });
 
 const questionAnalyticsSchema = new mongoose.Schema({

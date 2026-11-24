@@ -159,11 +159,12 @@ export const selectFaculty = async (req, res) => {
       return res.status(400).json({ message: "Feedback already started" });
     }
 
-    // Fetch all enrollments for this student
-    const enrollments = await Enrollment.find({ student: studentId }).populate(
-      "course"
-    );
-    const enrolledCourseIds = enrollments.map((e) => e.course._id.toString());
+    // Only this semester's courses can be given feedback (an old course's results are final)
+    const enrollments = await Enrollment.find({ student: studentId }).populate({
+      path: "course",
+      match: { semester },
+    });
+    const enrolledCourseIds = enrollments.filter((e) => e.course).map((e) => e.course._id.toString());
 
     // Validation 1: Student enrolled in each selected course
     for (const sel of selections) {
@@ -632,7 +633,7 @@ export const submitFeedback = async (req, res) => {
           // Only store if non-empty
           if (ans.response && ans.response.trim() !== "") {
             qEntry.textResponses.push({
-              text: ans.response.trim(),
+              text: ans.response.trim().slice(0, 2000),
               score: parseFloat(avgScore.toFixed(2)),
             });
           }
@@ -657,7 +658,6 @@ export const submitFeedback = async (req, res) => {
     session.endSession();
     return res.status(500).json({
       message: "Error submitting feedback",
-      error: err.message,
     });
   }
 };  

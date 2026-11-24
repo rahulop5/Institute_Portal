@@ -11,8 +11,6 @@ export const getQuestions = async (req, res) => {
   } catch (error) {
     console.error("Error fetching questions:", error);
     res.status(500).json({ 
-      message: "Failed to fetch questions", 
-      error: error.message 
-    });
+      message: "Failed to fetch questions" });
   }
 };

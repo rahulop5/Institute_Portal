@@ -162,6 +162,24 @@ export async function computeAndStore(grading, {session} = {}) {
     return res;
 }
 
+// Recompute grades only while the grading is still in the "grading" stage. Runs in a transaction that
+// first writes the CourseGrading document, so a concurrent submit/send-back either waits for it or
+// makes it abort: live grades can never drift from a submitted or released snapshot.
+// `before(grading, session)` runs inside the same transaction, ahead of the recompute.
+export async function recomputeIfGrading(gradingId, {before} = {}) {
+    const session = await mongoose.startSession();
+    let result;
+    try {
+        await session.withTransaction(async () => {
+            const g = await CourseGrading.findOneAndUpdate({_id: gradingId, status: "grading"}, {$set: {updatedAt: new Date()}}, {session, new: true});
+            if (!g) throw new GradeError("The grading just changed. Reload.", 409);
+            if (before) await before(g, session);
+            try { result = await computeAndStore(g, {session}); } catch (e) { throw e instanceof GradeError ? e : new GradeError(e.message); }
+        });
+    } finally { await session.endSession(); }
+    return result;
+}
+
 // collecting -> grading once every sheet is ready (stage-guarded).
 export async function advanceIfAllReady(gradingId) {
     const grading = await CourseGrading.findById(gradingId);

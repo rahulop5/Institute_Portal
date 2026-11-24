@@ -20,6 +20,7 @@ import {
     listFacultyForStudent,
     getStudentEnrollment,
 } from "../controllers/programChangeController.js";
+import { linkStudent, linkStudentsBulk, linkOptions } from "../controllers/ugprojectsLinkController.js";
 
 const router = express.Router();
 
@@ -42,6 +43,10 @@ router.get("/admin/project", authAdminMiddleware, getProjectDetail);
 router.post("/faculty/topic", authFacultyMiddleware, updateTopicAsStaff("Faculty"));
 
 // Approval chain: UG Projects -> Assistant Dean Academics -> guide
+// UG Projects linking students straight to their guide (no request / accept chain)
+router.get("/ugprojects/link/options", authUGProjectsMiddleware, linkOptions);
+router.post("/ugprojects/link", authUGProjectsMiddleware, linkStudent);
+router.post("/ugprojects/link/bulk", authUGProjectsMiddleware, linkStudentsBulk);
 router.get("/ugprojects", authUGProjectsMiddleware, listForReviewer("pending_ugprojects"));
 router.post("/ugprojects/decide", authUGProjectsMiddleware, decideForReviewer("pending_ugprojects"));
 router.get("/assistantdean/projects", authAssistantDeanMiddleware, listProjectsForUGProjects);

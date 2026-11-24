@@ -21,6 +21,11 @@ import CourseAttempt from "./models/grades/CourseAttempt.js";
 import GradeCorrectionRequest from "./models/grades/GradeCorrectionRequest.js";
 import {getCurrentSemester, getPreviousSemester} from "./utils/semesterUtils.js";
 dotenv.config();
+const TEST_DB = process.env.MONGO_DB_NAME;
+if (!TEST_DB || TEST_DB === "clgproject") {
+    console.error("Refusing to run: this writes demo data. Set MONGO_DB_NAME to a test database (never clgproject, which is production).");
+    process.exit(1);
+}
 
 const password = crypto.randomBytes(9).toString("base64url");
 const hash = await bcrypt.hash(password, 10);
@@ -29,7 +34,7 @@ const PREV = getPreviousSemester(SEM);
 const facEmails = ["A", "B", "C"].map((x) => `dev.grades${x.toLowerCase()}@iiits.in`);
 const aoEmail = "dev.gradesao@iiits.in";
 
-await mongoose.connect((process.env.MONGO_URI || "").trim().replace(/^"|"$/g, ""), {dbName: "clgproject"});
+await mongoose.connect((process.env.MONGO_URI || "").trim().replace(/^"|"$/g, ""), {dbName: TEST_DB});
 try {
     // wipe previous demo
     const oldCourse = await Course.findOne({code: "GRDEMO-" + SEM});

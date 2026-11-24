@@ -1,3 +1,4 @@
+import { oid, normEmail, clip, markListProblem } from "../utils/security.js";
 import { projectStartSemester } from "../utils/semesterUtils.js";
 import Faculty from "../models/Faculty.js";
 import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
@@ -130,15 +131,19 @@ export const addHonorsTopic = async (req, res) => {
 
 export const deleteHonorsTopic = async (req, res) => {
   try {
-    const { topicid, actualtid } = req.body;
+    const topicid = oid(req.body.topicid);
+    const actualtid = oid(req.body.actualtid);
     if (!topicid || !actualtid) return res.status(400).json({ message: "Id not mentioned" });
-    
+    const user = await Faculty.findOne({ email: req.user.email }).select("_id").lean();
+    if (!user) return res.status(404).json({ message: "Faculty not found" });
+
+    // Only the owner's own topic list can be touched.
     const result = await HonorsTopic.updateOne(
-      { _id: actualtid },
+      { _id: actualtid, faculty: user._id, "topics._id": topicid },
       { $pull: { topics: { _id: topicid }, requests: { topic: topicid } } }
     );
-    
-    if (result.matchedCount === 0) return res.status(200).json({ message: "No Topic found" });
+
+    if (result.matchedCount === 0) return res.status(404).json({ message: "No Topic found" });
     return res.status(200).json({ message: "Deleted honors topic and requests successfully" });
   } catch (err) {
     console.log(err);
@@ -251,7 +256,11 @@ export const rejectHonorsTopicRequest = async (req, res) => {
 // Evaluation functions
 export const evaluateHonorsProjectasGuide = async (req, res) => {
   try {
-    const { projid, remark, marks } = req.body;
+    const { marks } = req.body;
+    const projid = oid(req.body.projid);
+    const remark = clip(req.body.remark, 5000);
+    const markProblem = markListProblem(marks);
+    if (markProblem) return res.status(400).json({ message: markProblem });
     if (!projid || !remark || !Array.isArray(marks)) return res.status(400).json({ message: "Invalid request" });
 
     const project = await Honors.findById(projid)
@@ -260,8 +269,8 @@ export const evaluateHonorsProjectasGuide = async (req, res) => {
     if (!project) return res.status(404).json({ message: "Project not found" });
     if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
 
-    if (project.status === "completed") {
-      return res.status(400).json({ message: "This Honors project has already been completed. No more evaluations allowed." });
+    if (project.status !== "active") {
+      return res.status(400).json({ message: project.status === "completed" ? "This project has already been completed. No more evaluations allowed." : "This project is no longer active, so it can't be evaluated." });
     }
 
     const evaluationConfig = project.evaluationConfig?.length ? project.evaluationConfig : DEFAULT_EVALUATION_CONFIG;
@@ -270,7 +279,7 @@ export const evaluateHonorsProjectasGuide = async (req, res) => {
     // Check if max evaluations already reached - completion is now an explicit
     // guide action (see completeProject) rather than automatic, so a project
     // sits here at "all rounds evaluated, not yet marked complete" until then.
-    const existingEvalCount = await HonorsEvaluation.countDocuments({ projectRef: projid });
+    const existingEvalCount = await HonorsEvaluation.countDocuments({ projectRef: project._id });
     if (existingEvalCount >= maxEvaluations) {
       return res.status(400).json({ message: `Honors has reached the maximum number of evaluations (${maxEvaluations}). Mark the project complete instead of evaluating again.` });
     }
@@ -302,7 +311,7 @@ export const evaluateHonorsProjectasGuide = async (req, res) => {
     });
 
     const newEval = new HonorsEvaluation({
-        projectRef: projid,
+        projectRef: project._id,
         time: new Date(),
         canstudentsee: !hasEvaluators,
         remark,
@@ -326,7 +335,12 @@ export const evaluateHonorsProjectasGuide = async (req, res) => {
 
 export const evaluateHonorsProjectasEval = async (req, res) => {
     try {
-        const { projid, evalId, panelmarks, remark } = req.body;
+        const { panelmarks } = req.body;
+        const projid = oid(req.body.projid);
+        const evalId = oid(req.body.evalId);
+        const remark = clip(req.body.remark, 5000);
+        const markProblem = markListProblem(panelmarks);
+        if (markProblem) return res.status(400).json({ message: markProblem });
         if (!projid || !evalId || !remark || !Array.isArray(panelmarks)) {
             return res.status(400).json({ message: "Invalid request" });
         }
@@ -339,6 +353,7 @@ export const evaluateHonorsProjectasEval = async (req, res) => {
 
         const evalIndex = evaluation.panelEvaluations.findIndex(e => e.evaluator._id.toString() === user._id.toString());
         if (evalIndex === -1) return res.status(403).json({ message: "Not an evaluator" });
+        if (evaluation.canstudentsee) return res.status(400).json({ message: "These marks were already sent to the student and can\'t be changed" });
 
         const roundMaxMarks = evaluation.maxMarks ?? 50;
         for (const m of panelmarks) {
@@ -349,6 +364,7 @@ export const evaluateHonorsProjectasEval = async (req, res) => {
 
         const project = await Honors.findById(projid).populate({ path: "students.student", select: "student" });
         if (!project) return res.status(404).json({ message: "Project not found" });
+        if (!project.evaluators.some(e => String(e.evaluator) === String(user._id))) return res.status(403).json({ message: "You are no longer an evaluator on this project" });
 
         const resolvedPanelmarks = panelmarks.map(m => {
             const projectStudent = project.students.find(
@@ -374,7 +390,11 @@ export const evaluateHonorsProjectasEval = async (req, res) => {
 
 export const releaseHonorsEvaluation = async (req, res) => {
     try {
-        const { projid, evalId, marks } = req.body;
+        const { marks } = req.body;
+        const projid = oid(req.body.projid);
+        const evalId = oid(req.body.evalId);
+        const markProblem = markListProblem(marks);
+        if (markProblem) return res.status(400).json({ message: markProblem });
         if (!projid || !evalId || !Array.isArray(marks)) {
             return res.status(400).json({ message: "Invalid request" });
         }
@@ -385,7 +405,7 @@ export const releaseHonorsEvaluation = async (req, res) => {
         if (!project) return res.status(404).json({ message: "Project not found" });
         if (project.guide.email !== req.user.email) return res.status(403).json({ message: "Unauthorized" });
 
-        const evaluation = await HonorsEvaluation.findOne({ _id: evalId, projectRef: projid });
+        const evaluation = await HonorsEvaluation.findOne({ _id: evalId, projectRef: project._id });
         if (!evaluation) return res.status(404).json({ message: "Evaluation not found" });
 
         if (evaluation.canstudentsee) {
@@ -410,7 +430,12 @@ export const releaseHonorsEvaluation = async (req, res) => {
             if (!markEntry) {
                 return res.status(400).json({ message: `No guide marks found for this student - evaluate as guide first` });
             }
-            markEntry.totalgrade = m.totalgrade;
+            const total = typeof m.totalgrade === "number" || (typeof m.totalgrade === "string" && m.totalgrade.trim() !== "") ? Number(m.totalgrade) : NaN;
+            const maxMarks = evaluation.maxMarks ?? 50;
+            if (!Number.isFinite(total) || total < 0 || total > maxMarks) {
+                return res.status(400).json({ message: `Final marks must be between 0 and ${maxMarks}` });
+            }
+            markEntry.totalgrade = String(total);
         }
 
         evaluation.canstudentsee = true;
@@ -424,7 +449,8 @@ export const releaseHonorsEvaluation = async (req, res) => {
 
 export const assignEvaluator = async (req, res) => {
     try {
-        const { projid, facultyEmail } = req.body;
+        const projid = oid(req.body.projid);
+        const facultyEmail = normEmail(req.body.facultyEmail);
         if (!projid || !facultyEmail) return res.status(400).json({ message: "Invalid request" });
 
         const project = await Honors.findById(projid).populate("guide");
@@ -451,7 +477,7 @@ export const assignEvaluator = async (req, res) => {
         await project.save();
 
         await HonorsEvaluation.updateMany(
-            { projectRef: projid, canstudentsee: false, "panelEvaluations.evaluator": { $ne: targetFaculty._id } },
+            { projectRef: project._id, canstudentsee: false, "panelEvaluations.evaluator": { $ne: targetFaculty._id } },
             { $push: { panelEvaluations: { evaluator: targetFaculty._id, submitted: false } } }
         );
 
@@ -464,7 +490,8 @@ export const assignEvaluator = async (req, res) => {
 
 export const removeEvaluator = async (req, res) => {
     try {
-        const { projid, facultyEmail } = req.body;
+        const projid = oid(req.body.projid);
+        const facultyEmail = normEmail(req.body.facultyEmail);
         if (!projid || !facultyEmail) return res.status(400).json({ message: "Invalid request" });
 
         const project = await Honors.findById(projid).populate("guide");
@@ -487,7 +514,7 @@ export const removeEvaluator = async (req, res) => {
         await project.save();
 
         await HonorsEvaluation.updateMany(
-            { projectRef: projid, canstudentsee: false },
+            { projectRef: project._id, canstudentsee: false },
             { $pull: { panelEvaluations: { evaluator: targetFaculty._id, submitted: false } } }
         );
 
@@ -505,7 +532,7 @@ export const removeEvaluator = async (req, res) => {
 // evaluations already happened.
 export const stopGuiding = async (req, res) => {
     try {
-        const { projid } = req.body;
+        const projid = oid(req.body.projid);
         if (!projid) return res.status(400).json({ message: "Project ID required" });
 
         const project = await Honors.findById(projid).populate("guide");
@@ -533,7 +560,7 @@ export const stopGuiding = async (req, res) => {
 
 export const completeProject = async (req, res) => {
     try {
-        const { projid } = req.body;
+        const projid = oid(req.body.projid);
         if (!projid) return res.status(400).json({ message: "Project ID required" });
 
         const project = await Honors.findById(projid).populate("guide");
@@ -547,7 +574,7 @@ export const completeProject = async (req, res) => {
         const evaluationConfig = project.evaluationConfig?.length ? project.evaluationConfig : DEFAULT_EVALUATION_CONFIG;
         const maxEvaluations = evaluationConfig.length * HONORS_SEMESTERS;
 
-        const evaluations = await HonorsEvaluation.find({ projectRef: projid });
+        const evaluations = await HonorsEvaluation.find({ projectRef: project._id });
         if (evaluations.length < maxEvaluations) {
             return res.status(400).json({ message: `Only ${evaluations.length} of ${maxEvaluations} evaluations done - complete all evaluations first` });
         }

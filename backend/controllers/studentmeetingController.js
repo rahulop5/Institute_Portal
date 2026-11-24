@@ -1,3 +1,4 @@
+import { oid } from "../utils/security.js";
 import Faculty from "../models/Faculty.js";
 import Student from "../models/feedback/Student.js";
 import MeetingSlot from "../models/MeetingSlot.js";
@@ -21,8 +22,9 @@ export const listFaculty = async (req, res) => {
 
 export const listFacultySlots = async (req, res) => {
   try {
-    const { facultyId } = req.params;
-    const fac = await Faculty.findById(facultyId);
+    const facultyId = oid(req.params.facultyId);
+    if (!facultyId) return res.status(404).json({ message: "Faculty not found" });
+    const fac = await Faculty.findById(facultyId, "name email dept");
     if (!fac) return res.status(404).json({ message: "Faculty not found" });
 
     const candidateSlots = await MeetingSlot.find({ faculty: fac._id, status: "available" }).sort({
@@ -40,7 +42,8 @@ export const listFacultySlots = async (req, res) => {
 
 export const requestSlot = async (req, res) => {
   try {
-    const { slotId, purpose } = req.body;
+    const slotId = oid(req.body.slotId);
+    const purpose = typeof req.body.purpose === "string" ? req.body.purpose : undefined;
     if (!slotId) return res.status(400).json({ message: "slotId is required" });
     if (purpose && purpose.length > 500) {
       return res.status(400).json({ message: "Comment must be 500 characters or fewer" });
@@ -76,7 +79,7 @@ export const requestSlot = async (req, res) => {
     }
 
     const updated = await MeetingSlot.findOneAndUpdate(
-      { _id: slotId, status: "available" },
+      { _id: slot._id, status: "available" },
       {
         $set: {
           status: "requested",

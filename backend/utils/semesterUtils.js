@@ -120,3 +120,31 @@ export function startWindowProblem(program, semester) {
   }
   return null;
 }
+
+/**
+ * Sorts semester codes newest first: S26, M25, S25, M24...
+ * (Monsoon YY comes after Spring YY in the calendar, so it sorts first.)
+ * @param {string[]} codes
+ * @returns {string[]} the same array, sorted in place
+ */
+export function sortSemestersDesc(codes) {
+  return codes.sort((a, b) => {
+    const yearA = parseInt(a.substring(1), 10);
+    const yearB = parseInt(b.substring(1), 10);
+    if (yearA !== yearB) return yearB - yearA;
+    return a.charAt(0) === b.charAt(0) ? 0 : a.charAt(0) === "M" ? -1 : 1;
+  });
+}
+
+/**
+ * Which semester a faculty dashboard should open on: the one asked for, else
+ * the current semester if they teach in it, else the latest one they taught.
+ * @param {string|undefined} requested
+ * @param {string[]} facultySemesters newest first
+ */
+export function pickFacultySemester(requested, facultySemesters) {
+  if (requested) return requested;
+  const current = getCurrentSemester();
+  if (facultySemesters.length === 0 || facultySemesters.includes(current)) return current;
+  return facultySemesters[0];
+}

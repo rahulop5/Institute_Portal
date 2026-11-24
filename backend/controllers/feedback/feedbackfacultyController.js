@@ -2,7 +2,8 @@ import Enrollment from "../../models/feedback/Enrollment.js";
 import Faculty from "../../models/Faculty.js";
 import Analytics from "../../models/feedback/Analytics.js";
 import Course from "../../models/feedback/Course.js";
-import { getCurrentSemester } from "../../utils/semesterUtils.js";
+import { getCurrentSemester, sortSemestersDesc, pickFacultySemester } from "../../utils/semesterUtils.js";
+import { protectCourseStats } from "../../utils/feedbackPrivacy.js";
 
 export const facultyDashboard = async (req, res) => {
   try {
@@ -23,17 +24,11 @@ export const facultyDashboard = async (req, res) => {
         select: "type",
     });
 
-    // Determine semester filter
-    const semesterFilter = req.query.semester || getCurrentSemester();
-
-    // Fetch available semesters for dropdown
-    const allSemesters = await Course.distinct("semester");
-    allSemesters.sort((a, b) => {
-      const yearA = parseInt(a.substring(1), 10);
-      const yearB = parseInt(b.substring(1), 10);
-      if (yearA !== yearB) return yearB - yearA;
-      return a.charAt(0) === "M" ? -1 : 1;
-    });
+    // Dropdown shows only the semesters this faculty was assigned a course in
+    const allSemesters = sortSemestersDesc(
+      await Course.distinct("semester", { faculty: faculty._id })
+    );
+    const semesterFilter = pickFacultySemester(req.query.semester, allSemesters);
 
     if (!analytics || analytics.courses.length === 0) {
       return res.status(200).json({
@@ -82,6 +77,7 @@ export const facultyDashboard = async (req, res) => {
         name: c.course.name,
         coursecode: c.course.code,
         avgscore: parseFloat(courseAvg.toFixed(2)),
+        responses: c.totalResponses || 0,
       });
     }
 
@@ -202,8 +198,8 @@ export const viewCourseStatistics = async (req, res) => {
       })),
     };
 
-    // Send final response
-    return res.status(200).json({
+    // Send final response (comments carry no per-student score)
+    return res.status(200).json(protectCourseStats({
       name: courseData.course.name,
       coursecode: courseData.course.code,
       avgscore: parseFloat(avgscore.toFixed(2)),
@@ -221,7 +217,7 @@ export const viewCourseStatistics = async (req, res) => {
         question: maxQ?.question?.order || "N/A",
       },
       feedback,
-    });
+    }));
   } catch (err) {
     console.error("Error fetching course statistics:", err);
     return res
@@ -272,7 +268,6 @@ export const getAvailableFacultySemesters = async (req, res) => {
     console.error("Error fetching faculty semesters:", err);
     return res.status(500).json({
       message: "Error fetching available semesters",
-      error: err.message,
     });
   }
 };

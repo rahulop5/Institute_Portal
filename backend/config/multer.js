@@ -20,14 +20,15 @@ const storage = multer.diskStorage({
 });
 
 const csvFilter = (req, file, cb) => {
-  if (file.mimetype === "text/csv" || file.originalname.endsWith(".csv")) {
+  if (file.mimetype === "text/csv" || /\.csv$/i.test(file.originalname)) {
     cb(null, true);
   } else {
-    cb(new Error("Only CSV files are allowed!"), false);
+    cb(Object.assign(new Error("Only CSV files are allowed!"), { status: 400 }), false);
   }
 };
 
 //only supports csv files btw
-const upload = multer({ storage, fileFilter: csvFilter });
+// One CSV of at most 5 MB per request, and no extra form fields beyond a handful.
+const upload = multer({ storage, fileFilter: csvFilter, limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 20, fieldSize: 100 * 1024 } });
 
 export default upload;

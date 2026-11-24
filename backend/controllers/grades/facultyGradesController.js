@@ -14,8 +14,9 @@ import {
 import {canOverride} from "../../utils/gradePermissions.js";
 import {GradeError, handle, getFaculty, requireCourseFaculty, requireSectionOwner, histEntry} from "../../utils/gradeGuards.js";
 import {
-    ensureGrading, openBacklogPool, cohortBatch, olderBatch, classLabel, backlogNote, computeAndStore, advanceIfAllReady, snapshot, buildCourseView, attemptLabel, LOCKED_STATUSES,
+    ensureGrading, openBacklogPool, cohortBatch, olderBatch, classLabel, backlogNote, computeAndStore, recomputeIfGrading, advanceIfAllReady, snapshot, buildCourseView, attemptLabel, LOCKED_STATUSES,
 } from "../../utils/gradeService.js";
+import {oid} from "../../utils/security.js";
 
 const q = (req) => ({...req.query, ...req.body});
 const userCtx = (faculty, course) => ({facultyId: faculty._id, courseFacultyIds: course.faculty, coordinatorId: course.coordinator});
@@ -29,6 +30,9 @@ const lockMessage = async (grading) => {
     };
     return map[grading.status] || "This is locked right now.";
 };
+const COMPONENT_KEY = /^[a-z0-9][a-z0-9_]{0,39}$/; // no leading "_" (rules out __proto__)
+const MAX_COMPONENTS = 30;
+const MAX_RAW = 1000;
 const slug = (s, i) => (String(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "c") + "_" + i;
 
 
@@ -155,19 +159,29 @@ export const setComponents = handle(async (req, res) => {
     const grading = await ensureGrading(course);
     if (!["setup", "collecting", "grading"].includes(grading.status) || grading.amendment?.type)
         throw new GradeError(await lockMessage(grading), 409);
-    const components = (req.body.components || []).map((c, i) => ({
-        key: c.key || slug(c.name, i), name: String(c.name || "").trim(), rawMax: Number(c.rawMax), weight: Number(c.weight),
+    if (!Array.isArray(req.body.components) || req.body.components.length > MAX_COMPONENTS)
+        throw new GradeError(`Give between 1 and ${MAX_COMPONENTS} components.`);
+    const components = req.body.components.map((c, i) => ({
+        key: c?.key || slug(c?.name, i), name: String(c?.name || "").trim(), rawMax: Number(c?.rawMax), weight: Number(c?.weight),
     }));
+    // Keys become field names in every student's marks, so only short [a-z0-9_] keys are allowed.
+    for (const c of components) {
+        if (typeof c.key !== "string" || !COMPONENT_KEY.test(c.key) || c.key in Object.prototype) throw new GradeError(`"${c.name || c.key}": the key may only use a-z, 0-9 and _ (max 40).`);
+        if (c.name.length > 100) throw new GradeError("Component names must be 100 characters or fewer.");
+        if (!Number.isFinite(c.rawMax) || c.rawMax <= 0 || c.rawMax > MAX_RAW) throw new GradeError(`"${c.name}": raw maximum must be between 0 and ${MAX_RAW}.`);
+        if (!Number.isFinite(c.weight)) throw new GradeError(`"${c.name}": weight must be a number.`);
+    }
     const err = validateComponents(components);
     if (err) throw new GradeError(err);
     const wasLocked = grading.componentsLocked;
-    await CourseGrading.findOneAndUpdate(
+    const saved = await CourseGrading.findOneAndUpdate(
         {_id: grading._id, status: grading.status},
         {
             $set: {components, componentAgreements: [{faculty: faculty._id, at: new Date()}], componentsLocked: false, status: "setup"},
             $push: {history: histEntry("Faculty", req.user.email, wasLocked ? "components_changed" : "components_set")},
         }
     );
+    if (!saved) throw new GradeError("The grading just changed. Reload.", 409);
     // changing agreed components sends every section back to editing
     await SectionSheet.updateMany({courseGrading: grading._id}, {$set: {status: "editing"}, $unset: {readyAt: ""}});
     await finishAgreement(grading._id, course);
@@ -208,7 +222,8 @@ function cleanMarks(raw, components) {
         const v = raw?.[c.key];
         if (v === undefined || v === null || v === "") continue;
         const n = Number(v);
-        if (!Number.isFinite(n) || n < 0) throw new Error(`"${c.name}" must be a number of 0 or more`);
+        if (typeof v === "object" || !Number.isFinite(n) || n < 0) throw new Error(`"${c.name}" must be a number of 0 or more`);
+        if (n > c.rawMax) throw new Error(`"${c.name}" is above its maximum of ${c.rawMax}`);
         out[c.key] = n;
     }
     return out;
@@ -255,8 +270,9 @@ export const saveMarks = handle(async (req, res) => {
                 continue;
             }
             if (amending && !entry.amended) { result.rejected.push({rollNumber: roll, reason: "Not part of the open amendment"}); continue; }
+            if (r.absent && !entry.isBacklog) { result.rejected.push({rollNumber: roll, reason: "Only a backlog student can be marked absent"}); continue; }
             const set = {marks, total: computeTotal(marks, grading.components)};
-            if (r.absent !== undefined) set.absent = !!r.absent;
+            if (r.absent !== undefined) set.absent = !!r.absent && entry.isBacklog;
             await GradeEntry.updateOne({_id: entry._id}, {$set: set});
             result.saved++;
             continue;
@@ -269,6 +285,7 @@ export const saveMarks = handle(async (req, res) => {
             result.rejected.push({rollNumber: roll, reason: "Not enrolled in this course and not from an earlier batch"});
             continue;
         }
+        if (r.absent && !backlog) { result.rejected.push({rollNumber: roll, reason: "Only a backlog student can be marked absent"}); continue; }
         try {
             await GradeEntry.create({
                 courseGrading: grading._id, sheet: sheet._id, student: st._id, marks, total: computeTotal(marks, grading.components),
@@ -289,23 +306,34 @@ export const saveMarks = handle(async (req, res) => {
     res.json(result);
 });
 
+// Anyone who had entered this student as a conflict now holds the row. The marks are re-checked,
+// every other sheet's stale conflict for the student is dropped, and the receiving sheet goes back
+// to editing so its faculty re-confirms it with "ready" (which validates every row again).
+async function promoteConflict(grading, entry) {
+    const claimant = await SectionSheet.findOne({courseGrading: grading._id, "conflicts.student": entry.student});
+    if (!claimant) return;
+    const c = claimant.conflicts.find((x) => String(x.student) === String(entry.student));
+    let marks = {};
+    try { marks = cleanMarks(c?.marks, grading.components); } catch { marks = {}; }
+    await GradeEntry.create({
+        courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks, total: computeTotal(marks, grading.components),
+        ...(entry.isBacklog ? {isBacklog: true, attemptType: "repeat"} : {}),
+    });
+    await SectionSheet.updateMany({courseGrading: grading._id}, {$pull: {conflicts: {student: entry.student}}});
+    await SectionSheet.updateOne({_id: claimant._id, status: "ready"}, {$set: {status: "editing"}, $unset: {readyAt: ""}, $push: {history: histEntry("System", null, "reopened_conflict_moved_in")}});
+}
+
 export const deleteRow = handle(async (req, res) => {
     const {grading, sheet} = await requireSectionOwner(req, req.body.courseId);
     if (grading.status !== "collecting" || sheet.status !== "editing" || grading.amendment?.type)
         throw new GradeError("This section can't be edited right now.", 409);
-    const entry = await GradeEntry.findOne({courseGrading: grading._id, sheet: sheet._id, student: req.body.studentId});
+    const studentId = oid(req.body.studentId);
+    if (!studentId) throw new GradeError("A valid studentId is required.");
+    const entry = await GradeEntry.findOne({courseGrading: grading._id, sheet: sheet._id, student: studentId});
     if (!entry) throw new GradeError("Student is not on your sheet", 404);
     await entry.deleteOne();
     // anyone who had entered this student as a conflict now holds the row
-    const claimant = await SectionSheet.findOne({courseGrading: grading._id, "conflicts.student": entry.student});
-    if (claimant) {
-        const c = claimant.conflicts.find((x) => String(x.student) === String(entry.student));
-        await GradeEntry.create({
-            courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks: c.marks || {}, total: computeTotal(c.marks, grading.components),
-            ...(entry.isBacklog ? {isBacklog: true, attemptType: "repeat"} : {}),
-        });
-        await SectionSheet.updateOne({_id: claimant._id}, {$pull: {conflicts: {student: entry.student}}});
-    }
+    await promoteConflict(grading, entry);
     res.json({message: "Removed"});
 });
 
@@ -319,21 +347,16 @@ export const clearSection = handle(async (req, res) => {
     await SectionSheet.updateOne({_id: sheet._id}, {$set: {conflicts: []}});
     // anyone who had entered one of these students as a conflict now holds the row
     for (const entry of entries) {
-        const claimant = await SectionSheet.findOne({courseGrading: grading._id, "conflicts.student": entry.student});
-        if (!claimant) continue;
-        const c = claimant.conflicts.find((x) => String(x.student) === String(entry.student));
-        await GradeEntry.create({
-            courseGrading: grading._id, sheet: claimant._id, student: entry.student, marks: c.marks || {}, total: computeTotal(c.marks, grading.components),
-            ...(entry.isBacklog ? {isBacklog: true, attemptType: "repeat"} : {}),
-        });
-        await SectionSheet.updateOne({_id: claimant._id}, {$pull: {conflicts: {student: entry.student}}});
+        await promoteConflict(grading, entry);
     }
     res.json({removed: entries.length, message: `Removed ${entries.length} student${entries.length === 1 ? "" : "s"} from your sheet.`});
 });
 
 export const dropConflict = handle(async (req, res) => {
     const {sheet} = await requireSectionOwner(req, req.body.courseId);
-    await SectionSheet.updateOne({_id: sheet._id}, {$pull: {conflicts: {student: req.body.studentId}}});
+    const studentId = oid(req.body.studentId);
+    if (!studentId) throw new GradeError("A valid studentId is required.");
+    await SectionSheet.updateOne({_id: sheet._id}, {$pull: {conflicts: {student: studentId}}});
     res.json({message: "Removed from your sheet"});
 });
 
@@ -420,7 +443,7 @@ export const setBands = handle(async (req, res) => {
         {$set: {bandConfig: bands}, $push: {history: histEntry("Faculty", req.user.email, "bands_changed", BAND_KEYS.map((k) => `${k} ${bands[k]}%`).join(", "))}}, {new: true}
     );
     if (!upd) throw new GradeError("The grading just changed. Reload.", 409);
-    try { await computeAndStore(upd); } catch (e) { throw new GradeError(e.message); }
+    await recomputeIfGrading(grading._id);
     res.json({message: "Band percentages updated."});
 });
 
@@ -428,12 +451,12 @@ export const overrideCutoffs = handle(async (req, res) => {
     const {grading, faculty, course} = await requireGradingStage(req);
     if (!canOverride(userCtx(faculty, course), "cutoffs")) throw new GradeError("You can't change the cutoffs for this course.", 403);
     if (req.body.clear) {
-        await CourseGrading.updateOne({_id: grading._id, status: "grading"}, {$unset: {cutoffOverride: ""}, $push: {history: histEntry("Faculty", req.user.email, "cutoff_override_cleared")}});
-        const g = await CourseGrading.findById(grading._id);
-        await computeAndStore(g);
+        const cleared = await CourseGrading.updateOne({_id: grading._id, status: "grading"}, {$unset: {cutoffOverride: ""}, $push: {history: histEntry("Faculty", req.user.email, "cutoff_override_cleared")}});
+        if (!cleared.matchedCount) throw new GradeError("The grading just changed. Reload.", 409);
+        await recomputeIfGrading(grading._id);
         return res.json({message: "Cutoffs reset to the calculated values."});
     }
-    const reason = String(req.body.reason || "").trim();
+    const reason = String(req.body.reason || "").trim().slice(0, 1000);
     if (!reason) throw new GradeError("Give a reason for changing the cutoffs.");
     const values = {...(grading.cutoffOverride?.values || {})};
     for (const k of BAND_KEYS) if (req.body.values?.[k] !== undefined && req.body.values[k] !== null && req.body.values[k] !== "") values[k] = Number(req.body.values[k]);
@@ -447,14 +470,17 @@ export const overrideCutoffs = handle(async (req, res) => {
         {$set: {cutoffOverride: {values, by: faculty._id, reason, at: new Date()}}, $push: {history: histEntry("Faculty", req.user.email, "cutoffs_overridden", `${reason} (${Object.entries(values).map(([k, v]) => `${k} ${v}`).join(", ")})`)}}, {new: true}
     );
     if (!upd) throw new GradeError("The grading just changed. Reload.", 409);
-    await computeAndStore(upd);
+    await recomputeIfGrading(grading._id);
     res.json({message: "Cutoffs updated."});
 });
 
 export const setFinalGrade = handle(async (req, res) => {
     const {grading, faculty, course} = await requireGradingStage(req);
-    const entry = await GradeEntry.findOne({_id: req.body.entryId, courseGrading: grading._id});
+    const entryId = oid(req.body.entryId);
+    if (!entryId) throw new GradeError("A valid entryId is required.");
+    const entry = await GradeEntry.findOne({_id: entryId, courseGrading: grading._id});
     if (!entry) throw new GradeError("Student not found", 404);
+    if (grading.amendment?.type && !entry.amended) throw new GradeError("Only students in the open amendment can be changed.", 409);
     const sheet = await SectionSheet.findById(entry.sheet);
     if (!canOverride(userCtx(faculty, course), "f_to_p", {sheetFacultyId: sheet.faculty}))
         throw new GradeError(`Only ${(await Faculty.findById(sheet.faculty))?.name || "the section faculty"} can move this student.`, 403);
@@ -494,14 +520,18 @@ export const submit = handle(async (req, res) => {
 // ---------------------------------------------------------------- amendments
 export const openAmendment = handle(async (req, res) => {
     const {faculty, course} = await requireCourseFaculty(req, req.body.courseId);
+    if (!canOverride(userCtx(faculty, course), "submit")) throw new GradeError("Only the course coordinator can reopen a released grading.", 403);
     const grading = await ensureGrading(course);
     const type = req.body.type;
     if (!["correction", "reexam", "backlog"].includes(type)) throw new GradeError("Choose correction, re-exam or backlog.");
-    const reason = String(req.body.reason || "").trim();
+    const reason = String(req.body.reason || "").trim().slice(0, 1000);
     if (!reason) throw new GradeError("Give a reason for the amendment.");
     if (grading.status !== "released") throw new GradeError("Only a released grading can be amended.", 409);
-    const rolls = (req.body.rollNumbers || []).map((r) => String(r).trim()).filter(Boolean);
-    const ids = req.body.studentIds || [];
+    const rawRolls = Array.isArray(req.body.rollNumbers) ? req.body.rollNumbers : [];
+    const rawIds = Array.isArray(req.body.studentIds) ? req.body.studentIds : [];
+    if (rawRolls.length + rawIds.length > 500) throw new GradeError("Too many students in one amendment.");
+    const rolls = rawRolls.map((r) => String(r).trim()).filter(Boolean);
+    const ids = rawIds.map((v) => oid(v)).filter(Boolean);
     const students = await Student.find({$or: [{_id: {$in: ids}}, {rollNumber: {$in: rolls}}]}).select("_id").lean();
     if (!students.length) throw new GradeError("Pick at least one affected student.");
     const entries = await GradeEntry.find({courseGrading: grading._id, student: {$in: students.map((s) => s._id)}});
@@ -576,18 +606,24 @@ export const reexamApply = handle(async (req, res) => {
     const rel = await CourseGradingVersion.findOne({courseGrading: grading._id, kind: "released"}).sort({version: -1}).lean();
     if (!rel) throw new GradeError("No released version to compare with.", 409);
     const byStudent = Object.fromEntries(rel.rows.map((r) => [String(r.student), r]));
-    const entries = await GradeEntry.find({courseGrading: grading._id, amended: false});
-    await GradeEntry.bulkWrite(entries.map((e) => {
-        const r = byStudent[String(e.student)];
-        return {updateOne: {filter: {_id: e._id}, update: r ? {$set: {computedGrade: r.computedGrade, finalGrade: r.finalGrade}} : {}}};
-    }));
     const upd = await CourseGrading.findOneAndUpdate(
         {_id: grading._id, status: "grading"},
         {$set: {"amendment.mode": mode, threshold: rel.threshold, cutoffs: rel.cutoffs, calculatedCutoffs: rel.calculatedCutoffs},
          $push: {history: histEntry("Faculty", req.user.email, "amendment_mode", mode)}}, {new: true}
     );
     if (!upd) throw new GradeError("The grading just changed. Reload.", 409);
-    await computeAndStore(upd);
+    await recomputeIfGrading(grading._id, {before: async (g, session) => {
+        // non-amended rows go back to exactly what was released, override included
+        const entries = await GradeEntry.find({courseGrading: g._id, amended: false}).session(session);
+        const ops = entries.map((e) => {
+            const r = byStudent[String(e.student)];
+            if (!r) return null;
+            const update = {$set: {computedGrade: r.computedGrade, finalGrade: r.finalGrade}};
+            if (r.override?.grade) update.$set.override = r.override; else update.$unset = {override: ""};
+            return {updateOne: {filter: {_id: e._id}, update}};
+        }).filter(Boolean);
+        if (ops.length) await GradeEntry.bulkWrite(ops, {session});
+    }});
     res.json({message: mode === "frozen" ? "Re-graded against the previous cutoffs. Nobody else changes." : "Curve recomputed with the new marks."});
 });
 
@@ -603,8 +639,10 @@ export const listCorrections = handle(async (req, res) => {
 
 export const decideCorrection = handle(async (req, res) => {
     const faculty = await getFaculty(req);
-    const {id, decision} = req.body;
-    const remark = String(req.body.remark || "").trim();
+    const {decision} = req.body;
+    const id = oid(req.body.id);
+    if (!id) throw new GradeError("A valid request id is required.");
+    const remark = String(req.body.remark || "").trim().slice(0, 2000);
     if (!["accepted", "rejected"].includes(decision)) throw new GradeError("Choose accept or reject.");
     if (decision === "rejected" && !remark) throw new GradeError("Give the student a reason.");
     const upd = await GradeCorrectionRequest.findOneAndUpdate(

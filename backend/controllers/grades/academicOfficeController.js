@@ -18,6 +18,10 @@ import GradeEntry from "../../models/grades/GradeEntry.js";
 import {semesterRank} from "../../utils/gradeEngine.js";
 import {GradeError, handle, histEntry} from "../../utils/gradeGuards.js";
 import {snapshot, writeAttempts} from "../../utils/gradeService.js";
+import {oid} from "../../utils/security.js";
+import {getCurrentSemester as currentSemesterCode} from "../../utils/semesterUtils.js";
+
+const needId = (v, what = "id") => { const id = oid(v); if (!id) throw new GradeError(`A valid ${what} is required.`); return id; };
 import {getCurrentSemester} from "../../utils/semesterUtils.js";
 
 export const listCourses = handle(async (req, res) => {
@@ -37,9 +41,11 @@ export const listCourses = handle(async (req, res) => {
 // The Academic Office picks who teaches a course and which of them is the coordinator
 // (sets the components, submits the grading). Nothing about marks or grades is touched.
 export const setCourseTeam = handle(async (req, res) => {
-    const course = await Course.findById(req.body.courseId);
+    const course = await Course.findById(needId(req.body.courseId, "course"));
     if (!course) throw new GradeError("That course doesn't exist", 404);
-    const facultyIds = [...new Set((req.body.facultyIds || []).map(String))];
+    if (!Array.isArray(req.body.facultyIds) || req.body.facultyIds.length > 20) throw new GradeError("Pick between 1 and 20 faculty members.");
+    const facultyIds = [...new Set(req.body.facultyIds.map(String))];
+    if (facultyIds.some((id) => !oid(id))) throw new GradeError("One of those faculty members doesn't exist.");
     const coordinatorId = String(req.body.coordinatorId || "");
     if (!facultyIds.length) throw new GradeError("Pick at least one faculty member.");
     if (!facultyIds.includes(coordinatorId)) throw new GradeError("The coordinator must be one of the course's faculty.");
@@ -134,7 +140,7 @@ async function viewFor(grading, version) {
 }
 
 export const getGrading = handle(async (req, res) => {
-    const grading = await CourseGrading.findById(req.params.id).populate("course", "name code").populate("approvals.faculty", "name").lean();
+    const grading = await CourseGrading.findById(needId(req.params.id)).populate("course", "name code").populate("approvals.faculty", "name").lean();
     if (!grading) throw new GradeError("Not found", 404);
     const versions = await CourseGradingVersion.find({courseGrading: grading._id}).select("version kind releasedAt createdAt versionNote amendment").sort({version: -1}).lean();
     let snap = null;
@@ -155,7 +161,7 @@ export const release = handle(async (req, res) => {
     try {
         await session.withTransaction(async () => {
             const grading = await CourseGrading.findOneAndUpdate(
-                {_id: req.body.gradingId, status: "approved"},
+                {_id: needId(req.body.gradingId, "grading"), status: "approved"},
                 {$set: {status: "released", releasedAt: new Date()}, $push: {history: histEntry("AcademicOffice", req.user.email, "released")}},
                 {new: true, session}
             );
@@ -174,10 +180,11 @@ export const release = handle(async (req, res) => {
 // Send an approved grading back to the faculty with a remark. Marks and grades are not touched:
 // the status goes back to the grading draft and earlier approvals are cleared, as in a CC send-back.
 export const sendBack = handle(async (req, res) => {
-    const remark = String(req.body.remark || "").trim();
+    const gradingId = needId(req.body.gradingId, "grading");
+    const remark = String(req.body.remark || "").trim().slice(0, 2000);
     if (!remark) throw new GradeError("A remark is required to send this back.");
     const upd = await CourseGrading.findOneAndUpdate(
-        {_id: req.body.gradingId, status: "approved"},
+        {_id: gradingId, status: "approved"},
         {$set: {status: "grading", approvals: []}, $push: {history: histEntry("AcademicOffice", req.user.email, "ao_sent_back", remark)}},
         {new: true}
     );
@@ -258,7 +265,7 @@ function nextSemester(code) {
 }
 
 export const studentHistory = handle(async (req, res) => {
-    const student = await Student.findById(req.params.studentId).select("name rollNumber").lean();
+    const student = await Student.findById(needId(req.params.studentId, "student")).select("name rollNumber").lean();
     if (!student) throw new GradeError("Student not found", 404);
     const attempts = await CourseAttempt.find({student: student._id}).lean();
     attempts.sort((a, b) => semesterRank(a.semester) - semesterRank(b.semester) || a.version - b.version);
@@ -269,6 +276,9 @@ export const studentHistory = handle(async (req, res) => {
 export const importBacklog = handle(async (req, res) => {
     const rows = Array.isArray(req.body.rows) ? req.body.rows : [];
     if (!rows.length) throw new GradeError("No rows to import");
+    if (rows.length > 2000) throw new GradeError("At most 2000 rows per import.");
+    const knownKeys = new Set((await Course.distinct("abbreviation")).map(String));
+    const nowRank = semesterRank(currentSemesterCode());
     const rolls = [...new Set(rows.map((r) => String(r.rollNumber || "").trim()))];
     const students = await Student.find({rollNumber: {$in: rolls}}).select("rollNumber").lean();
     const byRoll = Object.fromEntries(students.map((s) => [s.rollNumber.toUpperCase(), s]));
@@ -280,8 +290,12 @@ export const importBacklog = handle(async (req, res) => {
         const st = byRoll[roll.toUpperCase()];
         if (!st) { result.unmatched.push(roll); continue; }
         if (!courseKey || !/^[MS]\d{2}$/.test(semester)) { result.invalid.push(roll); continue; }
+        // only earlier F's for an existing course; never one that would override a later recorded result
+        if (!knownKeys.has(courseKey) || semesterRank(semester) > nowRank) { result.invalid.push(roll); continue; }
+        const later = await CourseAttempt.find({student: st._id, courseKey}).select("semester").lean();
+        if (later.some((a) => semesterRank(a.semester) >= semesterRank(semester))) { result.skipped++; continue; }
         try {
-            await CourseAttempt.create({student: st._id, courseKey, courseName: r.courseName, semester, grade: "F", source: "imported", attemptType: "regular"});
+            await CourseAttempt.create({student: st._id, courseKey, courseName: String(r.courseName || "").slice(0, 200), semester, grade: "F", source: "imported", attemptType: "regular"});
             result.imported++;
         } catch (e) {
             if (e.code !== 11000) throw e;

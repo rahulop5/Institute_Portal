@@ -66,8 +66,9 @@ export const getHonorsDashboard = async (req, res) => {
                 formattedEvaluations.push({
                     _id: currEval._id,
                     time: currEval.time,
-                    remark: currEval.remark,
-                    resources: currEval.resources,
+                    // guide remark and resources are part of the result: hidden until the round is released
+                    remark: currEval.canstudentsee ? currEval.remark : null,
+                    resources: currEval.canstudentsee ? currEval.resources : null,
                     updates: evalUpdates,
                     canstudentsee: currEval.canstudentsee,
                     maxMarks: currEval.maxMarks,

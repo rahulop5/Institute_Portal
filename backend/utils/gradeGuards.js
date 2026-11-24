@@ -16,6 +16,7 @@ export const handle = (fn) => async (req, res) => {
         await fn(req, res);
     } catch (err) {
         if (err instanceof GradeError) return res.status(err.status).json({message: err.message});
+        if (err?.name === "CastError" || err?.status === 400) return res.status(400).json({message: "Invalid request"});
         console.error(err);
         return res.status(500).json({message: "Something went wrong. Please try again."});
     }

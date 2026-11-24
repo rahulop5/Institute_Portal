@@ -7,11 +7,20 @@ import { notifyMeeting } from "../utils/meetingMailer.js";
 export const createSlot = async (req, res) => {
   try {
     const { date, startTime, endTime, location, title } = req.body;
-    if (!title || !title.trim() || !date || !startTime || !endTime || !location || !location.trim()) {
+    const isStr = (v) => typeof v === "string";
+    if (![date, startTime, endTime, location, title].every(isStr) || !title.trim() || !location.trim()) {
       return res.status(400).json({ message: "Title, date, start time, end time and location are all required" });
+    }
+    // HH:MM and YYYY-MM-DD only: anything else made a slot whose time never parses, so it never expired.
+    const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!/^\d{4}-\d{2}-\d{2}/.test(date) || Number.isNaN(new Date(date).getTime()) || !HHMM.test(startTime) || !HHMM.test(endTime)) {
+      return res.status(400).json({ message: "Use a valid date and times like 09:30" });
     }
     if (title.trim().length > 120) {
       return res.status(400).json({ message: "Title must be 120 characters or fewer" });
+    }
+    if (location.trim().length > 200) {
+      return res.status(400).json({ message: "Location must be 200 characters or fewer" });
     }
     if (endTime <= startTime) {
       return res.status(400).json({ message: "End time must be after start time" });
