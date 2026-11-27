@@ -33,7 +33,8 @@ export const getFacultyAPDashboard = async (req, res) => {
         .populate({
             path: "requests.student",
             populate: { path: "student", select: "name email rollNumber" }
-        });
+        })
+        .populate({ path: "requests.teammates", select: "name email rollNumber" });
 
     let enrichedRequests = [];
     
@@ -50,6 +51,7 @@ export const getFacultyAPDashboard = async (req, res) => {
                     student: req.student?.student || req.student,
                     proposalTitle: req.proposalTitle,
                     proposalText: req.proposalText,
+                    teammates: (req.teammates || []).map((t) => ({ name: t.name, email: t.email, rollNumber: t.rollNumber })),
                     isapproved: req.isapproved
                 };
             });
@@ -561,7 +563,8 @@ export const viewAPProject = async (req, res) => {
                  about: project.about,
                  guide: project.guide,
                  status: project.status,
-                 students: project.students.map(s => s.student?.student),
+                 // regId links each member to their own marks in every evaluation.
+                 students: project.students.map(s => s.student?.student ? { ...s.student.student.toObject(), regId: s.student._id } : null).filter(Boolean),
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,
@@ -596,7 +599,8 @@ export const viewAPProjectEvaluator = async (req, res) => {
                  about: project.about,
                  guide: project.guide,
                  status: project.status,
-                 students: project.students.map(s => s.student?.student),
+                 // regId links each member to their own marks in every evaluation.
+                 students: project.students.map(s => s.student?.student ? { ...s.student.student.toObject(), regId: s.student._id } : null).filter(Boolean),
                  evaluators: project.evaluators.map(e => e.evaluator),
                  evaluations: evaluations,
                  updates: project.updates,

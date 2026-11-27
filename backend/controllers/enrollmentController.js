@@ -12,6 +12,10 @@ import HonorsRegistration from "../models/HonorsRegistration.js";
 import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
 import { clearOpenRequests } from "./topicProposalController.js";
 import { notifyEnrollment } from "../utils/programMailer.js";
+import BTPEvaluation from "../models/BTPEvaluation.js";
+import HonorsEvaluation from "../models/HonorsEvaluation.js";
+import { projectStartSemester, studentSemesterOn } from "../utils/semesterUtils.js";
+import { apTeamBlock, joinTeam } from "./apTeamController.js";
 
 // A student's BTP / Honors topic request, once the faculty member accepts it,
 // is not a project yet: it goes to UG Projects, then the Assistant Dean, and
@@ -40,6 +44,29 @@ function validateEvaluationConfig(evaluationConfig) {
     if (typeof slot?.maxMarks !== "number" || slot.maxMarks <= 0) return null;
   }
   return evaluationConfig.map((slot) => ({ maxMarks: slot.maxMarks }));
+}
+
+// A BTP closed by "switch to Honors, start a new topic" still counts: its
+// rounds go into the student's next Honors project, and that Honors counts as
+// starting when the BTP did. Returns the not-yet-used switch, or null.
+export async function btpCarry(studentId, session) {
+  const opts = (query) => (session ? query.session(session) : query);
+  const request = await opts(
+    ProgramChangeRequest.findOne({ student: studentId, program: "btp", type: "switch", switchMode: "fresh", status: "approved", carriedInto: null }).sort({ updatedAt: -1 })
+  );
+  if (!request) return null;
+  const [project, evaluations] = await Promise.all([
+    opts(BTP.findById(request.project)),
+    opts(BTPEvaluation.find({ projectRef: request.project }).sort({ time: 1 })),
+  ]);
+  return project ? { request, project, evaluations } : null;
+}
+
+// The semester a new Honors project would count as starting in for this
+// student: their BTP's start if its marks carry over, otherwise now.
+export async function honorsStartSemester(student) {
+  const carry = await btpCarry(student._id);
+  return carry ? projectStartSemester(student.batch, carry.project, carry.evaluations) : studentSemesterOn(student.batch, new Date());
 }
 
 // A student can have one request under review for BTP / Honors (they exclude
@@ -177,6 +204,38 @@ export async function applyEnrollment(request, session) {
   // Clears this request and any other pending ones (including the proposal
   // this project came from) from every faculty member's list.
   await clearOpenRequests(K.Topic, registration._id, session);
+
+  if (request.program === "honors") {
+    const carry = await btpCarry(request.student, session);
+    if (carry) {
+      // Same rounds, dates and marks; marks point at the Honors registration.
+      const btpRegistration = await BTPRegistration.findOne({ student: request.student }).session(session);
+      const ref = (id) => (btpRegistration && id.equals(btpRegistration._id) ? registration._id : id);
+      if (carry.evaluations.length) {
+        await HonorsEvaluation.insertMany(
+          carry.evaluations.map((ev) => ({
+            projectRef: project._id,
+            time: ev.time,
+            canstudentsee: ev.canstudentsee,
+            remark: ev.remark,
+            maxMarks: ev.maxMarks,
+            resources: ev.resources.map((r) => ({ resourceURL: r.resourceURL })),
+            marksgiven: ev.marksgiven.map((m) => ({ student: ref(m.student), guidemarks: m.guidemarks, totalgrade: m.totalgrade })),
+            panelEvaluations: ev.panelEvaluations.map((pe) => ({
+              evaluator: pe.evaluator,
+              submitted: pe.submitted,
+              submittedAt: pe.submittedAt,
+              remark: pe.remark,
+              panelmarks: pe.panelmarks.map((pm) => ({ student: ref(pm.student), marks: pm.marks })),
+            })),
+          })),
+          { session }
+        );
+      }
+      carry.request.carriedInto = project._id;
+      await carry.request.save({ session });
+    }
+  }
 }
 
 // A request that ended without a project: take it off the faculty member's
@@ -232,6 +291,15 @@ export const forwardAPRequest = async (req, res) => {
     if (await findOpenEnrollment(studentReg.student, ["ap"])) {
       return res.status(400).json({ message: "This student already has a request under review with another faculty member" });
     }
+    // Every teammate must still be free to join.
+    const teammates = request.teammates || [];
+    for (const id of teammates) {
+      const block = await apTeamBlock(id);
+      if (block) {
+        const mate = await Student.findById(id, "name");
+        return res.status(400).json({ message: `Teammate ${mate?.name || ""} ${block}, so this proposal can't be sent on.`.replace("  ", " ") });
+      }
+    }
 
     const student = await Student.findById(studentReg.student);
     await ProgramChangeRequest.create({
@@ -240,7 +308,7 @@ export const forwardAPRequest = async (req, res) => {
       type: "enrollment",
       guide: fac._id,
       reason: request.proposalText,
-      enrollment: { topicName: request.proposalTitle, topicAbout: request.proposalText, message: "", proposed: true, evaluationConfig },
+      enrollment: { topicName: request.proposalTitle, topicAbout: request.proposalText, message: "", proposed: true, evaluationConfig, teammates },
       status: "pending_ugprojects",
       history: [
         { role: "Student", email: student.email, action: "submitted" },
@@ -287,6 +355,8 @@ async function applyAPEnrollment(request, session) {
   await registration.save({ session });
   // Their other proposals to other faculty members are no longer needed.
   await APFacultyRequest.updateMany({ "requests.student": registration._id }, { $pull: { requests: { student: registration._id } } }, { session });
+  // The rest of the team joins the same project.
+  if (e.teammates?.length) await joinTeam(project, e.teammates, session, request._id);
 }
 
 async function closeAPEnrollment(request, outcome) {

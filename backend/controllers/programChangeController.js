@@ -3,6 +3,8 @@ import { projectStartSemester, studentSemesterOn, startWindowProblem } from "../
 import mongoose from "mongoose";
 import Student from "../models/feedback/Student.js";
 import Faculty from "../models/Faculty.js";
+import UGProjects from "../models/UGProjects.js";
+import AssistantDean from "../models/AssistantDean.js";
 import BTP from "../models/BTP.js";
 import Honors from "../models/Honors.js";
 import BTPRegistration from "../models/BTPRegistration.js";
@@ -13,8 +15,9 @@ import HonorsEvaluation from "../models/HonorsEvaluation.js";
 import AP from "../models/AP.js";
 import APEvaluation from "../models/APEvaluation.js";
 import ProgramChangeRequest from "../models/ProgramChangeRequest.js";
-import { RequestError, ENROLLMENT_NEXT, applyEnrollment, closeEnrollment, notifyOutcome } from "./enrollmentController.js";
+import { RequestError, ENROLLMENT_NEXT, applyEnrollment, closeEnrollment, notifyOutcome, honorsStartSemester } from "./enrollmentController.js";
 import { notifyProgramChangeReceived } from "../utils/programChangeMailer.js";
+import { applyTeamAdd } from "./apTeamController.js";
 
 const PROGRAMS = {
   btp: { label: "BTP", model: "BTP", Project: BTP, Registration: BTPRegistration, Evaluation: BTPEvaluation, semesters: 2, credits: 4 },
@@ -26,6 +29,9 @@ const PROGRAM_LABELS = { btp: "BTP", honors: "Honors", ap: "Additional Project" 
 const DEFAULT_EVALUATION_CONFIG = [{ maxMarks: 50 }, { maxMarks: 50 }];
 
 const OPEN_STATUSES = ["pending_ugprojects", "pending_assistantdean", "pending_faculty"];
+// Adding an Additional Project teammate: the guide first, then UG Projects and
+// the Assistant Dean, whose approval puts the new member on the project.
+const TEAM_ADD_NEXT = { pending_faculty: "pending_ugprojects", pending_ugprojects: "pending_assistantdean", pending_assistantdean: "approved" };
 // Who each open status is waiting on, and where an approval moves it next.
 const STAGES = {
   pending_ugprojects: { role: "UGProjects", next: "pending_assistantdean" },
@@ -85,10 +91,14 @@ function requestOptions(program, project, { startSemester, currentSemester }) {
     ? closed
     : startWindowProblem(target, startSemester) &&
       `${startWindowProblem(target, startSemester)} Your ${PROGRAMS[program].label} started in Semester ${startSemester}.`;
+  // BTP -> Honors keeps the BTP marks either way, so even a new Honors topic
+  // counts from when the BTP started. Honors -> BTP has no new-topic option:
+  // it always continues the project, keeping the first 2 semesters.
   const freshProblem = !switchable
     ? closed
-    : startWindowProblem(target, currentSemester) &&
-      `A new ${targetLabel} topic would start now. ${startWindowProblem(target, currentSemester)} You are in Semester ${currentSemester}.`;
+    : program === "btp"
+    ? continueProblem
+    : `Switching to ${targetLabel} keeps your current project; there is no new topic option.`;
 
   return {
     allowed: {
@@ -144,6 +154,9 @@ function formatRequest(request) {
       : null,
     guide: request.guide ? { name: request.guide.name, email: request.guide.email } : null,
     project: request.project ? { name: request.project.name } : null,
+    // team_add: who would join; enrollment: the rest of the team.
+    newMember: request.newMember?.name ? { name: request.newMember.name, email: request.newMember.email, rollNumber: request.newMember.rollNumber } : null,
+    teammates: (request.enrollment?.teammates || []).filter((t) => t?.name).map((t) => ({ name: t.name, email: t.email, rollNumber: t.rollNumber })),
   };
 }
 
@@ -152,6 +165,8 @@ function populateRequest(query) {
     .populate("student", "name email rollNumber")
     .populate("guide", "name email")
     .populate("newGuide", "name email")
+    .populate("newMember", "name email rollNumber")
+    .populate("enrollment.teammates", "name email rollNumber")
     .populate("project", "name evaluationConfig");
 }
 
@@ -177,7 +192,7 @@ async function withEvaluationSummary(request) {
   return {
     ...formatRequest(request),
     evaluations: {
-      done: request.project ? await PROGRAMS[request.program].Evaluation.countDocuments({ projectRef: request.project._id }) : 0,
+      done: request.project ? await (request.program === "ap" ? APEvaluation : PROGRAMS[request.program].Evaluation).countDocuments({ projectRef: request.project._id }) : 0,
       perSemester: request.project ? evaluationsPerSemester(request.project) : DEFAULT_EVALUATION_CONFIG.length,
     },
   };
@@ -386,7 +401,8 @@ export const decideForReviewer = (stage) => async (req, res) => {
     const request = await ProgramChangeRequest.findById(requestId).populate("guide", "email").populate("newGuide", "email");
     if (!request) return res.status(404).json({ message: "Request not found" });
     // An enrollment never waits on the guide at this point: they already sent it on.
-    const next = request.type === "enrollment" ? ENROLLMENT_NEXT[stage] : STAGES[stage].next;
+    const next =
+      request.type === "enrollment" ? ENROLLMENT_NEXT[stage] : request.type === "team_add" ? TEAM_ADD_NEXT[stage] : STAGES[stage].next;
     if (!next) return res.status(400).json({ message: "This request is no longer waiting on you" });
     const update = { $set: { status: decision === "approve" ? next : "rejected" }, $push: { history: entry } };
 
@@ -425,7 +441,7 @@ export const decideForReviewer = (stage) => async (req, res) => {
     if (applied?.type === "enrollment") notifyOutcome(applied, "approved");
     return res.status(200).json({ message: "Request approved and applied" });
   } catch (err) {
-    if (err instanceof RequestError) return res.status(400).json({ message: err.message });
+    if (err instanceof RequestError || err.status === 400) return res.status(400).json({ message: err.message });
     console.error(err);
     return res.status(500).json({ message: "Error deciding request" });
   }
@@ -435,6 +451,7 @@ export const decideForReviewer = (stage) => async (req, res) => {
 
 async function applyRequest(request, session) {
   if (request.type === "enrollment") return applyEnrollment(request, session);
+  if (request.type === "team_add") return applyTeamAdd(request, session);
   const from = PROGRAMS[request.program];
   const project = await from.Project.findById(request.project).session(session);
   if (!project || !["active", "completed"].includes(project.status)) {
@@ -633,6 +650,7 @@ const listProjects = (statuses) => async (req, res) => {
         .populate({ path: "students.student", populate: { path: "student", select: "name email rollNumber batch" } });
       for (const project of projects) {
         const student = project.students[0]?.student?.student;
+        const team = project.students.map((s) => s.student?.student).filter(Boolean);
         rows.push({
           _id: project._id,
           program,
@@ -643,6 +661,7 @@ const listProjects = (statuses) => async (req, res) => {
           about: project.about,
           guide: project.guide ? { name: project.guide.name, email: project.guide.email } : null,
           student: student ? { name: student.name, email: student.email, rollNumber: student.rollNumber, batch: student.batch } : null,
+          team: team.map((s) => ({ name: s.name, rollNumber: s.rollNumber })),
           lastTopicChange: project.topicHistory?.at(-1) || null,
         });
       }
@@ -659,8 +678,34 @@ const listProjects = (statuses) => async (req, res) => {
 // can be edited for active BTP / Honors projects (UG Projects only, in the UI).
 export const listProjectsForUGProjects = listProjects(["active", "completed"]);
 
-// Admins see every project, including dropped, switched and discontinued ones.
-export const listAllProjects = listProjects(null);
+// Admins see every project, including dropped and discontinued ones. A
+// switched one is left out: the project carries on in the other program and
+// is listed there, so showing both would list the student twice. The switch
+// itself is on the Dean's Program Change page.
+export const listAllProjects = listProjects(["active", "completed", "dropped", "discontinued"]);
+
+// The Dean's log: every request (new projects, topic and guide changes, drops
+// and switches) with each step, who took it and when, newest first.
+export const listAllRequests = async (req, res) => {
+  try {
+    const requests = await populateRequest(ProgramChangeRequest.find({}).sort({ createdAt: -1 }));
+    const emails = [...new Set(requests.flatMap((r) => r.history.map((h) => h.email)))];
+    const people = await Promise.all(
+      [Faculty, UGProjects, AssistantDean, Student].map((Model) => Model.find({ email: { $in: emails } }, "name email"))
+    );
+    const names = new Map(people.flat().map((p) => [p.email, p.name]));
+    return res.status(200).json({
+      requests: requests.map((r) => ({
+        ...formatRequest(r),
+        updatedAt: r.updatedAt,
+        history: r.history.map((h) => ({ role: h.role, name: names.get(h.email) || h.email, action: h.action, remark: h.remark, at: h.at })),
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Error loading program changes" });
+  }
+};
 
 // One project's full picture for UG Projects and the Assistant Dean: who is
 // doing it, under whom, every evaluation round with the marks given (released
@@ -697,6 +742,7 @@ export const getProjectDetail = async (req, res) => {
         guide: project.guide ? { name: project.guide.name, email: project.guide.email } : null,
         evaluators: project.evaluators.map((e) => ({ name: e.evaluator?.name, email: e.evaluator?.email })),
         student: student ? { name: student.name, email: student.email, rollNumber: student.rollNumber, batch: student.batch } : null,
+        team: project.students.map((s) => s.student?.student).filter(Boolean).map((s) => ({ name: s.name, rollNumber: s.rollNumber })),
         startSemester: projectStartSemester(student?.batch, project, evaluations),
         evaluationsPerSemester: (project.evaluationConfig?.length || DEFAULT_EVALUATION_CONFIG.length),
         updates: [...(project.updates || [])].sort((a, b) => new Date(b.time) - new Date(a.time)).map((u) => ({ update: u.update, time: u.time })),
@@ -717,6 +763,13 @@ export const getProjectDetail = async (req, res) => {
             marks: number(p.panelmarks?.[0]?.marks),
             remark: p.remark || null,
           })),
+          // Teams: each member's final mark (marksgiven is per member).
+          finals: project.students.length > 1
+            ? project.students.map((s) => {
+                const m = ev.marksgiven.find((g) => String(g.student) === String(s.student?._id));
+                return { name: s.student?.student?.name, marks: number(m?.totalgrade ?? m?.guidemarks) };
+              })
+            : null,
         };
       }),
     });
@@ -740,7 +793,7 @@ export const getStudentEnrollment = async (req, res) => {
     // sidebar shows these as locked items with the reason instead of hiding them.
     const locks = {
       btp: program === "honors" ? "You're enrolled in Honors, so BTP isn't available." : program === "btp" ? null : startWindowProblem("btp", semester),
-      honors: program === "btp" ? "You're enrolled in BTP, so Honors isn't available." : program === "honors" ? null : startWindowProblem("honors", semester),
+      honors: program === "btp" ? "You're enrolled in BTP, so Honors isn't available." : program === "honors" ? null : startWindowProblem("honors", await honorsStartSemester(student)),
       ap: ap ? null : startWindowProblem("ap", semester),
     };
     return res.status(200).json({ program, semester, hasAP: !!ap, locks });

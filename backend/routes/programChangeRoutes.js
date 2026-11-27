@@ -5,6 +5,8 @@ import {
     authUGProjectsMiddleware,
     authAssistantDeanMiddleware,
     authAdminMiddleware,
+    authMiddleware,
+    requireDeanMiddleware,
 } from "../controllers/authController.js";
 import {
     getStudentProgramChange,
@@ -16,10 +18,13 @@ import {
     updateTopicAsStaff,
     listProjectsForUGProjects,
     listAllProjects,
+    listAllRequests,
   getProjectDetail,
     listFacultyForStudent,
     getStudentEnrollment,
 } from "../controllers/programChangeController.js";
+import { getTracking } from "../controllers/trackingController.js";
+import { getNotifications } from "../controllers/notificationController.js";
 
 const router = express.Router();
 
@@ -38,8 +43,17 @@ router.get("/assistantdean/project", authAssistantDeanMiddleware, getProjectDeta
 router.post("/ugprojects/topic", authUGProjectsMiddleware, updateTopicAsStaff("UGProjects"));
 // Admin: read-only view of every project
 router.get("/admin/projects", authAdminMiddleware, listAllProjects);
+// Dean only: every request and each step it went through
+router.get("/admin/requests", authAdminMiddleware, requireDeanMiddleware, listAllRequests);
 router.get("/admin/project", authAdminMiddleware, getProjectDetail);
 router.post("/faculty/topic", authFacultyMiddleware, updateTopicAsStaff("Faculty"));
+
+// Sidebar badges for whoever is signed in (UI only, no mail)
+router.get("/notifications", authMiddleware, getNotifications);
+
+// Where every student stands, from first request to finished project
+router.get("/ugprojects/tracking", authUGProjectsMiddleware, getTracking);
+router.get("/assistantdean/tracking", authAssistantDeanMiddleware, getTracking);
 
 // Approval chain: UG Projects -> Assistant Dean Academics -> guide
 router.get("/ugprojects", authUGProjectsMiddleware, listForReviewer("pending_ugprojects"));
