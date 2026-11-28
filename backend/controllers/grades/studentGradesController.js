@@ -17,19 +17,22 @@ async function me(req) {
     return s;
 }
 
-// Latest RELEASED version per grading that contains this student.
+// Keep the released version that last changed this student's final grade.
 async function releasedFor(studentId) {
-    const snaps = await CourseGradingVersion.find({kind: "released", "rows.student": studentId}).sort({version: -1}).lean();
-    const seen = new Set();
-    const out = [];
-    for (const s of snaps) {
-        if (seen.has(String(s.courseGrading))) continue;
-        seen.add(String(s.courseGrading));
-        const row = s.rows.find((r) => String(r.student) === String(studentId));
-        if (!row || row.absent) continue;
-        out.push({snap: s, row});
+    const snaps = await CourseGradingVersion.find({kind: "released", "rows.student": studentId}).sort({version: 1}).lean();
+    const visible = new Map();
+    const id = String(studentId);
+    for (const snap of snaps) {
+        const row = snap.rows.find((r) => String(r.student) === id);
+        if (!row) continue;
+        const key = String(snap.courseGrading);
+        if (row.absent || !row.finalGrade) {
+            visible.delete(key);
+        } else if (visible.get(key)?.row.finalGrade !== row.finalGrade) {
+            visible.set(key, {snap, row});
+        }
     }
-    return out;
+    return [...visible.values()];
 }
 
 // Every course the student is taking now, whether or not a grade is out yet: this semester's
