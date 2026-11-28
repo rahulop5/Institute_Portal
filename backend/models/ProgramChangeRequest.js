@@ -16,13 +16,20 @@ const programChangeRequestSchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
     program: { type: String, enum: ["btp", "honors", "ap"], required: true },
-    type: { type: String, enum: ["drop", "switch", "guide_change", "topic_change", "enrollment"], required: true },
+    // team_add: a student on an Additional Project asks to add a teammate
+    // (before the first evaluation): guide -> UG Projects -> Assistant Dean.
+    type: { type: String, enum: ["drop", "switch", "guide_change", "topic_change", "enrollment", "team_add"], required: true },
     // switch only: "continue" carries the project (and its marks) into the
     // other program, "fresh" closes it so the student applies for a new topic.
     switchMode: { type: String, enum: ["continue", "fresh"] },
+    // switch "fresh" from BTP only: the Honors project the BTP's marks were
+    // carried into once the student's new Honors topic was approved.
+    carriedInto: { type: mongoose.Schema.Types.ObjectId, ref: "Honors" },
     // An "enrollment" request has no project yet: it creates one once approved.
     project: { type: mongoose.Schema.Types.ObjectId, refPath: "projectModel", required: function () { return this.type !== "enrollment"; } },
-    projectModel: { type: String, enum: ["BTP", "Honors"], required: function () { return this.type !== "enrollment"; } },
+    projectModel: { type: String, enum: ["BTP", "Honors", "AP"], required: function () { return this.type !== "enrollment"; } },
+    // team_add only: the student who would join the project.
+    newMember: { type: mongoose.Schema.Types.ObjectId, ref: "Student" },
     // enrollment only: a student's accepted topic request on its way to becoming
     // a project (faculty -> UG Projects -> Assistant Dean).
     enrollment: {
@@ -33,6 +40,8 @@ const programChangeRequestSchema = new mongoose.Schema(
       message: { type: String },
       proposed: { type: Boolean },
       evaluationConfig: [{ _id: false, maxMarks: { type: Number } }],
+      // Additional Project only: the other students on the team (Student ids).
+      teammates: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
     },
     guide: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true },
     // guide_change only: the faculty member the student proposes, and the

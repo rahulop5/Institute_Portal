@@ -4,11 +4,12 @@ import UGProjects from "../models/UGProjects.js";
 import AssistantDean from "../models/AssistantDean.js";
 import BTP from "../models/BTP.js";
 import Honors from "../models/Honors.js";
+import AP from "../models/AP.js";
 import { getTransporter, mailConfigured, esc } from "./mailer.js";
 
-const PROGRAM_LABEL = { btp: "BTP", honors: "Honors" };
+const PROGRAM_LABEL = { btp: "BTP", honors: "Honors", ap: "Additional Project" };
 const OTHER = { btp: "honors", honors: "btp" };
-const PROJECT_MODEL = { btp: BTP, honors: Honors };
+const PROJECT_MODEL = { btp: BTP, honors: Honors, ap: AP };
 const ROLE_LABEL = { UGProjects: "UG Projects", AssistantDean: "Assistant Dean Academics", Faculty: "Guide" };
 
 const idOf = (x) => x?._id ?? x;
@@ -35,12 +36,16 @@ async function describe(request) {
       return `Drop ${from} project`;
     case "switch":
       return `Switch from ${from} to ${PROGRAM_LABEL[OTHER[request.program]]} (${
-        request.switchMode === "continue" ? "continue the current project and its marks" : "start fresh with a new topic"
+        request.switchMode === "continue" ? "continue the current project and its marks" : request.program === "btp" ? "new Honors topic, BTP marks still count" : "start fresh with a new topic"
       })`;
     case "guide_change": {
       const newGuide = await Faculty.findById(idOf(request.newGuide), "name email");
       const topic = request.newTopic?.name ? `, new topic "${request.newTopic.name}"` : ", keeping the current topic";
       return `Guide change: move ${from} project to ${newGuide?.name || "another faculty member"}${topic}`;
+    }
+    case "team_add": {
+      const member = await Student.findById(idOf(request.newMember), "name");
+      return `Add ${member?.name || "a teammate"} to the ${from} team`;
     }
     case "topic_change":
       return `Topic change on ${from} project to "${request.newTopic?.name}"`;

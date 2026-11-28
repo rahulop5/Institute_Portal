@@ -114,9 +114,12 @@ try {
     const none = Buffer.from(JSON.stringify({alg: "none", typ: "JWT"})).toString("base64url") + "." + Buffer.from(JSON.stringify({email: `demo.admin${D}`, role: "Admin"})).toString("base64url") + ".";
     r = await call("GET", "/puser/feedback/semesters", {token: none});
     check("alg=none token is rejected", r.status === 401 || r.status === 403, short(r));
+    // The grades feature lives on the course-grades branch; on a build without it, its checks are skipped.
+    const HAS_GRADES = (await call("GET", "/faculty/grades/mycourses", {token: T("fdfed1")})).status !== 404;
+    if (!HAS_GRADES) console.log("  (grades routes not in this build: grade checks skipped)");
     const [h, , s] = T("fd001").split(".");
     const tampered = `${h}.${Buffer.from(JSON.stringify({email: `demo.fd001${D}`, role: "AcademicOffice", iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600})).toString("base64url")}.${s}`;
-    r = await call("GET", "/academicoffice/gradings", {token: tampered});
+    r = await call("GET", HAS_GRADES ? "/academicoffice/gradings" : "/auth/profile", {token: tampered});
     check("student token with role edited to AcademicOffice is rejected", r.status === 401 || r.status === 403, short(r));
 
     // ============================================================ B. injection / ownership
@@ -148,18 +151,21 @@ try {
     check("X-Powered-By header is not sent", !hdr.headers.get("x-powered-by"), hdr.headers.get("x-powered-by") || "");
 
     // role boundaries
+    if (HAS_GRADES) {
     r = await call("GET", "/faculty/grades/mycourses", {token: T("fd001")});
     check("student cannot call faculty grade routes", r.status === 403, short(r));
     r = await call("GET", "/academicoffice/gradings", {token: T("fd001")});
     check("student cannot call Academic Office routes", r.status === 403, short(r));
     r = await call("GET", "/academicoffice/gradings", {token: T("fdfed1")});
     check("faculty cannot call Academic Office routes", r.status === 403, short(r));
+    }
     r = await call("GET", "/puser/feedback/dashboard/students", {token: T("fdfed1")});
     check("faculty cannot call admin feedback routes", r.status === 403, short(r));
 
     // ============================================================ C. grades end-to-end
     console.log("\nC. Grades (full flow on the FDFED demo course)");
     const course = await db.collection("courses").findOne({code: /^FDFED-DEMO-/});
+    if (HAS_GRADES) {
     const courseId = String(course._id);
     // reset any previous run
     const oldG = await db.collection("coursegradings").findOne({course: course._id});
@@ -268,6 +274,7 @@ try {
     check("non-coordinator cannot reopen a released grading", r.status === 403, short(r));
     const gAfter = await db.collection("coursegradings").findOne({_id: grading._id});
     check("grading is still released after that attempt", gAfter.status === "released", gAfter.status);
+    } else console.log("  skipped: grades routes not in this build");
     // ============================================================ D. feedback anonymity + admin scope
     console.log("\nD. Feedback anonymity and admin scope");
     await feedbackChecks(course);

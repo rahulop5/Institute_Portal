@@ -49,7 +49,7 @@ export const getBTPDashboard = async (req, res) => {
             // student - only the phase label and an informational message change,
             // marking the project complete is an explicit guide action, not a
             // reason to cut the student off from their own results.
-            const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+            const evaluations = await BTPEvaluation.find({ projectRef: project._id }).sort({ time: 1 }).populate("panelEvaluations.evaluator", "name");
 
             // Format updates and evaluations
             const updates = project.updates ? project.updates.sort((a, b) => new Date(a.time) - new Date(b.time)) : [];
@@ -71,7 +71,16 @@ export const getBTPDashboard = async (req, res) => {
                     updates: evalUpdates,
                     canstudentsee: currEval.canstudentsee,
                     maxMarks: currEval.maxMarks,
-                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === btpUser._id.toString()) : null
+                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === btpUser._id.toString()) : null,
+                    // Released rounds only: what each evaluator gave this student and wrote.
+                    panel: currEval.canstudentsee
+                        ? currEval.panelEvaluations.filter(pe => pe.submitted).map(pe => ({
+                            name: pe.evaluator?.name || "Evaluator",
+                            marks: pe.panelmarks.find(m => m.student.toString() === btpUser._id.toString())?.marks ?? null,
+                            remark: pe.remark || "",
+                            at: pe.submittedAt || null,
+                        }))
+                        : null
                 });
             }
 

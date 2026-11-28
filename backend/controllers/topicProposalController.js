@@ -13,7 +13,7 @@ export const MESSAGE_MAX = 1500;
 // `proposedBy` (so only the proposer and that faculty member see it), plus an
 // ordinary request for it - from there the existing approve / reject /
 // withdraw paths handle it like any listed topic.
-export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistration, otherLabel }) =>
+export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistration, otherLabel, startSemester }) =>
   async (req, res) => {
     try {
       const facultyId = req.body.facultyId;
@@ -32,7 +32,8 @@ export const proposeTopic = ({ program, label, Topic, Registration, OtherRegistr
       const student = await Student.findOne({ email: req.user.email });
       if (!student) return res.status(404).json({ message: "Student not found" });
 
-      const startProblem = startWindowProblem(program, studentSemesterOn(student.batch, new Date()));
+      // startSemester: when this program would count as starting (Honors after a BTP keeps the BTP's start).
+      const startProblem = startWindowProblem(program, startSemester ? await startSemester(student) : studentSemesterOn(student.batch, new Date()));
       if (startProblem) return res.status(400).json({ message: startProblem });
 
       const other = await OtherRegistration.findOne({ student: student._id, project: { $ne: null } });

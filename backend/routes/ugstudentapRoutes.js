@@ -4,7 +4,8 @@ import {
     getAPDashboard,
     requestFaculty,
     withdrawRequest,
-    addUpdatetoAPProject
+    addUpdatetoAPProject,
+    addTeammate
 } from "../controllers/ugstudentapController.js";
 
 import { editUpdate, deleteUpdate } from "../controllers/studentUpdatesController.js";
@@ -17,6 +18,7 @@ router.get("/", authStudentMiddleware, getAPDashboard);
 router.post("/requestfaculty", authStudentMiddleware, requestFaculty);
 router.post("/withdrawrequest", authStudentMiddleware, withdrawRequest);
 router.post("/addupdate", authStudentMiddleware, addUpdatetoAPProject);
+router.post("/addteammate", authStudentMiddleware, addTeammate);
 router.post("/editupdate", authStudentMiddleware, editUpdate(AP, APRegistration, "AP"));
 router.post("/deleteupdate", authStudentMiddleware, deleteUpdate(AP, APRegistration, "AP"));
 
