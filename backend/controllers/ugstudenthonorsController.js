@@ -6,7 +6,7 @@ import Honors from "../models/Honors.js";
 import HonorsEvaluation from "../models/HonorsEvaluation.js";
 import Student from "../models/feedback/Student.js";
 import { proposeTopic, visibleTopics, facultyDirectory, MESSAGE_MAX } from "./topicProposalController.js";
-import { findOpenEnrollment, reviewFor } from "./enrollmentController.js";
+import { findOpenEnrollment, reviewFor, honorsStartSemester } from "./enrollmentController.js";
 
 // Max evaluations for Honors: 4 semesters × 2 evals = 8
 const HONORS_MAX_EVALUATIONS = 8;
@@ -50,7 +50,7 @@ export const getHonorsDashboard = async (req, res) => {
             // student - only the phase label and an informational message change,
             // marking the project complete is an explicit guide action, not a
             // reason to cut the student off from their own results.
-            const evaluations = await HonorsEvaluation.find({ projectRef: project._id }).sort({ time: 1 });
+            const evaluations = await HonorsEvaluation.find({ projectRef: project._id }).sort({ time: 1 }).populate("panelEvaluations.evaluator", "name");
 
             // Format updates and evaluations
             const updates = project.updates ? project.updates.sort((a, b) => new Date(a.time) - new Date(b.time)) : [];
@@ -72,7 +72,16 @@ export const getHonorsDashboard = async (req, res) => {
                     updates: evalUpdates,
                     canstudentsee: currEval.canstudentsee,
                     maxMarks: currEval.maxMarks,
-                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === honorsUser._id.toString()) : null
+                    marksgiven: currEval.canstudentsee ? currEval.marksgiven.filter(m => m.student.toString() === honorsUser._id.toString()) : null,
+                    // Released rounds only: what each evaluator gave this student and wrote.
+                    panel: currEval.canstudentsee
+                        ? currEval.panelEvaluations.filter(pe => pe.submitted).map(pe => ({
+                            name: pe.evaluator?.name || "Evaluator",
+                            marks: pe.panelmarks.find(m => m.student.toString() === honorsUser._id.toString())?.marks ?? null,
+                            remark: pe.remark || "",
+                            at: pe.submittedAt || null,
+                        }))
+                        : null
                 });
             }
 
@@ -112,7 +121,8 @@ export const getHonorsDashboard = async (req, res) => {
 
         // Outside the semesters this program can start in: say so instead of
         // offering topics.
-        const startProblem = startWindowProblem("honors", studentSemesterOn(student.batch, new Date()));
+        // A student whose BTP marks carry over counts from their BTP's start.
+        const startProblem = startWindowProblem("honors", await honorsStartSemester(student));
         if (startProblem) {
             return res.status(200).json({
                 email: student.email,
@@ -171,7 +181,7 @@ export const requestHonorsTopic = async (req, res) => {
         // 1. Get Student
         const student = await Student.findOne({ email: req.user.email });
         if (!student) return res.status(404).json({ message: "Student not found" });
-        const requestStartProblem = startWindowProblem("honors", studentSemesterOn(student.batch, new Date()));
+        const requestStartProblem = startWindowProblem("honors", await honorsStartSemester(student));
         if (requestStartProblem) return res.status(400).json({ message: requestStartProblem });
 
         // 2. Mutual exclusion check
@@ -325,4 +335,5 @@ export const proposeHonorsTopic = proposeTopic({
     Registration: HonorsRegistration,
     OtherRegistration: BTPRegistration,
     otherLabel: "a BTP",
+    startSemester: honorsStartSemester,
 });

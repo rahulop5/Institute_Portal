@@ -10,6 +10,8 @@ const apRegistrationSchema = new mongoose.Schema({
             faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty", required: true },
             proposalTitle: { type: String, required: true },
             proposalText: { type: String, required: true },
+            // Other students on the proposal (Student ids); empty for a solo project.
+            teammates: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
             status: { type: String, enum: ["Pending", "UnderReview", "Rejected"], default: "Pending" }
         }
     ]

@@ -23,8 +23,13 @@ const ROLE_LABEL = { UGProjects: "UG Projects", AssistantDean: "the Assistant De
 
 export async function notifyEnrollment(request, outcome, { rejectedBy, remark } = {}) {
   if (process.env.PROGRAM_EMAILS === "off" || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
-  const [student, guide] = await Promise.all([Student.findById(request.student), Faculty.findById(request.guide)]);
-  const to = [student?.email, guide?.email].filter(Boolean);
+  const [student, guide, teammates] = await Promise.all([
+    Student.findById(request.student),
+    Faculty.findById(request.guide),
+    Student.find({ _id: { $in: request.enrollment?.teammates || [] } }, "email"),
+  ]);
+  // The whole team hears the outcome, not just the student who proposed.
+  const to = [student?.email, ...teammates.map((t) => t.email), guide?.email].filter(Boolean);
   if (!to.length) return;
 
   const topic = request.enrollment?.topicName || "the project";
